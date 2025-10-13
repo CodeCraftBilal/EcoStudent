@@ -1,10 +1,23 @@
 "use client";
 import { Leaf, Menu, X } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 const Navbar = () => {
+  const pathname = usePathname();
+  const [isHidden, setIsHidden] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const hiddenPaths = ["/auth", "/auth/signup", "/auth/login", "/chat"];
+    setIsHidden(hiddenPaths.includes(pathname));
+  }, [pathname]);
+
+  // Early return after useEffect sets the state
+  if (isHidden) {
+    return null;
+  }
 
   const pages = [
     { id: 1, name: "Home", href: "/" },
@@ -21,7 +34,6 @@ const Navbar = () => {
   const closeMenu = () => {
     setIsMenuOpen(false);
   };
-
   return (
     <nav className="bg-white/90 backdrop-blur-md border-b border-green-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -48,13 +60,13 @@ const Navbar = () => {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             <Link
-              href={'/auth/login'}
+              href={"/auth/login"}
               className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors font-bold"
             >
               Login
             </Link>
             <Link
-              href={'/auth/signup'}
+              href={"/auth/signup"}
               className="bg-green-600 cursor-pointer text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors shadow-lg"
             >
               Get Started
@@ -64,7 +76,7 @@ const Navbar = () => {
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-4">
             <Link
-              href={'/auth/login'}
+              href={"/auth/login"}
               className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors text-lg font-bold"
             >
               Login
@@ -100,7 +112,7 @@ const Navbar = () => {
               {/* Mobile Signup Button */}
               <div className="px-3 py-2">
                 <Link
-                  href={'/auth/signup'}
+                  href={"/auth/signup"}
                   onClick={closeMenu}
                   className="block w-full bg-green-600 text-white text-center px-4 py-2 rounded-full hover:bg-green-700 transition-colors shadow-lg"
                 >
