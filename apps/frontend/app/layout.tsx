@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import TopLoader from "@/components/topLoader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Ecosutdent - A platform for students to share and discover resources",
   description: "A platform for students to share and discover resources.",
+  icons: {
+    icon: '/logo.svg'
+  }
 };
 
 export default function RootLayout({
@@ -28,6 +32,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <TopLoader />
         <Navbar />
         {children}
       </body>
