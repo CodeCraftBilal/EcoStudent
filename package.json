@@ -23,6 +23,10 @@
     "packages/*"
   ],
   "dependencies": {
-    "lucide-react": "^0.545.0"
+    "framer-motion": "^12.23.22",
+    "lottie-react": "^2.4.1",
+    "lucide-react": "^0.545.0",
+    "nextjs-toploader": "^3.9.17",
+    "react-responsive": "^10.0.1"
   }
 }

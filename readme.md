@@ -1,3 +1,18 @@
+pages
+1. home page
+2. shop page
+3. product view page
+4. login page
+5. signup page
+6. chat page
+7. dashobrad page
+    i. List Item
+    ii. show listed items 
+8. how it works
+9. about us
+10. contact
+
+
 Ecostudent 🌱
 
 A location-aware, AI-powered web platform for students to buy, sell, exchange, or donate books, uniforms, and educational items.
