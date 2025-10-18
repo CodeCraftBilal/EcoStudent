@@ -4,7 +4,7 @@ export class CreateUserDto {
   @IsString()
   @MinLength(3)
   @MaxLength(255)
-  user_name: string;
+  username: string;
 
   @IsString()
   @MinLength(8)
@@ -21,7 +21,7 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
-  @IsNumber()
+  @IsString()
   @MaxLength(20)
   @MinLength(11)
   phone_number: string;
