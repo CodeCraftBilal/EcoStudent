@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, Leaf, BookOpen, User, Lock, Smartphone } from "lucide-react";
+import { Eye, EyeOff, Leaf, BookOpen, User, Lock, Smartphone, Frown } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { redirect } from "next/navigation";
+import Lottie from "lottie-react";
+import LoadingAnim from '@/public/lotieAnim/Loading.json'
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,8 +16,18 @@ export default function LoginPage() {
     rememberMe: false
   });
 
+  const [isSubmiting, setIsSubmiting] = useState(false)
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmiting(true);
+    return new Promise((resolve, reject) => { 
+      setTimeout(() => {
+        resolve(1);
+        setIsSubmiting(false);
+        redirect('/dashboard')
+      }, 3000);
+     })
     console.log("Login attempt:", formData);
     // Handle login logic here
   };
@@ -166,9 +179,15 @@ export default function LoginPage() {
               {/* Login Button */}
               <button
                 type="submit"
-                className="w-full bg-green-500 text-white py-3 px-6 rounded-2xl font-semibold hover:bg-green-600 transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                disabled={isSubmiting}
+                className="w-full bg-green-500 flex items-center justify-center text-white py-3 px-6 rounded-2xl font-semibold hover:bg-green-600 transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               >
-                Sign In
+                {isSubmiting ? <Lottie
+                        className={`w-8 h-8`} 
+                        animationData={LoadingAnim}
+                        loop={true}
+                        autoPlay={true}
+                        /> : 'Sign In'}
               </button>
 
               {/* Divider */}
