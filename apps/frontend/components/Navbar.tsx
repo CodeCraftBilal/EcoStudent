@@ -10,7 +10,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    const hiddenPaths = ["/auth", "/auth/signup", "/auth/login", "/chat"];
+    const hiddenPaths = ["/dashboard", "/auth/signup", "/auth/login", "/chat"];
     setIsHidden(hiddenPaths.includes(pathname));
   }, [pathname]);
 
