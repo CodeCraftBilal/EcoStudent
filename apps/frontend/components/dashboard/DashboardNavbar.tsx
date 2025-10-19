@@ -18,6 +18,8 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import NotificationDropdown from "./Notification";
+import UploadItemModal from "./UploadItemModal";
+import { UploadItemData } from "@/lib/types/dashboard/types";
 
 export default function DashboardNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -25,6 +27,14 @@ export default function DashboardNavbar() {
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
     useState(false);
   const pathname = usePathname();
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  
+    const handleUploadItem = (data: UploadItemData) => {
+      console.log("Uploading item:", data);
+      // Here you would typically send the data to your backend
+      // For now, we'll just log it and show a success message
+      alert("Item listed successfully!");
+    };
 
   const dashboardLinks = [
     {
@@ -157,14 +167,22 @@ export default function DashboardNavbar() {
               />
             </div>
 
-            {/* Quick Action Button */}
-            <Link
-              href="/dashboard/upload"
+            {/*Quick Action Button */}
+            <button
+              onClick={() => {
+                setIsUploadModalOpen(!isUploadModalOpen)
+              }}
               className="hidden sm:flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-xl hover:bg-green-600 transition-colors shadow-sm"
             >
               <Plus className="w-4 h-4" />
               <span className="font-medium">Sell Item</span>
-            </Link>
+            </button>
+
+            <UploadItemModal
+              isOpen={isUploadModalOpen}
+              onClose={() => setIsUploadModalOpen(false)}
+              onUpload={handleUploadItem}
+            />
 
             {/* Notifications */}
             <div className="relative">
