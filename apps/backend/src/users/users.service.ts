@@ -26,14 +26,28 @@ export class UsersService {
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} user`;
+    return this.prisma.users.findUnique({
+      where: {user_id: id}
+    })
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
     return `This action updates a #${id} user`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number) {
+    const user = await this.prisma.users.delete({
+      where: {user_id: id}
+    })
+
+    return `user deleted with user name ${user.user_id}`
+  }
+
+  async findByEmail(email: string) {
+    return await this.prisma.users.findUnique({
+      where: {
+        email,
+      }
+    })
   }
 }
