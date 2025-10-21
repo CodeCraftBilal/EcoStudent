@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, Settings } from "lucide-react";
+import { Bell, Cross, Settings, X } from "lucide-react";
+import { useState } from "react";
 
 interface WelcomeHeaderProps {
   userName: string;
@@ -18,8 +19,17 @@ export default function WelcomeHeader({
     return "Good Evening";
   };
 
+  const [isOpen, setIsOpen] = useState(true);
+  const handleOpen = () => {
+    setIsOpen(false);
+  }
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
+    <div className={`${isOpen ? '' : 'hidden'} bg-white rounded-2xl p-6 shadow-sm mb-6 relative`}>
+      <button 
+      onClick={handleOpen}
+      className="absolute right-3 top-2">
+        <X color="black" />
+      </button>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
