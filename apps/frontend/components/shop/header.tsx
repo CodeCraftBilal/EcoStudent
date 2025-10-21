@@ -1,7 +1,25 @@
 "use client";
 
-import { Search, MapPin, ShoppingCart, Filter } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  ShoppingCart,
+  Filter,
+  Leaf,
+  NotebookIcon,
+  Bell,
+  MessageCircleHeartIcon,
+  MessageCircle,
+  Heart,
+  LogOut,
+  Home,
+  Settings,
+  User,
+} from "lucide-react";
 import { Filters, FiltersProps } from "./filters";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 interface HeaderProps extends FiltersProps {
   searchQuery: string;
@@ -9,7 +27,7 @@ interface HeaderProps extends FiltersProps {
   cartCount: number;
 }
 
-export function Header({
+export function ShopNavBar({
   searchQuery,
   setSearchQuery,
   cartCount,
@@ -29,14 +47,36 @@ export function Header({
     });
     setSearchQuery("");
   };
+
+  // geting param from the session
+  let sessionParam = false;
+  const param = useSearchParams().get("session");
+  if (param === "true") {
+    sessionParam = true;
+  } else {
+    sessionParam = false;
+  }
+
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(4)
+
+  const closeAllMenus = () => {
+    setIsMobileMenuOpen(false);
+    setIsProfileDropdownOpen(false);
+  };
+
+  const toggleProfileDropdown = () => {
+    setIsProfileDropdownOpen(!isProfileDropdownOpen);
+  };
+
   return (
     <div className="bg-white/80 backdrop-blur-md border-b border-green-200 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="max-md:hidden flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">
-              EcoStudent Shop
-            </h1>
+            <Leaf className="w-8 h-8 text-green-600" />
+            <h1 className="text-2xl font-bold text-gray-900">EcoStudent</h1>
           </div>
 
           {/* Search Bar in Header */}
@@ -62,13 +102,127 @@ export function Header({
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <ShoppingCart className="w-6 h-6 text-gray-700" />
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
+            {/* show when user is login in */}
+            <div
+              className={`${sessionParam ? "flex" : "hidden"} gap-4 items-center justify-center`}
+            >
+              {/* <Bell className={`w-3 h-3 sm:w-5 sm:h-5 hover:text-green-500 text-gray-600`}/> */}
+
+              <button className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
+            <Bell className="w-5 h-5" />
+            {unreadNotifications > 0 && (
+              <span className="absolute -top-0 -right-0 bg-green-500 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center">
+                {/* {unreadNotifications} */}
+              </span>
+            )}
+          </button>
+              <button className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
+            <MessageCircle className="w-5 h-5" />
+            {unreadNotifications > 0 && (
+              <span className="absolute -top-1 -right-0 bg-green-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                {unreadNotifications}
+              </span>
+            )}
+          </button>
+              <button className="relative p-2 text-gray-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors">
+            <Heart className="w-5 h-5" />
+            
+          </button>
+              {/* <MessageCircle className={`w-3 h-3 sm:w-5 sm:h-5 hover:text-green-500 text-gray-600`} />
+              <Heart className={`w-3 h-3 sm:w-5 sm:h-5 hover:text-green-500 text-gray-600`} /> */}
+            </div>
+
+            {/* show when user is not logged in */}
+            <div
+              className={`hidden ${sessionParam ? "" : "md:flex"} items-center space-x-4`}
+            >
+              <Link
+                href={"/auth/login"}
+                className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors font-bold"
+              >
+                Login
+              </Link>
+              <Link
+                href={"/auth/signup"}
+                className="font-bold bg-green-600 cursor-pointer text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors shadow-lg"
+              >
+                Sign Up
+              </Link>
+            </div>
+            <div
+              className={`hidden ${sessionParam ? "md:flex" : ""} items-center space-x-4`}
+            >
+              <div className="relative">
+                <button
+                  onClick={toggleProfileDropdown}
+                  className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                    A
+                  </div>
+                  <div className="hidden md:block text-left">
+                    <div className="text-sm font-medium text-gray-900">
+                      Ali Student
+                    </div>
+                    <div className="text-xs text-gray-500">Student</div>
+                  </div>
+                </button>
+
+                {/* Profile Dropdown Menu */}
+                {isProfileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <div className="text-sm font-medium text-gray-900">
+                        Ali Student
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        ali@example.com
+                      </div>
+                    </div>
+
+                    <Link
+                      href="/dashboard/profile"
+                      onClick={closeAllMenus}
+                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      <span>My Profile</span>
+                    </Link>
+
+                    <Link
+                      href="/dashboard/settings"
+                      onClick={closeAllMenus}
+                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>Settings</span>
+                    </Link>
+
+                    <div className="border-t border-gray-100 mt-2 pt-2">
+                      <Link
+                        href="/"
+                        onClick={closeAllMenus}
+                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <Home className="w-4 h-4" />
+                        <span>Back to Website</span>
+                      </Link>
+
+                      <button
+                        onClick={() => {
+                          closeAllMenus();
+                          // Handle logout
+                          console.log("Logging out...");
+                        }}
+                        className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
