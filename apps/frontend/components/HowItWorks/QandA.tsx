@@ -23,17 +23,17 @@ const QandA: React.FC<QandAProps> = ({ faqs }) => {
       {faqs.map((faq, index) => (
         <div
           key={index}
-          className="border border-eco-200 rounded-lg overflow-hidden transition-all duration-300"
+          className="border border-green-200 rounded-lg overflow-hidden transition-all duration-300"
         >
           <button
             onClick={() => toggleFAQ(index)}
-            className="w-full px-6 py-4 text-left bg-eco-50 hover:bg-eco-100 transition-colors flex justify-between items-center"
+            className="w-full px-6 py-4 text-left bg-green-50 hover:bg-green-100 transition-colors flex justify-between items-center"
           >
             <span className="font-semibold text-gray-900 text-lg">
               {faq.question}
             </span>
             <svg
-              className={`w-5 h-5 text-eco-600 transition-transform duration-300 ${
+              className={`w-5 h-5 text-green-600 transition-transform duration-300 ${
                 openIndex === index ? 'rotate-180' : ''
               }`}
               fill="none"

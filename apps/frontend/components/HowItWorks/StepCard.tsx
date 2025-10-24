@@ -17,11 +17,11 @@ const StepCard: React.FC<StepCardProps> = ({
   features
 }) => {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-eco-100">
+    <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-green-100">
       {/* Step Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-gradient-to-r from-eco-500 to-eco-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-3">
             {stepNumber}
           </div>
           <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
@@ -39,7 +39,7 @@ const StepCard: React.FC<StepCardProps> = ({
         {features.map((feature, index) => (
           <li key={index} className="flex items-center text-sm text-gray-700">
             <svg 
-              className="w-4 h-4 text-eco-500 mr-2 flex-shrink-0" 
+              className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -58,7 +58,7 @@ const StepCard: React.FC<StepCardProps> = ({
 
       {/* Progress Line (for visual flow) */}
       {stepNumber < 6 && (
-        <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-0.5 bg-eco-300 transform -translate-y-1/2" />
+        <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-0.5 bg-green-300 transform -translate-y-1/2" />
       )}
     </div>
   );

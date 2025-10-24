@@ -77,12 +77,12 @@ const HowItWorksPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-eco-50 to-eco-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            How <span className="text-eco-600">EcoStudent</span> Works
+            How <span className="text-green-600">EcoStudent</span> Works
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Join thousands of students in creating a sustainable educational community. 
@@ -107,7 +107,7 @@ const HowItWorksPage: React.FC = () => {
         {/* Q&A Section */}
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            Frequently Asked <span className="text-eco-blue-600">Questions</span>
+            Frequently Asked <span className="text-green-blue-600">Questions</span>
           </h2>
           <div className="max-w-4xl mx-auto">
             <QandA faqs={faqs} />
@@ -115,16 +115,16 @@ const HowItWorksPage: React.FC = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="text-center mt-16 bg-gradient-to-r from-eco-500 to-eco-blue-500 rounded-2xl p-12 text-white">
+        <div className="text-center mt-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl p-12 text-white">
           <h2 className="text-3xl font-bold mb-4">Ready to Join the Movement?</h2>
           <p className="text-xl mb-8 opacity-90">
             Start exchanging, saving, and making education more sustainable today!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-eco-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            <button className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
               Sign Up Now
             </button>
-            <button className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:bg-opacity-10 transition-colors">
+            <button className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-500 hover:bg-opacity-10 transition-colors">
               Watch Demo
             </button>
           </div>
