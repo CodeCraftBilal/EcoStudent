@@ -11,7 +11,7 @@ const HomeNavBar = () => {
   const pages = [
     { id: 1, name: "Home", href: "/" },
     { id: 2, name: "Shop", href: "/shop" },
-    { id: 3, name: "Features", href: "#features" },
+    { id: 3, name: "Features", href: "/#features" },
     { id: 4, name: "How It Works", href: "/how-it-works" },
     { id: 5, name: "About Us", href: "/aboutus" },
   ];
