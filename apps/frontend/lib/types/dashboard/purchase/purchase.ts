@@ -1,0 +1,36 @@
+// types/purchase.ts
+export interface Purchase {
+  id: string;
+  item: {
+    id: string;
+    title: string;
+    description: string;
+    price: number;
+    image: string;
+    category: string;
+    condition: 'excellent' | 'good' | 'fair';
+  };
+  seller: {
+    id: string;
+    name: string;
+    avatar: string;
+    rating: number;
+    verified: boolean;
+  };
+  status: 'completed' | 'cancelled' | 'refunded' | 'disputed';
+  purchaseDate: string;
+  deliveredDate?: string;
+  quantity: number;
+  totalAmount: number;
+  paymentMethod: 'jazzcash' | 'easypaisa' | 'cash';
+  meetupLocation: string;
+  rating?: number;
+  review?: string;
+}
+
+export interface PurchaseStats {
+  totalPurchases: number;
+  totalSpent: number;
+  completedOrders: number;
+  pendingReviews: number;
+}
