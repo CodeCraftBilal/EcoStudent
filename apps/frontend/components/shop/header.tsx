@@ -74,10 +74,12 @@ export function ShopNavBar({
     <div className="bg-white/80 backdrop-blur-md border-b border-green-200 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="max-md:hidden flex items-center space-x-4">
+          <Link 
+          href={'/'}
+          className="max-md:hidden flex items-center space-x-4">
             <Leaf className="w-8 h-8 text-green-600" />
             <h1 className="text-2xl font-bold text-gray-900">EcoStudent</h1>
-          </div>
+          </Link>
 
           {/* Search Bar in Header */}
           <div className="flex items-center justify-center gap-3 max-w-2xl mx-4 w-full">
@@ -109,7 +111,7 @@ export function ShopNavBar({
               {/* <Bell className={`w-3 h-3 sm:w-5 sm:h-5 hover:text-green-500 text-gray-600`}/> */}
 
               <button className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
-            <Bell className="w-5 h-5" />
+                        <Bell className="w-5 h-5" />
             {unreadNotifications > 0 && (
               <span className="absolute -top-0 -right-0 bg-green-500 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center">
                 {/* {unreadNotifications} */}
@@ -117,6 +119,7 @@ export function ShopNavBar({
             )}
           </button>
               <button className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
+            
             <MessageCircle className="w-5 h-5" />
             {unreadNotifications > 0 && (
               <span className="absolute -top-1 -right-0 bg-green-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">

@@ -14,6 +14,8 @@ import {
   Bell,
   Search,
   Plus,
+  ShoppingBag,
+  ShoppingBasket,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -40,21 +42,26 @@ export default function DashboardNavbar() {
     {
       name: "My Listings",
       href: "/dashboard/listings",
-      icon: Package,
+      // icon: Package,
       description: "Manage items",
     },
     {
       name: "Messages",
       href: "/chat",
-      icon: MessageCircle,
+      // icon: MessageCircle,
       description: "Chats",
     },
     {
-      name: "Profile",
-      href: "/dashboard/profile",
-      icon: User,
+      name: "Favorites",
+      href: "/dashboard/favorites",
+      // icon: User,
       description: "Account settings",
     },
+    {
+      name: 'Purchases',
+      href: '/dashboard/purchases',
+      descrption: 'View items you bought'
+    }
   ];
 
   const toggleMobileMenu = () => {
@@ -147,7 +154,7 @@ export default function DashboardNavbar() {
                         : "text-gray-600 hover:text-green-600 hover:bg-gray-50"
                     }`}
                   >
-                    <link.icon className="w-4 h-4" />
+                    {/* <link.icon className="w-4 h-4" /> */}
                     <span className="font-medium">{link.name}</span>
                   </Link>
                 );
@@ -168,6 +175,14 @@ export default function DashboardNavbar() {
               <Plus className="w-4 h-4" />
               <span className="font-medium">Sell Item</span>
             </button>
+            
+            <Link
+              href={'/shop'}
+              className="hidden sm:flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-xl hover:bg-green-600 transition-colors shadow-sm"
+            >
+              <ShoppingBasket className="w-4 h-4" />
+              <span className="font-medium">Explore Items</span>
+            </Link>
 
             <UploadItemModal
               isOpen={isUploadModalOpen}
@@ -304,7 +319,7 @@ export default function DashboardNavbar() {
                         : "text-gray-600 hover:text-green-600 hover:bg-gray-50"
                     }`}
                   >
-                    <link.icon className="w-5 h-5" />
+                    {/* <link.icon className="w-5 h-5" /> */}
                     <div>
                       <div className="font-medium">{link.name}</div>
                       <div className="text-sm text-gray-500">
@@ -364,3 +379,4 @@ export default function DashboardNavbar() {
     </nav>
   );
 }
+

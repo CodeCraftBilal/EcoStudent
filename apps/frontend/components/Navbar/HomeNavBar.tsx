@@ -21,14 +21,20 @@ const HomeNavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    if(hiddenPaths.includes(pathname) || pathname.startsWith('/shop/product')) {
-        setIsHidden(true);
-    }
+  const shouldHide = hiddenPaths.some((path) => pathname.startsWith(path));
+  setIsHidden(shouldHide);
+}, [pathname]);
 
-    return () => {
-        setIsHidden(false)
-    }
-  }, [pathname])
+
+  // useEffect(() => {
+  //   if(hiddenPaths.includes(pathname) || pathname.startsWith('')) {
+  //       setIsHidden(true);
+  //   }
+
+  //   return () => {
+  //       setIsHidden(false)
+  //   }
+  // }, [pathname])
   
   // Early return after useEffect sets the state
   if (isHidden) {
