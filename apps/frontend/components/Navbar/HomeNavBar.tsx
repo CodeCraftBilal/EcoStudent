@@ -3,10 +3,13 @@ import { Leaf, Menu, ShoppingBag, ShoppingBasket, X } from "lucide-react";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useSession } from "@/context/useSession";
 
 const HomeNavBar = () => {
+  // checking the session
+  const { session, isLoading } = useSession();
 
-    const hiddenPaths = ['/auth/login', '/auth/signup', '/dashboard', '/shop']
+  const hiddenPaths = ["/auth/login", "/auth/signup", "/dashboard", "/shop"];
 
   const pages = [
     { id: 1, name: "Home", href: "/" },
@@ -21,21 +24,10 @@ const HomeNavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-  const shouldHide = hiddenPaths.some((path) => pathname.startsWith(path));
-  setIsHidden(shouldHide);
-}, [pathname]);
+    const shouldHide = hiddenPaths.some((path) => pathname.startsWith(path));
+    setIsHidden(shouldHide);
+  }, [pathname]);
 
-
-  // useEffect(() => {
-  //   if(hiddenPaths.includes(pathname) || pathname.startsWith('')) {
-  //       setIsHidden(true);
-  //   }
-
-  //   return () => {
-  //       setIsHidden(false)
-  //   }
-  // }, [pathname])
-  
   // Early return after useEffect sets the state
   if (isHidden) {
     return null;
@@ -72,29 +64,47 @@ const HomeNavBar = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link
-              href={"/auth/login"}
-              className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors font-bold"
-            >
-              Login
-            </Link>
+            {session && session.userName ? (
+              <Link
+                href={"/dashboard"}
+                className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors font-bold"
+              >
+                {session.userName}
+              </Link>
+            ) : (
+              <Link
+                href={"/auth/login"}
+                className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors font-bold"
+              >
+                Login
+              </Link>
+            )}
             <Link
               href={"/shop"}
               className="flex gap-1 font-bold text-xl bg-green-600 cursor-pointer text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors shadow-lg"
             >
-                <ShoppingBasket />
+              <ShoppingBasket />
               Start Shoping
             </Link>
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-4">
-            <Link
-              href={"/auth/login"}
-              className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors text-lg font-bold"
-            >
-              Login
-            </Link>
+            {session && session.userName ? (
+              <Link
+                href={"/dashboard"}
+                className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors text-lg font-bold"
+              >
+                {session.userName}
+              </Link>
+            ) : (
+              <Link
+                href={"/auth/login"}
+                className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors text-lg font-bold"
+              >
+                Login
+              </Link>
+            )}
             <button
               onClick={toggleMenu}
               className="p-2 rounded-md text-gray-700 hover:text-green-600 hover:bg-green-50 transition-colors"

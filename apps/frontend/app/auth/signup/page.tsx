@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff, Leaf, BookOpen, User, Lock, Mail, MapPin, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useSession } from "@/context/useSession";
+import { redirect } from "next/navigation";
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,6 +19,19 @@ export default function SignupPage() {
     userType: "student",
     agreeToTerms: false
   });
+
+  // checking session
+  const {session, setSession, isLoading} = useSession();
+  useEffect(() => {
+    const checkSession = async () => {
+      if(session && session.email) {
+        console.log(session);
+        redirect('/dashboard')
+      }
+    }
+    
+    checkSession();
+  }, [isLoading])
 
   const [passwordStrength, setPasswordStrength] = useState(0);
 

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff, Leaf, BookOpen, User, Lock, Smartphone, Frown } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { redirect } from "next/navigation";
 import Lottie from "lottie-react";
 import LoadingAnim from '@/public/lotieAnim/Loading.json'
+import { useSession } from "@/context/useSession";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -25,6 +26,14 @@ export default function LoginPage() {
       setTimeout(() => {
         resolve(1);
         setIsSubmiting(false);
+        // Todo: set the real session here
+        setSession({
+          userId: '123456789',
+          userName: 'Bilal Khan',
+          email: formData.email,
+          role: 'student',
+          profile: '/globe.svg'
+        })
         redirect('/dashboard')
       }, 3000);
      })
@@ -39,6 +48,20 @@ export default function LoginPage() {
       [name]: type === 'checkbox' ? checked : value
     }));
   };
+
+  // checking session
+  const {session, setSession, isLoading} = useSession();
+  useEffect(() => {
+    const checkSession = async () => {
+      if(session && session.email) {
+        console.log(session);
+        redirect('/dashboard')
+      }
+    }
+    
+    checkSession();
+  }, [isLoading])
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-4">

@@ -22,8 +22,44 @@ import { usePathname } from "next/navigation";
 import NotificationDropdown from "./Notification";
 import UploadItemModal from "./UploadItemModal";
 import { UploadItemData } from "@/lib/types/dashboard/types";
+import { useSession } from "@/context/useSession";
+
+// mock notifications
+export const notificationsData = [
+    {
+      id: "1",
+      type: "message" as const,
+      title: "New Message",
+      message: "Ali sent you a message about the Calculus book",
+      time: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
+      read: false,
+      link: "/chat",
+    },
+    {
+      id: "2",
+      type: "sale" as const,
+      title: "Item Sold",
+      message: "Your Scientific Calculator has been sold",
+      time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+      read: false,
+      link: "/dashboard/listings",
+    },
+    {
+      id: "3",
+      type: "review" as const,
+      title: "New Review",
+      message: "Sara gave you 5 stars for the uniform",
+      time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+      read: true,
+      link: "/dashboard/reviews",
+    },
+  ]
 
 export default function DashboardNavbar() {
+
+  // fetching session
+  const {session, isLoading} = useSession();
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
@@ -78,35 +114,7 @@ export default function DashboardNavbar() {
   };
 
   //
-  const [notifications, setNotifications] = useState([
-    {
-      id: "1",
-      type: "message" as const,
-      title: "New Message",
-      message: "Ali sent you a message about the Calculus book",
-      time: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
-      read: false,
-      link: "/chat",
-    },
-    {
-      id: "2",
-      type: "sale" as const,
-      title: "Item Sold",
-      message: "Your Scientific Calculator has been sold",
-      time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-      read: false,
-      link: "/dashboard/listings",
-    },
-    {
-      id: "3",
-      type: "review" as const,
-      title: "New Review",
-      message: "Sara gave you 5 stars for the uniform",
-      time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-      read: true,
-      link: "/dashboard/reviews",
-    },
-  ]);
+  const [notifications, setNotifications] = useState(notificationsData);
 
   // Notification handlers
   const handleMarkAsRead = (notificationId: string) => {
@@ -207,6 +215,7 @@ export default function DashboardNavbar() {
               </button>
 
               <NotificationDropdown
+                notificationType="Notifications"
                 isOpen={isNotificationDropdownOpen}
                 onClose={() => setIsNotificationDropdownOpen(false)}
                 notifications={notifications}
@@ -222,13 +231,13 @@ export default function DashboardNavbar() {
                 className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  A
+                  <img src={session?.profile} alt={session?.userName} />
                 </div>
                 <div className="hidden md:block text-left">
                   <div className="text-sm font-medium text-gray-900">
-                    Ali Student
+                    {session?.userName}
                   </div>
-                  <div className="text-xs text-gray-500">Student</div>
+                  <div className="text-xs text-gray-500">{session?.role}</div>
                 </div>
               </button>
 
@@ -237,9 +246,9 @@ export default function DashboardNavbar() {
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
                   <div className="px-4 py-2 border-b border-gray-100">
                     <div className="text-sm font-medium text-gray-900">
-                      Ali Student
+                      {session?.userName}
                     </div>
-                    <div className="text-xs text-gray-500">ali@example.com</div>
+                    <div className="text-xs text-gray-500">{session?.email}</div>
                   </div>
 
                   <Link

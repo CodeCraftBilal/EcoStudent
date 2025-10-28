@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import TopLoader from "@/components/topLoader";
+import SessionProvider from "@/context/useSession";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,8 +19,8 @@ export const metadata: Metadata = {
   title: "Ecosutdent - A platform for students to share and discover resources",
   description: "A platform for students to share and discover resources.",
   icons: {
-    icon: '/logo.svg'
-  }
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({
@@ -32,9 +33,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TopLoader />
-        <Navbar />
-        {children}
+        <SessionProvider>
+          <TopLoader />
+          <Navbar />
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );

@@ -8,21 +8,23 @@ import {
   ProfileSection 
 } from "@/components/dashboard/profile";
 import { UserProfile, ProfileStats as ProfileStatsType } from "@/lib/types/dashboard/profile/types";
+import { useSession } from "@/context/useSession";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
+  const {session, isLoading} = useSession();
 
   // Mock data - replace with actual API call
   useEffect(() => {
     const mockProfile: UserProfile = {
-      id: "user1",
-      name: "Ali Student",
-      email: "ali.student@example.com",
+      id: session?.userId || '',
+      name: session?.userName || '',
+      email: session?.email || '',
       phone: "+92 300 1234567",
-      avatar: "/api/placeholder/200/200",
-      coverImage: "/api/placeholder/800/200",
+      avatar: session?.profile || "/api/placeholder/200/200",
+      coverImage: session?.profile || "/api/placeholder/800/200",
       bio: "Computer Science student passionate about technology and sustainability. Love exchanging books and helping fellow students save money while protecting the environment.",
       location: "Mianwali, Pakistan",
       userType: "student",
@@ -45,8 +47,8 @@ export default function ProfilePage() {
     };
 
     setProfile(mockProfile);
-    setIsLoading(false);
-  }, []);
+    // setIsLoading(false);
+  }, [isLoading]);
 
   // Mock stats - replace with actual API call
   const stats: ProfileStatsType = {

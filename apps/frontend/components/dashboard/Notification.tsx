@@ -15,6 +15,7 @@ interface Notification {
 }
 
 interface NotificationDropdownProps {
+  notificationType: 'Messages' | 'Notifications';
   isOpen: boolean;
   onClose: () => void;
   notifications: Notification[];
@@ -23,6 +24,7 @@ interface NotificationDropdownProps {
 }
 
 export default function NotificationDropdown({
+  notificationType,
   isOpen,
   onClose,
   notifications,
@@ -84,7 +86,7 @@ export default function NotificationDropdown({
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h3 className="font-semibold text-gray-900">Notifications</h3>
+        <h3 className="font-semibold text-gray-900">{notificationType}</h3>
         <div className="flex items-center space-x-2">
           {unreadCount > 0 && (
             <button
@@ -153,7 +155,7 @@ export default function NotificationDropdown({
           href="/dashboard/notifications"
           className="block text-center text-sm text-eco-600 hover:text-eco-700 font-medium py-2"
         >
-          View all notifications
+          View all {notificationType.toLowerCase()}
         </Link>
       </div>
     </div>
