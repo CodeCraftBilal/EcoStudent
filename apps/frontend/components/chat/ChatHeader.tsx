@@ -80,19 +80,19 @@ export default function ChatHeader({
           </Link>
         )}
         
-        <button
+        {/* <button
           onClick={onCall}
           className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"
         >
           <Phone className="w-5 h-5" />
-        </button>
+        </button> */}
         
-        <button
+        {/* <button
           onClick={onVideoCall}
           className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"
         >
           <Video className="w-5 h-5" />
-        </button>
+        </button> */}
         
         <button
           onClick={onMenuClick}

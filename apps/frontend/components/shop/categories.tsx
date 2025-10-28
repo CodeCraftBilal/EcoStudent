@@ -27,8 +27,8 @@ const categoriesData: Category[] = [
 
 export function Categories({ selectedCategory, onCategorySelect }: CategoriesProps) {
   return (
-    <div className="mb-8">
-      <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide">
+    <div className="mb-0">
+      <div className="flex overflow-x-auto space-x-4 pb-2 scrollbar-hide">
         {categoriesData.map((category) => (
           <button
             key={category.id}

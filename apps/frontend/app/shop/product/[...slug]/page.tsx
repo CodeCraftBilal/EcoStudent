@@ -585,12 +585,12 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               onMessageSeller={handleMessageSeller}
             />
 
-            <ActionButtons
+            {/* <ActionButtons
               exchangeType={mockItem.exchangeType}
               price={mockItem.price}
               onAddToCart={handleAddToCart}
               onMessageSeller={handleMessageSeller}
-            />
+            /> */}
           </div>
         </div>
 

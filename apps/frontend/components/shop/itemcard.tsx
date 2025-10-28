@@ -41,7 +41,7 @@ export function ItemCard({
         <img
           src={item.image}
           alt={item.title}
-          className="w-full h-32 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-28 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
           />
           </Link>
         <div className="absolute top-2 right-2 flex space-x-1">
@@ -69,14 +69,14 @@ export function ItemCard({
       </div>
 
       {/* Content Section */}
-      <div className="p-2 sm:p-4">
+      <div className="px-2 sm:p-4">
         {/* Mobile Compact View */}
         <Link href={`/shop/product/${item.title}`} className="sm:hidden">
-          <h3 className={`font-semibold text-gray-900 text-sm max-md:h-10 line-clamp-2 mb-1 ${item.title.length < 25 ? 'min-h-[2.5rem]' : ''}`}>
+          <h3 className={`font-semibold text-gray-900 text-sm max-md:h-10 line-clamp-2 ${item.title.length < 25 ? 'min-h-[2rem]' : ''}`}>
             {item.title}
           </h3>
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
               {item.exchangeType === "donation" ? (
                 <span className="text-sm font-bold text-green-600">FREE</span>
               ) : (
@@ -97,18 +97,18 @@ export function ItemCard({
           <Link
           href={`/shop/product/${item.title}`}
           >
-          <div className="flex justify-between items-start mb-2">
+          <div className="flex justify-between items-start mb-1">
             <h3 className="font-semibold text-gray-900 line-clamp-2 flex-1">
               {item.title}
             </h3>
           </div>
 
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+          {/* <p className="text-gray-600 text-sm mb-1 line-clamp-2">
             {item.description}
-          </p>
+          </p> */}
 
           {/* Price and Distance */}
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex justify-between items-center mb-1">
             <div className="flex items-center space-x-2">
               {item.exchangeType === "donation" ? (
                 <span className="text-lg font-bold text-green-600">FREE</span>
@@ -148,7 +148,7 @@ export function ItemCard({
 
           {/* Action Buttons */}
           <div className="flex space-x-2">
-            <button
+            {/* <button
               onClick={() => onToggleCart(item.id)}
               className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                 isInCart
@@ -159,7 +159,10 @@ export function ItemCard({
               {isInCart ? "Added to Cart" : 
                item.exchangeType === "exchange" ? "Request Exchange" :
                item.exchangeType === "donation" ? "Get for Free" : "Add to Cart"}
-            </button>
+            </button> */}
+            <Link 
+            className={`flex-1 text-center py-2 px-4 rounded-lg text-sm font-medium transition-colors bg-green-500 text-white hover:bg-green-600`}
+            href={`/dashboard/chat?user=user_id`}>Message Seller</Link>
             <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
               <MessageCircle className="w-4 h-4 text-gray-600" />
             </button>

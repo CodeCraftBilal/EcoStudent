@@ -19,7 +19,7 @@ const mockConversations: Conversation[] = [
     participant: {
       id: "user2",
       name: "Ali Ahmed",
-      avatar: "/api/placeholder/100/100",
+      avatar: "/dashboard/messages/ali.png",
       verified: true,
       isOnline: true,
       rating: 4.8
@@ -31,7 +31,7 @@ const mockConversations: Conversation[] = [
       id: "item1",
       title: "Calculus Early Transcendentals",
       price: 2500,
-      image: "/api/placeholder/80/80"
+      image: "/dashboard/messages/sara.png"
     }
   },
   {
@@ -39,7 +39,7 @@ const mockConversations: Conversation[] = [
     participant: {
       id: "user3",
       name: "Sara Khan",
-      avatar: "/api/placeholder/100/100",
+      avatar: "/dashboard/messages/sara.png",
       verified: true,
       isOnline: false,
       lastSeen: "2 hours ago",
@@ -52,7 +52,7 @@ const mockConversations: Conversation[] = [
       id: "item2",
       title: "Oxford University Uniform",
       price: 1500,
-      image: "/api/placeholder/80/80"
+      image: "/dashboard/messages/ali.png"
     }
   },
   {
@@ -60,7 +60,7 @@ const mockConversations: Conversation[] = [
     participant: {
       id: "user4",
       name: "Bilal Raza",
-      avatar: "/api/placeholder/100/100",
+      avatar: "/dashboard/messages/bilal.png",
       verified: false,
       isOnline: true,
       rating: 4.5
@@ -79,7 +79,7 @@ const mockConversations: Conversation[] = [
 
 export default function ChatPage() {
   return (
-    <div className="h-screen bg-white">
+    <div className="h-[calc(100vh-64px)] bg-white">
       <ChatLayout
         conversations={mockConversations}
         currentUser={currentUser}

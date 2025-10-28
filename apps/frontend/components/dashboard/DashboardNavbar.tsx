@@ -83,7 +83,7 @@ export default function DashboardNavbar() {
     },
     {
       name: "Messages",
-      href: "/chat",
+      href: "/dashboard/chat",
       // icon: MessageCircle,
       description: "Chats",
     },

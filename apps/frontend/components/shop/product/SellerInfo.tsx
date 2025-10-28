@@ -66,7 +66,7 @@ export default function SellerInfo({
 
       <Link
         // onClick={onMessageSeller}
-        href={`/chat?user=${seller.id}`}
+        href={`/dashboard/chat?user=${seller.id}`}
         className="block w-full border-2 border-green-500 text-green-600 hover:bg-green-50 py-3 rounded-2xl font-semibold transition-colors text-center"
       >
         Message Seller

@@ -189,11 +189,10 @@ export function Home() {
                 <Shield className="w-6 h-6 text-pink-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900">
-                Secure Payments
+                Negotiate Price
               </h3>
               <p className="text-gray-600">
-                Integrated JazzCash & Easypaisa for safe and reliable
-                transactions
+                Bargain & Decide the best Price with the seller
               </p>
             </div>
 

@@ -399,7 +399,7 @@ export default function ShopPage() {
           onCategorySelect={(category) => setFilters(prev => ({ ...prev, category }))} categories={[]}        />
 
         {/* Results Count and Sort */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-2">
           <p className="text-gray-600">
             Showing {items.length} of {mockItems.length} items
           </p>
@@ -456,9 +456,9 @@ export default function ShopPage() {
       </div>
 
       {/* Chat Component */}
-      <div className="bg-transparent">
+      {/* <div className="bg-transparent">
       <Chat showChat={showChat} setShowChat={setShowChat} draggable={true}/>
-      </div>
+      </div> */}
     </div>
   );
 }                   

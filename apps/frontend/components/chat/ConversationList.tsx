@@ -35,11 +35,11 @@ export default function ConversationList({
           <h2 className="text-xl font-bold text-gray-900">Chats</h2>
           {showReturnToWebsite && (
             <Link 
-              href="/"
+              href="/shop"
               className="flex items-center space-x-2 text-green-600 hover:text-green-700 transition-colors"
             >
               <Home className="w-5 h-5" />
-              <span className="hidden sm:block text-sm font-medium">Return to Website</span>
+              <span className="hidden sm:block text-sm font-medium">Return to Shop</span>
             </Link>
           )}
         </div>

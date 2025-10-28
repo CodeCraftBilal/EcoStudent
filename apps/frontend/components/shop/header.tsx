@@ -138,11 +138,11 @@ export function ShopNavBar({
                   onClick={() =>
                     setIsNotificationDropdownOpen(!isNotificationDropdownOpen)
                   }
-                  className="relative p-2 text-gray-600 hover:text-eco-600 hover:bg-eco-50 rounded-xl transition-colors"
+                  className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-xl transition-colors"
                 >
                   <Bell className="w-5 h-5" />
                   {notifications.filter((n) => !n.read).length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-eco-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                       {notifications.filter((n) => !n.read).length}
                     </span>
                   )}
@@ -162,11 +162,11 @@ export function ShopNavBar({
                   onClick={() =>
                     setIsMessagesDropDownOpen(!isMessagesDropDownOpen)
                   }
-                  className="relative p-2 text-gray-600 hover:text-eco-600 hover:bg-eco-50 rounded-xl transition-colors"
+                  className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-xl transition-colors"
                 >
                   <MessageCircle className="w-5 h-5" />
                   {notifications.filter((n) => !n.read).length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-eco-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                       {notifications.filter((n) => !n.read).length}
                     </span>
                   )}
@@ -197,7 +197,7 @@ export function ShopNavBar({
                     className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-colors"
                   >
                     <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                      <img src={session.profile} alt={session.userName} />
+                      <img className="rounded-full" src={session.profile} alt={session.userName} />
                     </div>
                     <div className="hidden md:block text-left">
                       <div className="text-sm font-medium text-gray-900">

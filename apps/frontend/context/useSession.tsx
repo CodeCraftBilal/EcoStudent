@@ -38,7 +38,7 @@ const SessionProvider = ({ children }: { children: React.ReactNode }) => {
               userName: "Bilal Khan",
               email: "bilal.khan@example.com",
               role: "student",
-              profile: '/globe.svg'
+              profile: '/ali.png'
             });
             resolve(1);
           }, 5000);
