@@ -15,13 +15,13 @@ export default function PageHeader({ stats }: PageHeaderProps) {
           <h1 className="text-3xl font-bold text-gray-900">My Listings</h1>
           <p className="text-gray-600 mt-2">Manage your items for sale, exchange, or donation</p>
         </div>
-        <Link
+        {/* <Link
           href="/dashboard/upload"
           className="mt-4 sm:mt-0 flex items-center space-x-2 bg-green-500 text-white px-6 py-3 rounded-xl hover:bg-green-600 transition-colors shadow-lg"
         >
           <Plus className="w-5 h-5" />
           <span className="font-semibold">Add New Item</span>
-        </Link>
+        </Link> */}
       </div>
 
       {/* Stats */}

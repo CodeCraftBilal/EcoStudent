@@ -27,14 +27,14 @@ export default function PurchasesPage() {
           title: "Calculus Early Transcendentals 2nd Edition",
           description: "Like new condition, perfect for engineering students",
           price: 2500,
-          image: "/api/placeholder/300/200",
+          image: "/imgshop/phybook.png",
           category: "books",
           condition: "excellent"
         },
         seller: {
           id: "seller1",
           name: "Ali Ahmed",
-          avatar: "/api/placeholder/100/100",
+          avatar: "/ali.png",
           rating: 4.8,
           verified: true
         },
@@ -43,7 +43,7 @@ export default function PurchasesPage() {
         deliveredDate: "2024-01-16",
         quantity: 1,
         totalAmount: 2500,
-        paymentMethod: "easypaisa",
+        paymentMethod: "cash",
         meetupLocation: "University Library",
         rating: 5,
         review: "Book was in perfect condition, seller was very professional!"
@@ -55,14 +55,14 @@ export default function PurchasesPage() {
           title: "Oxford University Uniform Set",
           description: "Complete uniform set with blazer and trousers",
           price: 1500,
-          image: "/api/placeholder/300/200",
+          image: "/imgshop/oxforduniform.png",
           category: "uniform",
           condition: "good"
         },
         seller: {
           id: "seller2",
           name: "Sara Khan",
-          avatar: "/api/placeholder/100/100",
+          avatar: "/dashboard/messages/sara.png",
           rating: 4.9,
           verified: true
         },
@@ -71,7 +71,7 @@ export default function PurchasesPage() {
         deliveredDate: "2024-01-12",
         quantity: 1,
         totalAmount: 1500,
-        paymentMethod: "jazzcash",
+        paymentMethod: "cash",
         meetupLocation: "Student Center"
       },
       {
@@ -81,14 +81,14 @@ export default function PurchasesPage() {
           title: "Scientific Calculator FX-991ES",
           description: "Casio scientific calculator, all functions working",
           price: 800,
-          image: "/api/placeholder/300/200",
+          image: "/imgshop/calc.png",
           category: "calculator",
           condition: "excellent"
         },
         seller: {
           id: "seller3",
           name: "Bilal Raza",
-          avatar: "/api/placeholder/100/100",
+          avatar: "/dashboard/messages/bilal.png",
           rating: 4.5,
           verified: false
         },
@@ -106,7 +106,7 @@ export default function PurchasesPage() {
           title: "Physics Textbook Advanced",
           description: "Physics concepts and problems for college",
           price: 0,
-          image: "/api/placeholder/300/200",
+          image: "/imgshop/phybook.png",
           category: "books",
           condition: "good"
         },
