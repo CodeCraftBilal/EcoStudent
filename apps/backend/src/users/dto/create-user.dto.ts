@@ -21,11 +21,13 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
+  @IsOptional()
   @IsString()
   @MaxLength(20)
   @MinLength(11)
   phone_number: string;
 
+  @IsOptional()
   @IsString()
   profile_picture: string;
 
