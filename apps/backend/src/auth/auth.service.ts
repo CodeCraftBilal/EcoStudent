@@ -25,8 +25,13 @@ export class AuthService {
     const isPasswordMatched = await verify(user.hashed_password, password);
 
     if (isPasswordMatched) {
-      const { hashed_password, ...result } = user;
-      return result;
+      console.log(user.user_id, user.user_name);
+      return {
+        id: user.user_id,
+        name: user.user_name,
+        role: user.role,
+        email: user.email
+      }
     }
     throw new UnauthorizedException();
   }
@@ -36,6 +41,7 @@ export class AuthService {
   }
 
   async generateTokens(userId: number, username: string) {
+    console.log('userid: ', userId, 'username: ', username)
     const payload: AuthJwtPayload = { username: username, sub: userId };
     const [access_token, refresh_token] = await Promise.all([
       this.jwtservice.signAsync(payload),

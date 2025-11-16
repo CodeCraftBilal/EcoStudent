@@ -13,7 +13,8 @@ export class AuthController {
   @Post('signin')
   async login(@Request() req) {
     const user = req.user;
-    const tokens = await this.authService.login(req.user.user_id, req.user.username);
+    console.log('user ', user)
+    const tokens = await this.authService.login(req.user.id, req.user.name);
 
     return {...user, tokens };
   }
