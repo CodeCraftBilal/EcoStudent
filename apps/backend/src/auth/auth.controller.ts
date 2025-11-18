@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Request, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthGuard } from '@nestjs/passport';
 import { LocalAuthGuard } from './gaurds/local-auth/local-auth.guard';
 import { JwtAuthGuard } from './gaurds/jwt-auth/jwt-auth.guard';
 import { RefreshAuthGuard } from './gaurds/refresh-auth/refresh-auth.guard';
+import { type Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -11,12 +11,32 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('signin')
-  async login(@Request() req) {
+  async login(@Request() req, @Res({passthrough: true}) res: Response) {
     const user = req.user;
-    console.log('user ', user)
+    const clientType = req.headers['x-client-type'];
     const tokens = await this.authService.login(req.user.id, req.user.name);
 
-    return {...user, tokens };
+    if(clientType === 'mobile') {
+      return {...user, tokens}
+    } else {
+      
+      res.cookie('access_token', tokens.access_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 15,
+        path: '/'
+      })
+
+      res.cookie('refresh_token', tokens.refresh_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 24 * 7,
+        path: '/'
+      })
+      return {...user, message: 'user logged in successfuly' };
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -27,9 +47,32 @@ export class AuthController {
 
   @UseGuards(RefreshAuthGuard)
   @Post('refresh')
-  refresh(@Request() req) {
-    // return 'ey'
-    return this.authService.refreshTokens(req.user.id, req.user.name);
+  async refresh(@Request() req, @Res({passthrough: true}) res) {
+    
+    const clientType = req.headers['x-client-type'];
+    const tokens = await this.authService.refreshTokens(req.user.id, req.user.name);
+
+    if(clientType === 'mobile') {
+      return { tokens }
+    } else {
+      
+      res.cookie('access_token', tokens.access_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 15,
+        path: '/'
+      })
+
+      res.cookie('refresh_token', tokens.refresh_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 24 * 7,
+        path: '/'
+      })
+      return { message: 'refreshed successfuly' };
+    }
   }
 
   @UseGuards(JwtAuthGuard)

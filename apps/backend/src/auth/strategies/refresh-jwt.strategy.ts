@@ -10,11 +10,25 @@ import { Request } from 'express';
 @Injectable()
 export class RefreshStrategy extends PassportStrategy(Strategy, 'refresh-jwt') {
   constructor(
-    @Inject(refreshConfig.KEY) private refreshConfigration: ConfigType<typeof refreshConfig>,
+    @Inject(refreshConfig.KEY)
+    private refreshConfigration: ConfigType<typeof refreshConfig>,
     private authService: AuthService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromBodyField('refresh'),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req: Request) => {
+          if (req.headers?.authorization?.startsWith('Bearer')) {
+            return req.headers.authorization.split(' ')[1];
+          }
+          
+          if (req.cookies?.refresh_token) {
+            console.log('refresh token: ', req.cookies?.refresh_token);
+            return req.cookies?.refresh_token;
+          }
+
+          return null;
+        },
+      ]),
       secretOrKey: refreshConfigration.secret!,
       ignoreExpiration: false,
       passReqToCallback: true,
@@ -22,12 +36,17 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'refresh-jwt') {
   }
 
   async validate(req: Request, payload: AuthJwtPayload) {
-    console.log('refresh Straitegy is running')
+    console.log('refresh Straitegy is running');
     const userId = payload.sub;
-    console.log("userId: ", userId)
-    const refreshToken = await req.body.refresh;
-    console.log('refreshToken: ', refreshToken)
-    // const refreshToken = req.headers.authorization;
+    let refreshToken;
+    if (req.headers['x-client-type']) {
+      if (req.headers?.authorization?.startsWith('Bearer')) {
+        refreshToken = req.headers.authorization.split(' ')[1];
+      }
+    } else {
+      refreshToken = req.cookies?.refresh_token;
+    }
+    console.log('refreshToken: ', refreshToken);
     return await this.authService.validateRefreshToken(userId, refreshToken);
   }
 }

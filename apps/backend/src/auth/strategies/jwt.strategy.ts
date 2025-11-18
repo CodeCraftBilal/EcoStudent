@@ -15,28 +15,29 @@ export class JWTStrategy extends PassportStrategy(Strategy, 'jwt') {
     private readonly authservice: AuthService
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req: Request) => {
+          // 
+          if (req.headers?.authorization?.startsWith('Bearer')) {
+            
+            return req.headers.authorization.split(' ')[1];
+          }
+
+          if (req.cookies?.access_token) {
+            
+            return req.cookies?.access_token;
+          }
+
+          return null;
+        },
+      ]),
       secretOrKey: jwtConfigration.secret as string,
       ignoreExpiration: false,
     });
   }
+
   validate(payload: AuthJwtPayload) {
-    console.log('id is : ', payload.sub)
+    
     return this.authservice.validateJWTUser(payload.sub);
   }
 }
-
-
-// jwtFromRequest: ExtractJwt.fromExtractors([
-//         (req: Request) => {
-//           if (req.headers?.authorization?.startsWith('Bearer')) {
-//             return req.headers.authorization.split(' ')[1];
-//           }
-
-//           if (req.cookies?.access_token) {
-//             return req.cookies?.access_token;
-//           }
-
-//           return null;
-//         },
-//       ]),
