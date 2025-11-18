@@ -19,7 +19,7 @@ export class AuthController {
     return {...user, tokens };
   }
 
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post('signout')
   logout(@Request() req) {
     this.authService.logout(req.user.id)

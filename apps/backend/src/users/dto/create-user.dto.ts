@@ -1,10 +1,10 @@
-import { IsDecimal, IsEmail, IsNumber, IsOptional, IsString, Matches, MaxLength, min, MinLength, minLength } from 'class-validator';
+import { IsDecimal, IsEmail, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
   @MinLength(3)
   @MaxLength(255)
-  user_name: string;
+  userName: string;
 
   @IsString()
   @MinLength(8)
@@ -25,16 +25,16 @@ export class CreateUserDto {
   @IsString()
   @MaxLength(20)
   @MinLength(11)
-  phone_number: string;
+  phoneNumber: string;
 
   @IsOptional()
   @IsString()
-  profile_picture: string;
+  profilePicture: string;
 
   @IsString() 
   @MinLength(5)
   @MaxLength(255)
-  user_location: string;
+  userLocation: string;
 
   @IsDecimal()
   @IsOptional()

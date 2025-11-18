@@ -1,12 +1,11 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { verify } from 'argon2';
+import { hash, verify } from 'argon2';
 import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { AuthJwtPayload } from './types/auth-jwtpayload';
 import jwtConfig from './config/jwt.config';
 import refreshConfig from './config/refresh.config';
 import type { ConfigType } from '@nestjs/config';
-import { AwardIcon } from 'lucide-react';
 
 @Injectable()
 export class AuthService {
@@ -20,15 +19,15 @@ export class AuthService {
 
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
-    if (!user || !user.hashed_password) throw new UnauthorizedException();
+    if (!user || !user.hashedPassword) throw new UnauthorizedException();
 
-    const isPasswordMatched = await verify(user.hashed_password, password);
+    const isPasswordMatched = await verify(user.hashedPassword, password);
 
     if (isPasswordMatched) {
-      console.log(user.user_id, user.user_name);
+      console.log(user.userId, user.userName);
       return {
-        id: user.user_id,
-        name: user.user_name,
+        id: user.userId,
+        name: user.userName,
         role: user.role,
         email: user.email
       }
@@ -48,6 +47,10 @@ export class AuthService {
       this.jwtservice.signAsync(payload, this.refreshConfigration),
     ]);
 
+    const hashedRefreshToken = await hash(refresh_token);
+
+    await this.usersService.updateRefreshToken(hashedRefreshToken, userId);
+
     return {
       access_token,
       refresh_token,
@@ -55,13 +58,12 @@ export class AuthService {
   }
 
 //   validating refresh Token
-  async validateRefreshToken(userId: number, refreshToken: any) {
+  async validateRefreshToken(userId: number, refreshToken: string) {
       const user = await this.usersService.findOne(userId);
-      if(!user || !user.hashed_refresh_token) throw new UnauthorizedException('Invalide Credentials');
-
-      const refreshTokenMatched = await verify(user.hashed_refresh_token, refreshToken);
+      if(!user || !user.hashedRefreshToken) throw new UnauthorizedException('Invalide Credentials');
+      const refreshTokenMatched = await verify(user.hashedRefreshToken, refreshToken);
       if(!refreshTokenMatched) throw new UnauthorizedException('Invalid Credentials')
-      const currentUser = {id: user.user_id}
+      const currentUser = {id: user.userId}
       return currentUser; 
   }
   
@@ -70,7 +72,7 @@ export class AuthService {
     const user = await this.usersService.findOne(sub);
     if(!user) throw new UnauthorizedException('Invalide Tokens');
     
-    const currentuser = {id: user.user_id}
+    const currentuser = {id: user.userId}
     return currentuser;
   }
 
@@ -85,7 +87,7 @@ export class AuthService {
     }
   }
 
-  logout(id: any) {
-    throw new Error('Method not implemented.');
+  async logout(userId: number) {
+    return await this.usersService.updateRefreshToken(null, userId);
   }
 }

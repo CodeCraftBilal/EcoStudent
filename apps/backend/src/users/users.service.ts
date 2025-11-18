@@ -6,6 +6,7 @@ import { hash } from 'argon2';
 
 @Injectable()
 export class UsersService {
+  
   constructor(private readonly prisma: PrismaService) {}
   async create(createUserDto: CreateUserDto) {
     
@@ -20,11 +21,11 @@ export class UsersService {
     }
 
     const { password, ...user } = createUserDto;
-    const hashed_password = await hash(password);
+    const hashedPassword = await hash(password);
     
     await this.prisma.users.create({
       data: {
-        hashed_password,
+        hashedPassword,
         ...user,
         role: 'USER'
       },
@@ -38,7 +39,7 @@ export class UsersService {
 
   findOne(id: number) {
     return this.prisma.users.findUnique({
-      where: {user_id: id}
+      where: {userId: id}
     })
   }
 
@@ -48,10 +49,10 @@ export class UsersService {
 
   async remove(id: number) {
     const user = await this.prisma.users.delete({
-      where: {user_id: id}
+      where: {userId: id}
     })
 
-    return `user deleted with user name ${user.user_id}`
+    return `user deleted with user name ${user.userId}`
   }
 
   async findByEmail(email: string) {
@@ -60,5 +61,14 @@ export class UsersService {
         email,
       }
     })
+  }
+
+  async updateRefreshToken(hashedRefreshToken: string | null, userId: number) {
+    await this.prisma.users.update({
+      where: {
+        userId,
+      },
+      data: {hashedRefreshToken}
+    }) 
   }
 }

@@ -9,207 +9,166 @@ datasource db {
 }
 
 model Users {
-  userId        Int       @id @default(autoincrement()) @map("userid")
-  userName      String    @db.VarChar(255)              @map("username")
-  email         String    @unique @db.VarChar(255)
-  role          ROLE?  
-  hashedPassword     String? @db.VarChar(255)           @map("hashedpassword")
-  hashedRefreshToken String? @db.VarChar(255)           @map("hashedrefreshtoken")
-  phoneNumber        String? @db.VarChar(25)            @map("phonenumber")
-  profilePicture     String? @db.VarChar(255)           @map("profilepicture")
-  userLocation       String  @db.VarChar(255)           @map("userlocation")
-  latitude           Decimal? @db.Decimal(10, 8)
-  longitude          Decimal? @db.Decimal(11, 8)
-  rating             Decimal? @db.Decimal(3, 2)
-  isVerified         Boolean?                           @map("isverified")
-  createdAt          DateTime? @db.Timestamp(6)         @map("created_at")
-  updatedAt          DateTime? @db.Timestamp(6)         @map("updated_at")
+  userId                                Int              @id @default(autoincrement()) @map("userid")
+  userName                              String           @map("username") @db.VarChar(255)
+  email                                 String           @unique @db.VarChar(255)
+  role                                  ROLE?
+  hashedPassword                        String?          @map("hashedpassword") @db.VarChar(255)
+  hashedRefreshToken                    String?          @map("hashedrefreshtoken") @db.VarChar(255)
+  phoneNumber                           String?          @map("phonenumber") @db.VarChar(25)
+  profilePicture                        String?          @map("profilepicture") @db.VarChar(255)
+  userLocation                          String           @map("userlocation") @db.VarChar(255)
+  latitude                              Decimal?         @db.Decimal(10, 8)
+  longitude                             Decimal?         @db.Decimal(11, 8)
+  rating                                Decimal?         @db.Decimal(3, 2)
+  isVerified                            Boolean?         @map("isverified")
+  createdAt                             DateTime?        @map("created_at") @db.Timestamp(6)
+  updatedAt                             DateTime?        @map("updated_at") @db.Timestamp(6)
+  messagesReceived                      Message[]        @relation("Message_receiveridTousers")
+  messagesSent                          Message[]        @relation("Message_senderidTousers")
+  chat_chat_receiveridTousers           chat[]           @relation("chat_receiveridTousers")
+  chat_chat_senderidTousers             chat[]           @relation("chat_senderidTousers")
+  exchanges                             exchanges[]
+  notifications                         notifications[]
+  product                               product[]
+  reviews_reviews_revieweduseridTousers reviews[]        @relation("reviews_revieweduseridTousers")
+  reviews_reviews_revieweridTousers     reviews[]        @relation("reviews_revieweridTousers")
+  search_history                        search_history[]
+  user_favorites                        user_favorites[]
 
-  messagesReceived Message[] @relation("Message_receiveridTousers")
-  messagesSent     Message[] @relation("Message_senderidTousers")
-
-  chatsReceived Chat[] @relation("chat_receiveridTousers")
-  chatsSent     Chat[] @relation("chat_senderidTousers")
-
-  exchanges     Exchanges[]
-  notifications Notifications[]
-  products      Product[]
-  reviewsBy     Reviews[] @relation("reviews_revieweridTousers")
-  reviewsFor    Reviews[] @relation("reviews_revieweduseridTousers")
-
-  searchHistory SearchHistory[]
-  favorites     UserFavorites[]
-
-  @@map("Users")
+  @@map("users")
 }
 
-
 model Message {
-  messageId     Int       @id @default(autoincrement()) @map("messageid")
-  chatId        Int?      @map("chatid")
-  senderId      Int?      @map("senderid")
-  receiverId    Int?      @map("receiverid")
-  messageType   message_type? @map("messagetype")
-  content       String?   @db.VarChar(1000)
-  voiceNoteUrl  String?   @db.VarChar(255) @map("voicenoteurl")
-  isRead        Boolean?  @map("isread")
-  createdAt     DateTime? @db.Timestamp(6) @map("created_at")
-
-  chat     Chat?  @relation(fields: [chatId], references: [chatId], map: "fk_message_chat")
-  receiver Users? @relation("Message_receiveridTousers", fields: [receiverId], references: [userId], map: "fk_message_receiver")
-  sender   Users? @relation("Message_senderidTousers", fields: [senderId], references: [userId], map: "fk_message_sender")
+  messageId    Int           @id @default(autoincrement()) @map("messageid")
+  chatId       Int?          @map("chatid")
+  senderId     Int?          @map("senderid")
+  receiverId   Int?          @map("receiverid")
+  messageType  message_type? @map("messagetype")
+  content      String?       @db.VarChar(1000)
+  voiceNoteUrl String?       @map("voicenoteurl") @db.VarChar(255)
+  isRead       Boolean?      @map("isread")
+  createdAt    DateTime?     @map("created_at") @db.Timestamp(6)
+  chat         chat?         @relation(fields: [chatId], references: [chatid], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_chat")
+  receiver     Users?        @relation("Message_receiveridTousers", fields: [receiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_receiver")
+  sender       Users?        @relation("Message_senderidTousers", fields: [senderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_sender")
 
   @@map("Message")
 }
 
-
-model Admin {
-  adminId Int @id @map("admin_id")
-
-  @@map("Admin")
+model admin {
+  admin_id Int @id
 }
 
-
-model Category {
-  categoryId        Int        @id @default(autoincrement()) @map("categoryid")
-  parentCategoryId  Int?       @map("parentcategoryid")
-  categoryName      String?    @db.VarChar(255) @map("categoryname")
-  description       String?
-  mediaPath         String?    @db.VarChar(255) @map("mediapath")
-  createdAt         DateTime?  @db.Timestamp(6) @map("created_at")
-
-  parentCategory Category? @relation("categoryTocategory", fields: [parentCategoryId], references: [categoryId], map: "fk_category_parent")
-  subCategories  Category[] @relation("categoryTocategory")
-
-  products Product[]
-
-  @@map("Category")
+model category {
+  categoryid       Int        @id @default(autoincrement())
+  parentcategoryid Int?
+  categoryname     String?    @db.VarChar(255)
+  description      String?
+  mediapath        String?    @db.VarChar(255)
+  created_at       DateTime?  @db.Timestamp(6)
+  category         category?  @relation("categoryTocategory", fields: [parentcategoryid], references: [categoryid], onDelete: NoAction, onUpdate: NoAction, map: "fk_category_parent")
+  other_category   category[] @relation("categoryTocategory")
+  product          product[]
 }
 
-
-model Chat {
-  chatId        Int       @id @default(autoincrement()) @map("chatid")
-  senderId      Int?      @map("senderid")
-  receiverId    Int?      @map("receiverid")
-  productId     Int?      @map("productid")
-  lastMessage   String?   @db.VarChar(255) @map("lastmessage")
-  lastMessageAt DateTime? @db.Timestamp(6) @map("lastmessage_at")
-  createdAt     DateTime? @db.Timestamp(6) @map("created_at")
-
-  messages      Message[]
-  product       Product? @relation(fields: [productId], references: [productId], map: "fk_chat_product")
-  sender        Users?   @relation("chat_senderidTousers", fields: [senderId], references: [userId], map: "fk_chat_sender")
-  receiver      Users?   @relation("chat_receiveridTousers", fields: [receiverId], references: [userId], map: "fk_chat_receiver")
-
-  @@map("Chat")
+model chat {
+  chatid                       Int       @id @default(autoincrement())
+  senderid                     Int?
+  receiverid                   Int?
+  productid                    Int?
+  lastmessage                  String?   @db.VarChar(255)
+  lastmessage_at               DateTime? @db.Timestamp(6)
+  created_at                   DateTime? @db.Timestamp(6)
+  messages                     Message[]
+  product                      product?  @relation(fields: [productid], references: [productid], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_product")
+  users_chat_receiveridTousers Users?    @relation("chat_receiveridTousers", fields: [receiverid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_receiver")
+  users_chat_senderidTousers   Users?    @relation("chat_senderidTousers", fields: [senderid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_sender")
 }
 
-
-model Exchanges {
-  exchangeId      Int              @id @default(autoincrement()) @map("exchangeid")
-  productId       Int?             @map("productid")
-  buyerId         Int?             @map("buyerid")
-  exchangeType    exchange_type?   @map("exchangetype")
+model exchanges {
+  exchangeid      Int              @id @default(autoincrement())
+  productid       Int?
+  buyerid         Int?
+  exchangetype    exchange_type?
   status          exchange_status?
-  agreedPrice     Decimal?         @db.Decimal(10, 2) @map("agreedprice")
-  meetupLocation  String?          @db.VarChar(255) @map("meetuplocation")
-  meetupLatitude  Decimal?         @db.Decimal(10, 8) @map("meetuplatitude")
-  meetupLongitude Decimal?         @db.Decimal(11, 8) @map("meetuplongitude")
-  meetupTime      DateTime?        @db.Timestamp(6) @map("meetuptime")
-  completedAt     DateTime?        @db.Timestamp(6) @map("completed_at")
-  createdAt       DateTime?        @db.Timestamp(6) @map("created_at")
-
-  buyer   Users?    @relation(fields: [buyerId], references: [userId], map: "fk_exchanges_buyer")
-  product Product?  @relation(fields: [productId], references: [productId], map: "fk_exchanges_product")
-  reviews Reviews[]
-
-  @@map("Exchanges")
+  agreedprice     Decimal?         @db.Decimal(10, 2)
+  meetuplocation  String?          @db.VarChar(255)
+  meetuplatitude  Decimal?         @db.Decimal(10, 8)
+  meetuplongitude Decimal?         @db.Decimal(11, 8)
+  meetuptime      DateTime?        @db.Timestamp(6)
+  completed_at    DateTime?        @db.Timestamp(6)
+  created_at      DateTime?        @db.Timestamp(6)
+  users           Users?           @relation(fields: [buyerid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_buyer")
+  product         product?         @relation(fields: [productid], references: [productid], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_product")
+  reviews         reviews[]
 }
 
-
-model Notifications {
-  notificationId    Int       @id @default(autoincrement()) @map("notificationid")
+model notifications {
+  notificationid    Int       @id @default(autoincrement())
   type              String?   @db.VarChar(255)
   title             String    @db.VarChar(255)
   message           String?   @db.VarChar(255)
-  isRead            Boolean?  @map("isread")
-  relatedEntityType String?   @db.VarChar(50) @map("relatedentitytype")
-  relatedEntityId   Int?      @map("relatedentityid")
-  createdAt         DateTime? @db.Timestamp(6) @map("created_at")
-  userId            Int?      @map("userid")
-
-  user Users? @relation(fields: [userId], references: [userId], map: "fk_notifications_users")
-
-  @@map("Notifications")
+  isread            Boolean?
+  relatedentitytype String?   @db.VarChar(50)
+  relatedentityid   Int?
+  created_at        DateTime? @db.Timestamp(6)
+  userid            Int?
+  users             Users?    @relation(fields: [userid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_notifications_users")
 }
 
-
-model Product {
-  productId      Int       @id @default(autoincrement()) @map("productid")
-  userId         Int?      @map("userid")
-  categoryId     Int?      @map("categoryid")
-  title          String    @db.VarChar(255)
-  description    String?
-  productCondition String? @db.VarChar(50) @map("prductcondition")
-  price          Decimal?  @db.Decimal(10, 2)
-  status         status?
-  productType    product_type? @map("producttype")
-  views          Int?
-  images         Json?     @db.Json
-  viewCount      Int?      @map("viewcount")
-  createdAt      DateTime? @db.Timestamp(6) @map("created_at")
-  updatedAt      DateTime? @db.Timestamp(6) @map("updated_at")
-
-  chats      Chat[]
-  exchanges  Exchanges[]
-  category   Category? @relation(fields: [categoryId], references: [categoryId], map: "fk_product_category")
-  user       Users?    @relation(fields: [userId], references: [userId], map: "fk_product_users")
-  favorites  UserFavorites[]
-
-  @@map("Product")
+model product {
+  productid       Int              @id @default(autoincrement())
+  userid          Int?
+  categoryid      Int?
+  title           String           @db.VarChar(255)
+  description     String?
+  prductcondition String?          @db.VarChar(50)
+  price           Decimal?         @db.Decimal(10, 2)
+  status          status?
+  producttype     product_type?
+  views           Int?
+  images          Json?            @db.Json
+  viewcount       Int?
+  created_at      DateTime?        @db.Timestamp(6)
+  updated_at      DateTime?        @db.Timestamp(6)
+  chat            chat[]
+  exchanges       exchanges[]
+  category        category?        @relation(fields: [categoryid], references: [categoryid], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
+  users           Users?           @relation(fields: [userid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
+  user_favorites  user_favorites[]
 }
 
-model Reviews {
-  reviewId       Int       @id @default(autoincrement()) @map("reviewid")
-  exchangeId     Int?      @map("exchangeid")
-  reviewerId     Int?      @map("reviewerid")
-  reviewedUserId Int?      @map("revieweduserid")
-  rating         Int?
-  comment        String?   @db.VarChar(500)
-  createdAt      DateTime? @db.Timestamp(6) @map("created_at")
-
-  exchange Exchanges? @relation(fields: [exchangeId], references: [exchangeId], map: "fk_reviews_exchange")
-  reviewer Users?     @relation("reviews_revieweridTousers", fields: [reviewerId], references: [userId], map: "fk_reviews_reviewer")
-  reviewed Users?     @relation("reviews_revieweduseridTousers", fields: [reviewedUserId], references: [userId], map: "fk_reviews_revieweduser")
-
-  @@map("Reviews")
+model reviews {
+  reviewid                            Int        @id @default(autoincrement())
+  exchangeid                          Int?
+  reviewerid                          Int?
+  revieweduserid                      Int?
+  rating                              Int?
+  comment                             String?    @db.VarChar(500)
+  created_at                          DateTime?  @db.Timestamp(6)
+  exchanges                           exchanges? @relation(fields: [exchangeid], references: [exchangeid], onDelete: NoAction, onUpdate: NoAction, map: "fk_reviews_exchange")
+  users_reviews_revieweduseridTousers Users?     @relation("reviews_revieweduseridTousers", fields: [revieweduserid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_reviews_revieweduser")
+  users_reviews_revieweridTousers     Users?     @relation("reviews_revieweridTousers", fields: [reviewerid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_reviews_reviewer")
 }
 
-
-model SearchHistory {
-  searchId     Int       @id @default(autoincrement()) @map("searchid")
-  userId       Int       @map("userid")
+model search_history {
+  searchid     Int       @id @default(autoincrement())
+  userid       Int
   query        String?   @db.VarChar(255)
   filters      Json?     @db.Json
-  resultsCount Int?      @map("resultscount")
-  createdAt    DateTime? @db.Timestamp(6) @map("created_at")
-
-  user Users @relation(fields: [userId], references: [userId], map: "fk_searchhistory_users")
-
-  @@map("SearchHistory")
+  resultscount Int?
+  created_at   DateTime? @db.Timestamp(6)
+  users        Users     @relation(fields: [userid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_searchhistory_users")
 }
 
-
-model UserFavorites {
-  favoriteId Int       @id @map("favoriteid")
-  userId     Int?      @map("userid")
-  productId  Int?      @map("productid")
-  createdAt  DateTime? @db.Timestamp(6) @map("created_at")
-
-  product Product? @relation(fields: [productId], references: [productId], map: "fk_userfavorites_product")
-  user    Users?   @relation(fields: [userId], references: [userId], map: "fk_userfavorites_users")
-
-  @@map("UserFavorites")
+model user_favorites {
+  favoriteid Int       @id
+  userid     Int?
+  productid  Int?
+  created_at DateTime? @db.Timestamp(6)
+  product    product?  @relation(fields: [productid], references: [productid], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_product")
+  users      Users?    @relation(fields: [userid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_users")
 }
 
 enum role {
