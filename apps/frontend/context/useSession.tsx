@@ -8,7 +8,7 @@ type Session = {
   userName: string;
   email: string;
   role: string;
-  profile: string;
+  profile: string | null;
 };
 
 interface SessionContextType {
@@ -32,14 +32,14 @@ const SessionProvider = ({ children }: { children: React.ReactNode }) => {
         // const response = fetch('/auth/session');
         await new Promise((resolve, reject) => {
           timeout = setTimeout(() => {
-            
-            setSession({
-              userId: "123456789",
-              userName: "Bilal Khan",
-              email: "bilal.khan@example.com",
-              role: "student",
-              profile: '/ali.png'
-            });
+            setSession(null)
+            // setSession({
+            //   userId: "123456789",
+            //   userName: "Bilal Khan",
+            //   email: "bilal.khan@example.com",
+            //   role: "student",
+            //   profile: '/ali.png'
+            // });
             resolve(1);
           }, 5000);
         });

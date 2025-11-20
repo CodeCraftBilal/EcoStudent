@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -16,21 +16,18 @@ export class UsersService {
       }
     })
 
-    if(isUserExits) {
-      return {success: false, message: "User already exists"};
-    }
+    if(isUserExits) throw new ConflictException('user already exits!')
 
     const { password, ...user } = createUserDto;
     const hashedPassword = await hash(password);
     
-    await this.prisma.users.create({
+    return await this.prisma.users.create({
       data: {
         hashedPassword,
         ...user,
         role: 'USER'
       },
-    });
-    return {success: true, message: "User created successfully"};
+    });;
   }
 
   findAll() {

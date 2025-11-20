@@ -1,7 +1,9 @@
 "use client";
 
 import { DashboardLayout } from "@/components/dashboard";
+import { useSession } from "@/context/useSession";
 import { DashboardStats, Listing, Activity } from "@/lib/types/dashboard/types";
+import { useSearchParams } from "next/navigation";
 
 // Mock data
 const mockStats: DashboardStats = {
@@ -102,6 +104,25 @@ const mockActivities: Activity[] = [
 ];
 
 export default function DashboardPage() {
+  const params = useSearchParams();
+  // console.log('parms', params)
+  const userId = params.get('userId')
+  const userName = params.get('userName')
+  const role = params.get('role')
+  const email = params.get('email')
+  const profile = params.get('profilePicture')
+  console.log(userId, userName, role, email, profile)
+  // const {session, setSession} = useSession();
+  // if(userId && userName && role && email) {
+  //   setSession({
+  //     userId,
+  //     userName,
+  //     email,
+  //     role,
+  //     profile,
+  //   })
+  // }
+  // console.log(session)
   return (
     <DashboardLayout
       userName="Ali Student"

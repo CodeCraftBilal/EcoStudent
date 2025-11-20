@@ -1,14 +1,26 @@
-import { Body, Controller, Get, Post, Request, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Request, Res, SetMetadata, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './gaurds/local-auth/local-auth.guard';
-import { JwtAuthGuard } from './gaurds/jwt-auth/jwt-auth.guard';
 import { RefreshAuthGuard } from './gaurds/refresh-auth/refresh-auth.guard';
 import { type Response } from 'express';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { GoogleAuthGuard } from './gaurds/google-auth/google-auth.guard';
+import { Public } from './decorators/public.decorator';
+import { Roles } from './decorators/roles.decorators';
+import { RolesGuard } from './gaurds/roles/roles.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
+  @Post('signup')
+  registerUser(@Body() createUserDto: CreateUserDto) {
+    
+    return this.authService.registerUser(createUserDto);
+  }
+
+  @Public()
   @UseGuards(LocalAuthGuard)
   @Post('signin')
   async login(@Request() req, @Res({passthrough: true}) res: Response) {
@@ -39,12 +51,7 @@ export class AuthController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post('signout')
-  logout(@Request() req) {
-    this.authService.logout(req.user.id)
-  }
-
+  @Public()
   @UseGuards(RefreshAuthGuard)
   @Post('refresh')
   async refresh(@Request() req, @Res({passthrough: true}) res) {
@@ -75,7 +82,55 @@ export class AuthController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Public()
+  @UseGuards(GoogleAuthGuard)
+  @Get('google/login')
+  googleLogin() {}
+
+  @Public()
+  @UseGuards(GoogleAuthGuard)
+  @Get('google/callback')
+  async googleCallback(@Request() req, @Res() res: Response) {
+    
+    const user = req.user;
+    const result = await this.authService.login(user.userId, user.userName);
+
+    res.cookie('access_token', result.access_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 15,
+        path: '/'
+      })
+
+      res.cookie('refresh_token', result.refresh_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 24 * 7,
+        path: '/'
+      })
+      
+      res.redirect(`http://localhost:3000/dashboard?userId=${user.userId}&userName=${user.userName}&role=${user.role}$email=${user.email}&profilePic${user.profilePicture}`)
+      // return {...user, message: 'user logged in successfuly' };
+
+      // id: user.userId,
+      //   name: user.userName,
+      //   role: user.role,
+      //   email: user.email
+    // const response = await this.authService.login(req.user.id, req.user.name, req.user.role);
+    // res.redirect(
+    //   `http://localhost:3000/api/auth/google/callback?userId=${response.id}&name=${response.name}&accessToken=${response.accessToken}&refreshToken=${response.refreshToken}&role=${response.role}`,
+    // );
+    // 
+  }
+
+  @Post('signout')
+  logout(@Request() req) {
+    this.authService.logout(req.user.id)
+  }
+
+  @Roles('USER', 'ADMIN')
   @Get('protected')
   protectedRoute(@Request() req) {
     return `This is a protected route accessed by ${req.user.id}`

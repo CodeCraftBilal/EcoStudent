@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import Lottie from "lottie-react";
 import LoadingAnim from '@/public/lotieAnim/Loading.json'
 import { useSession } from "@/context/useSession";
+import { BACKEND_URL } from "@/lib/types/constants";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -222,13 +223,13 @@ export default function LoginPage() {
 
               {/* Social Login */}
               <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  className="flex items-center justify-center space-x-2 py-3 px-4 border border-gray-300 rounded-2xl hover:bg-gray-50 transition-colors"
+                <a
+                  href={`${BACKEND_URL}/auth/google/login`}
+                  className="cursor-pointer flex items-center justify-center space-x-2 py-3 px-4 border border-gray-300 rounded-2xl hover:bg-gray-50 transition-colors"
                 >
                   <img className="w-6 h-6" src="/login/google.svg" alt="Login with google" />
                   <span className="text-sm font-medium text-gray-700">Google</span>
-                </button>
+                </a>
                 <button
                   type="button"
                   className="flex items-center justify-center space-x-2 py-3 px-4 border border-gray-300 rounded-2xl hover:bg-gray-50 transition-colors"

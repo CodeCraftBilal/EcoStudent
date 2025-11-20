@@ -1,4 +1,4 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { hash, verify } from 'argon2';
 import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -6,16 +6,23 @@ import { AuthJwtPayload } from './types/auth-jwtpayload';
 import jwtConfig from './config/jwt.config';
 import refreshConfig from './config/refresh.config';
 import type { ConfigType } from '@nestjs/config';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
-  
+      
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtservice: JwtService,
     @Inject(refreshConfig.KEY)
     private refreshConfigration: ConfigType<typeof refreshConfig>,
   ) {}
+async registerUser(createUserDto: CreateUserDto) {
+  const user = await this.usersService.findByEmail(createUserDto.email);
+
+  if(user) throw new ConflictException('user already exits!');
+  return this.usersService.create(createUserDto);
+  }
 
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
@@ -63,7 +70,7 @@ export class AuthService {
       if(!user || !user.hashedRefreshToken) throw new UnauthorizedException('Invalide Credentials');
       const refreshTokenMatched = await verify(user.hashedRefreshToken, refreshToken);
       if(!refreshTokenMatched) throw new UnauthorizedException('Invalid Credentials')
-      const currentUser = {id: user.userId}
+      const currentUser = {id: user.userId, role: user.role}
       return currentUser; 
   }
   
@@ -72,7 +79,7 @@ export class AuthService {
     const user = await this.usersService.findOne(sub);
     if(!user) throw new UnauthorizedException('Invalide Tokens');
     
-    const currentuser = {id: user.userId}
+    const currentuser = {id: user.userId, role: user.role}
     return currentuser;
   }
 
@@ -85,6 +92,13 @@ export class AuthService {
       access_token,
       refresh_token
     }
+  }
+
+  async validateGoogleUser(googleUser: CreateUserDto) {
+    console.log('googleUser: ', googleUser)
+    const user = await this.usersService.findByEmail(googleUser.email)
+    if(user) return user;
+    return await this.usersService.create(googleUser)
   }
 
   async logout(userId: number) {
