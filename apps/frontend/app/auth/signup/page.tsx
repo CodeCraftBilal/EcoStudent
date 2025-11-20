@@ -1,57 +1,125 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, Leaf, BookOpen, User, Lock, Mail, MapPin, Smartphone } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Leaf,
+  BookOpen,
+  User,
+  Lock,
+  Mail,
+  MapPin,
+  Smartphone,
+} from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useSession } from "@/context/useSession";
 import { redirect } from "next/navigation";
+import { BACKEND_URL } from "@/lib/types/constants";
+import { SubmitHandler, useForm } from "react-hook-form";
+
+
+type FormData = {
+  userName: string,
+    email: string,
+    phoneNumber: number | null,
+    userLocation: string | null,
+    password: string,
+    confirmPassword: string,
+    userType: string,
+    agreeToTerms: boolean,
+}
+type ServerMessage = {
+  success: boolean;
+  error: boolean;
+  message: string;
+};
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: "",
+  const [formData, setFormData] = useState<FormData>({
+    userName: "",
     email: "",
-    phone: "",
-    location: "",
+    phoneNumber: 0,
+    userLocation: "",
     password: "",
     confirmPassword: "",
     userType: "student",
-    agreeToTerms: false
+    agreeToTerms: false,
   });
 
+  // const {
+  //   register,
+  //   handleSubmit,
+  //   watch,
+  //   formState: { errors },
+  // } = useForm<FormData>()
+
+  //   const onSubmit: SubmitHandler<FormData> = (data) => console.log(data)
+
   // checking session
-  const {session, setSession, isLoading} = useSession();
+  const { session, setSession, isLoading } = useSession();
   useEffect(() => {
     const checkSession = async () => {
-      if(session && session.email) {
+      if (session && session.email) {
         console.log(session);
-        redirect('/dashboard')
+        redirect("/dashboard");
       }
-    }
-    
+    };
+
     checkSession();
-  }, [isLoading])
+  }, [isLoading]);
 
   const [passwordStrength, setPasswordStrength] = useState(0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Signup attempt:", formData);
+    // console.log("Signup attempt:", formData);
+
+    const { phoneNumber, userLocation, ...rest } = formData;
+    const newPhoneNumber = () => { 
+      if(phoneNumber && phoneNumber == 0) {
+        return null;
+      }
+      return phoneNumber;
+    }
+    const newUserLocation = () => { 
+      if(userLocation && userLocation.trim() == '') {
+        return null;
+      }
+      return userLocation;
+    }
     // Handle signup logic here
+    const res = await fetch(`${BACKEND_URL}/auth/signup`, {
+      method: "Post",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify( {
+        ...rest,
+        newUserLocation,
+        newPhoneNumber
+      }),
+    });
+    const result = await res.json();
+    if(!res.ok) {
+      console.log('full error: ', result)
+    }
+    console.log(result);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
-
     // Calculate password strength
-    if (name === 'password') {
+    if (name === "password") {
       calculatePasswordStrength(value);
     }
   };
@@ -67,30 +135,41 @@ export default function SignupPage() {
 
   const getPasswordStrengthColor = () => {
     switch (passwordStrength) {
-      case 0: return "bg-gray-200";
-      case 1: return "bg-red-500";
-      case 2: return "bg-yellow-500";
-      case 3: return "bg-blue-500";
-      case 4: return "bg-green-500";
-      default: return "bg-gray-200";
+      case 0:
+        return "bg-gray-200";
+      case 1:
+        return "bg-red-500";
+      case 2:
+        return "bg-yellow-500";
+      case 3:
+        return "bg-blue-500";
+      case 4:
+        return "bg-green-500";
+      default:
+        return "bg-gray-200";
     }
   };
 
   const getPasswordStrengthText = () => {
     switch (passwordStrength) {
-      case 0: return "Very Weak";
-      case 1: return "Weak";
-      case 2: return "Fair";
-      case 3: return "Good";
-      case 4: return "Strong";
-      default: return "";
+      case 0:
+        return "Very Weak";
+      case 1:
+        return "Weak";
+      case 2:
+        return "Fair";
+      case 3:
+        return "Good";
+      case 4:
+        return "Strong";
+      default:
+        return "";
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden">
-        
         {/* Left Side - Brand & Information */}
         <div className="bg-gradient-to-br from-green-500 to-blue-500 p-8 lg:p-12 text-white hidden lg:flex flex-col justify-between">
           <motion.div
@@ -110,7 +189,9 @@ export default function SignupPage() {
                 Join Our Sustainable Student Community
               </h1>
               <p className="text-green-100 text-lg leading-relaxed">
-                Start saving money, making friends, and protecting the environment by exchanging educational resources with students near you.
+                Start saving money, making friends, and protecting the
+                environment by exchanging educational resources with students
+                near you.
               </p>
             </div>
 
@@ -118,19 +199,27 @@ export default function SignupPage() {
             <div className="space-y-4 mt-8">
               <div className="flex items-center space-x-3">
                 <BookOpen className="w-5 h-5 text-green-200" />
-                <span className="text-green-100">Buy & sell textbooks at affordable prices</span>
+                <span className="text-green-100">
+                  Buy & sell textbooks at affordable prices
+                </span>
               </div>
               <div className="flex items-center space-x-3">
                 <User className="w-5 h-5 text-green-200" />
-                <span className="text-green-100">Connect with students in your area</span>
+                <span className="text-green-100">
+                  Connect with students in your area
+                </span>
               </div>
               <div className="flex items-center space-x-3">
                 <Leaf className="w-5 h-5 text-green-200" />
-                <span className="text-green-100">Reduce waste and help the planet</span>
+                <span className="text-green-100">
+                  Reduce waste and help the planet
+                </span>
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="w-5 h-5 text-green-200" />
-                <span className="text-green-100">Safe, local meetups on campus</span>
+                <span className="text-green-100">
+                  Safe, local meetups on campus
+                </span>
               </div>
             </div>
           </motion.div>
@@ -168,20 +257,29 @@ export default function SignupPage() {
             {/* Mobile Logo */}
             <div className="flex items-center justify-center space-x-3 mb-6 lg:hidden">
               <Leaf className="w-8 h-8 text-green-600" />
-              <span className="text-2xl font-bold text-gray-900">EcoStudent</span>
+              <span className="text-2xl font-bold text-gray-900">
+                EcoStudent
+              </span>
             </div>
 
             {/* Form Header */}
             <div className="text-center mb-6">
-              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Create Your Account</h2>
-              <p className="text-gray-600 text-sm">Join thousands of students saving money and the planet</p>
+              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                Create Your Account
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Join thousands of students saving money and the planet
+              </p>
             </div>
 
             {/* Signup Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Full Name */}
               <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="fullName"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Full Name *
                 </label>
                 <div className="relative">
@@ -189,9 +287,9 @@ export default function SignupPage() {
                   <input
                     type="text"
                     id="fullName"
-                    name="fullName"
+                    name="userName"
                     required
-                    value={formData.fullName}
+                    value={formData.userName ?? ""}
                     onChange={handleChange}
                     placeholder="Enter your full name"
                     className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
@@ -201,7 +299,10 @@ export default function SignupPage() {
 
               {/* Email */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Email Address *
                 </label>
                 <div className="relative">
@@ -211,7 +312,7 @@ export default function SignupPage() {
                     id="email"
                     name="email"
                     required
-                    value={formData.email}
+                    value={formData.email ?? ""}
                     onChange={handleChange}
                     placeholder="Enter your email"
                     className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
@@ -222,16 +323,19 @@ export default function SignupPage() {
               {/* Phone & Location */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Phone
                   </label>
                   <div className="relative">
                     <Smartphone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <input
-                      type="tel"
+                      type="number"
                       id="phone"
-                      name="phone"
-                      value={formData.phone}
+                      name="phoneNumber"
+                      value={formData.phoneNumber ?? ""}
                       onChange={handleChange}
                       placeholder="Phone"
                       className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
@@ -239,7 +343,10 @@ export default function SignupPage() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="location"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Location
                   </label>
                   <div className="relative">
@@ -247,8 +354,8 @@ export default function SignupPage() {
                     <input
                       type="text"
                       id="location"
-                      name="location"
-                      value={formData.location}
+                      name="userLocation"
+                      value={formData.userLocation ?? ""}
                       onChange={handleChange}
                       placeholder="City"
                       className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
@@ -259,7 +366,10 @@ export default function SignupPage() {
 
               {/* User Type */}
               <div>
-                <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="userType"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   I am a *
                 </label>
                 <select
@@ -279,7 +389,10 @@ export default function SignupPage() {
 
               {/* Password */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Password *
                 </label>
                 <div className="relative">
@@ -289,7 +402,7 @@ export default function SignupPage() {
                     id="password"
                     name="password"
                     required
-                    value={formData.password}
+                    value={formData.password ?? ""}
                     onChange={handleChange}
                     placeholder="Create a password"
                     className="w-full pl-10 pr-12 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
@@ -299,7 +412,11 @@ export default function SignupPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
                 {/* Password Strength */}
@@ -307,17 +424,24 @@ export default function SignupPage() {
                   <div className="mt-2">
                     <div className="flex justify-between text-xs mb-1">
                       <span>Password strength:</span>
-                      <span className={`font-medium ${
-                        passwordStrength === 4 ? 'text-green-600' :
-                        passwordStrength === 3 ? 'text-blue-600' :
-                        passwordStrength === 2 ? 'text-yellow-600' :
-                        passwordStrength === 1 ? 'text-red-600' : 'text-gray-600'
-                      }`}>
+                      <span
+                        className={`font-medium ${
+                          passwordStrength === 4
+                            ? "text-green-600"
+                            : passwordStrength === 3
+                              ? "text-blue-600"
+                              : passwordStrength === 2
+                                ? "text-yellow-600"
+                                : passwordStrength === 1
+                                  ? "text-red-600"
+                                  : "text-gray-600"
+                        }`}
+                      >
                         {getPasswordStrengthText()}
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
-                      <div 
+                      <div
                         className={`h-1.5 rounded-full transition-all duration-300 ${getPasswordStrengthColor()}`}
                         style={{ width: `${(passwordStrength / 4) * 100}%` }}
                       ></div>
@@ -328,7 +452,10 @@ export default function SignupPage() {
 
               {/* Confirm Password */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Confirm Password *
                 </label>
                 <div className="relative">
@@ -338,15 +465,18 @@ export default function SignupPage() {
                     id="confirmPassword"
                     name="confirmPassword"
                     required
-                    value={formData.confirmPassword}
+                    value={formData.confirmPassword ?? ""}
                     onChange={handleChange}
                     placeholder="Confirm your password"
                     className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
                   />
                 </div>
-                {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                  <p className="text-red-500 text-xs mt-1">Passwords do not match</p>
-                )}
+                {formData.confirmPassword &&
+                  formData.password !== formData.confirmPassword && (
+                    <p className="text-red-500 text-xs mt-1">
+                      Passwords do not match
+                    </p>
+                  )}
               </div>
 
               {/* Terms and Conditions */}
@@ -362,11 +492,17 @@ export default function SignupPage() {
                 />
                 <label htmlFor="agreeToTerms" className="text-sm text-gray-700">
                   I agree to the{" "}
-                  <Link href="/terms" className="text-green-600 hover:text-green-700 font-medium">
+                  <Link
+                    href="/terms"
+                    className="text-green-600 hover:text-green-700 font-medium"
+                  >
                     Terms of Service
                   </Link>{" "}
                   and{" "}
-                  <Link href="/privacy" className="text-green-600 hover:text-green-700 font-medium">
+                  <Link
+                    href="/privacy"
+                    className="text-green-600 hover:text-green-700 font-medium"
+                  >
                     Privacy Policy
                   </Link>
                 </label>
@@ -375,7 +511,10 @@ export default function SignupPage() {
               {/* Sign Up Button */}
               <button
                 type="submit"
-                disabled={!formData.agreeToTerms || formData.password !== formData.confirmPassword}
+                disabled={
+                  !formData.agreeToTerms ||
+                  formData.password !== formData.confirmPassword
+                }
                 className="w-full bg-green-500 text-white py-3 px-6 rounded-xl font-semibold hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-eco-500 focus:ring-offset-2"
               >
                 Create Account
@@ -384,7 +523,9 @@ export default function SignupPage() {
               {/* Divider */}
               <div className="relative flex items-center py-2">
                 <div className="flex-grow border-t border-gray-300"></div>
-                <span className="flex-shrink mx-4 text-gray-500 text-sm">or sign up with</span>
+                <span className="flex-shrink mx-4 text-gray-500 text-sm">
+                  or sign up with
+                </span>
                 <div className="flex-grow border-t border-gray-300"></div>
               </div>
 
@@ -395,10 +536,22 @@ export default function SignupPage() {
                   className="flex items-center justify-center space-x-2 py-2.5 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    <path
+                      fill="currentColor"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    />
                   </svg>
                   <span className="font-medium text-gray-700">Google</span>
                 </button>
@@ -415,7 +568,10 @@ export default function SignupPage() {
               <div className="text-center pt-2">
                 <p className="text-gray-600 text-sm">
                   Already have an account?{" "}
-                  <Link href="/auth/login" className="text-green-600 hover:text-green-700 font-semibold transition-colors">
+                  <Link
+                    href="/auth/login"
+                    className="text-green-600 hover:text-green-700 font-semibold transition-colors"
+                  >
                     Sign in
                   </Link>
                 </p>
