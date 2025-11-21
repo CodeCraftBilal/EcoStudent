@@ -15,7 +15,7 @@ import {
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useSession } from "@/context/useSession";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { SubmitHandler, useForm } from "react-hook-form";
 
@@ -42,6 +42,7 @@ export default function SignupPage() {
   const [serverMessage, setServerMessage] = useState<ServerMessage | null>(
     null
   );
+  const router = useRouter();
 
   const {
     register,
@@ -69,7 +70,7 @@ export default function SignupPage() {
   useEffect(() => {
     if (!isLoading && session?.email) {
       console.log("session: ", session);
-      redirect("/dashboard");
+      router.push('/dashboard')
     }
   }, [session, isLoading]);
 
@@ -163,6 +164,8 @@ export default function SignupPage() {
 
       const result = await res.json();
 
+      console.log('result is: ', result)
+
       if (!res.ok) {
         console.log("Full error: ", result);
         if (Array.isArray(result.message)) {
@@ -224,11 +227,13 @@ export default function SignupPage() {
           error: false,
           message: "Account created successfully! Redirecting...",
         });
+        console.log('singup successfuly')
         // You might want to redirect to login or dashboard here
-        redirect("/dashboard");
+        router.push("/dashboard");
       }
     } catch (error) {
       console.error("Network error:", error);
+      console.log('some error', error)
       setServerMessage({
         success: false,
         error: true,

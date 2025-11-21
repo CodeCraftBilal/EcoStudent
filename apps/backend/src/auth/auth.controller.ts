@@ -23,7 +23,7 @@ export class AuthController {
       return result;
     };
     
-    const tokens = await this.authService.login(result.user?.id, result.user?.name);
+    const tokens = await this.authService.login(result.user?.id, result.user?.name, result.user.tokenVersion);
     console.log('tokens generate: ', tokens)
     const clientType = req.headers['x-client-type'];
     if(clientType === 'mobile') {
@@ -58,7 +58,7 @@ export class AuthController {
   async login(@Request() req, @Res({passthrough: true}) res: Response) {
     const user = req.user;
     const clientType = req.headers['x-client-type'];
-    const tokens = await this.authService.login(req.user.id, req.user.name);
+    const tokens = await this.authService.login(req.user.id, req.user.name, req.user.tokenVersion);
 
     if(clientType === 'mobile') {
       return {...user, tokens}
@@ -89,12 +89,12 @@ export class AuthController {
   async refresh(@Request() req, @Res({passthrough: true}) res) {
     
     const clientType = req.headers['x-client-type'];
-    const tokens = await this.authService.refreshTokens(req.user.id, req.user.name);
+    const tokens = await this.authService.refreshTokens(req.user.id, req.user.name, req.user.tokenVerion);
 
+    console.log('token version: ', req.user.tokenVerion)
     if(clientType === 'mobile') {
       return { tokens }
     } else {
-      
       res.cookie('access_token', tokens.access_token, {
         httpOnly: true,
         secure: true,
@@ -125,7 +125,7 @@ export class AuthController {
   async googleCallback(@Request() req, @Res() res: Response) {
     
     const user = req.user;
-    const result = await this.authService.login(user.userId, user.userName);
+    const result = await this.authService.login(user.userId, user.userName, user.tokenVersion);
 
     res.cookie('access_token', result.access_token, {
         httpOnly: true,
@@ -165,7 +165,7 @@ export class AuthController {
   @Get('signout')
   logout(@Request() req) {
     console.log('signout request recieved')
-    return this.authService.logout(req.user.id)
+    return this.authService.logout(req.user.id, req.user.tokenVersion)
   }
 
   @Roles('USER', 'ADMIN')

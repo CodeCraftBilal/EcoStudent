@@ -24,6 +24,7 @@ model Users {
   isVerified                            Boolean?         @map("isverified")
   createdAt                             DateTime?        @map("created_at") @db.Timestamp(6)
   updatedAt                             DateTime?        @map("updated_at") @db.Timestamp(6)
+  tokenversion                          Int              @default(0)
   messagesReceived                      Message[]        @relation("Message_receiveridTousers")
   messagesSent                          Message[]        @relation("Message_senderidTousers")
   chat_chat_receiveridTousers           chat[]           @relation("chat_receiveridTousers")

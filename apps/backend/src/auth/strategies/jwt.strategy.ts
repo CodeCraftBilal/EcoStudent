@@ -38,6 +38,6 @@ export class JWTStrategy extends PassportStrategy(Strategy, 'jwt') {
 
   validate(payload: AuthJwtPayload) {
     
-    return this.authservice.validateJWTUser(payload.sub);
+    return this.authservice.validateJWTUser(payload.sub, payload.tokenVersion);
   }
 }

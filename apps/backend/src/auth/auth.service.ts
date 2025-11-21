@@ -12,7 +12,6 @@ import refreshConfig from './config/refresh.config';
 import type { ConfigType } from '@nestjs/config';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UserSession } from './types/userSession';
-import { error } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -32,7 +31,8 @@ export class AuthService {
       return {
         user: {
           id: user.userId,
-          name: user.userName
+          name: user.userName,
+          tokenVersion: user.tokenversion
         },
         error: false,
         success: true,
@@ -60,18 +60,19 @@ export class AuthService {
         name: user.userName,
         role: user.role,
         email: user.email,
+        tokenVersion: user.tokenversion
       };
     }
-    throw new UnauthorizedException();
+    throw new UnauthorizedException('Invalid Credential!');
   }
 
-  async login(userId: number, username: string) {
-    return await this.generateTokens(userId, username);
+  async login(userId: number, username: string, tokenVersion: number) {
+    return await this.generateTokens(userId, username, tokenVersion);
   }
 
-  async generateTokens(userId: number, username: string) {
-    console.log('userid: ', userId, 'username: ', username);
-    const payload: AuthJwtPayload = { username: username, sub: userId };
+  async generateTokens(userId: number, username: string, tokenVersion: number) {
+    console.log('userid: ', userId, 'username: ', username, 'tokenVersion: ', tokenVersion);
+    const payload: AuthJwtPayload = { username: username, sub: userId, tokenVersion };
     const [access_token, refresh_token] = await Promise.all([
       this.jwtservice.signAsync(payload),
       this.jwtservice.signAsync(payload, this.refreshConfigration),
@@ -79,7 +80,7 @@ export class AuthService {
 
     const hashedRefreshToken = await hash(refresh_token);
 
-    await this.usersService.updateRefreshToken(hashedRefreshToken, userId);
+    await this.usersService.updateRefreshToken(hashedRefreshToken, userId, tokenVersion);
 
     console.log('tokens generated and stored')
     return {
@@ -99,22 +100,23 @@ export class AuthService {
     );
     if (!refreshTokenMatched)
       throw new UnauthorizedException('Invalid Credentials');
-    const currentUser = { id: user.userId, role: user.role };
+    const currentUser = { id: user.userId, name: user.userName ,role: user.role, tokenVerion: user.tokenversion };
     return currentUser;
   }
 
   //   validating jwt user
-  async validateJWTUser(sub: number) {
+  async validateJWTUser(sub: number, tokenVersion: number) {
     const user = await this.usersService.findOne(sub);
     if (!user) throw new UnauthorizedException('Invalide Tokens');
+    if(user.tokenversion != tokenVersion) throw new UnauthorizedException('!Session Expired');
 
-    const currentuser = { id: user.userId, role: user.role };
+    const currentuser = { id: user.userId, role: user.role, tokenVersion: user.tokenversion };
     return currentuser;
   }
 
   // refresh tokens
-  async refreshTokens(id: number, name: string) {
-    const { access_token, refresh_token } = await this.generateTokens(id, name);
+  async refreshTokens(id: number, name: string, tokenVerion: number) {
+    const { access_token, refresh_token } = await this.generateTokens(id, name, tokenVerion);
     return {
       id,
       name,
@@ -143,8 +145,11 @@ export class AuthService {
     }
   }
 
-  async logout(userId: number) {
-    await this.usersService.updateRefreshToken(null, userId);
+  async logout(userId: number, tokenVersion: number) {
+    console.log('before logout ', tokenVersion, 'after ')
+    tokenVersion = tokenVersion + 1;
+    console.log(tokenVersion)
+    await this.usersService.updateRefreshToken(null, userId, tokenVersion);
     return {
       error: false,
       success: true,
