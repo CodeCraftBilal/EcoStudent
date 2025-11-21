@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -31,12 +31,23 @@ export class UsersService {
   }
 
   findAll() {
-    return `This action returns all users`;
+    const user = this.prisma.users.findMany({
+      select: {
+        userId: true,
+        userName: true,
+        email: true,
+        role: true,
+        profilePicture: true,
+        isVerified: true,
+        userLocation: true
+      }
+    });
+    return user;
   }
 
   findOne(id: number) {
     return this.prisma.users.findUnique({
-      where: {userId: id}
+      where: {userId: id},
     })
   }
 
@@ -49,7 +60,13 @@ export class UsersService {
       where: {userId: id}
     })
 
-    return `user deleted with user name ${user.userId}`
+    return {
+      id: user.userId,
+      name: user.userName,
+      email: user.email,
+      profile: user.profilePicture,
+      role: user.role
+    }
   }
 
   async findByEmail(email: string) {

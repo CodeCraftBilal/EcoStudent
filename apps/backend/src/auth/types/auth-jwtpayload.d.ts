@@ -1,4 +1,5 @@
 export type AuthJwtPayload = {
     username: string,
-    sub: number
+    sub: number,
+    // tokenVersion: number,
 }

@@ -1,27 +1,50 @@
-import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { hash, verify } from 'argon2';
 import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { AuthJwtPayload } from './types/auth-jwtpayload';
-import jwtConfig from './config/jwt.config';
 import refreshConfig from './config/refresh.config';
 import type { ConfigType } from '@nestjs/config';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { UserSession } from './types/userSession';
+import { error } from 'console';
 
 @Injectable()
 export class AuthService {
-      
+  
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtservice: JwtService,
     @Inject(refreshConfig.KEY)
     private refreshConfigration: ConfigType<typeof refreshConfig>,
   ) {}
-async registerUser(createUserDto: CreateUserDto) {
-  const user = await this.usersService.findByEmail(createUserDto.email);
+  async registerUser(createUserDto: CreateUserDto) {
+    const user = await this.usersService.findByEmail(createUserDto.email);
+    if (user) throw new ConflictException('user already exits!');
 
-  if(user) throw new ConflictException('user already exits!');
-  return this.usersService.create(createUserDto);
+    try {
+      const user = await this.usersService.create(createUserDto);
+      return {
+        user: {
+          id: user.userId,
+          name: user.userName
+        },
+        error: false,
+        success: true,
+        message: 'Sign In successfuly'
+      };
+    } catch(err) {
+      return {
+        error: true,
+        success: false,
+        message: 'Something went wrong!'
+      }
+    }
   }
 
   async validateUser(email: string, password: string) {
@@ -36,8 +59,8 @@ async registerUser(createUserDto: CreateUserDto) {
         id: user.userId,
         name: user.userName,
         role: user.role,
-        email: user.email
-      }
+        email: user.email,
+      };
     }
     throw new UnauthorizedException();
   }
@@ -47,7 +70,7 @@ async registerUser(createUserDto: CreateUserDto) {
   }
 
   async generateTokens(userId: number, username: string) {
-    console.log('userid: ', userId, 'username: ', username)
+    console.log('userid: ', userId, 'username: ', username);
     const payload: AuthJwtPayload = { username: username, sub: userId };
     const [access_token, refresh_token] = await Promise.all([
       this.jwtservice.signAsync(payload),
@@ -58,50 +81,74 @@ async registerUser(createUserDto: CreateUserDto) {
 
     await this.usersService.updateRefreshToken(hashedRefreshToken, userId);
 
+    console.log('tokens generated and stored')
     return {
       access_token,
       refresh_token,
     };
   }
 
-//   validating refresh Token
+  //   validating refresh Token
   async validateRefreshToken(userId: number, refreshToken: string) {
-      const user = await this.usersService.findOne(userId);
-      if(!user || !user.hashedRefreshToken) throw new UnauthorizedException('Invalide Credentials');
-      const refreshTokenMatched = await verify(user.hashedRefreshToken, refreshToken);
-      if(!refreshTokenMatched) throw new UnauthorizedException('Invalid Credentials')
-      const currentUser = {id: user.userId, role: user.role}
-      return currentUser; 
+    const user = await this.usersService.findOne(userId);
+    if (!user || !user.hashedRefreshToken)
+      throw new UnauthorizedException('Invalide Credentials');
+    const refreshTokenMatched = await verify(
+      user.hashedRefreshToken,
+      refreshToken,
+    );
+    if (!refreshTokenMatched)
+      throw new UnauthorizedException('Invalid Credentials');
+    const currentUser = { id: user.userId, role: user.role };
+    return currentUser;
   }
-  
-    //   validating jwt user
+
+  //   validating jwt user
   async validateJWTUser(sub: number) {
     const user = await this.usersService.findOne(sub);
-    if(!user) throw new UnauthorizedException('Invalide Tokens');
-    
-    const currentuser = {id: user.userId, role: user.role}
+    if (!user) throw new UnauthorizedException('Invalide Tokens');
+
+    const currentuser = { id: user.userId, role: user.role };
     return currentuser;
   }
 
   // refresh tokens
   async refreshTokens(id: number, name: string) {
-    const {access_token, refresh_token} = await this.generateTokens(id, name)
+    const { access_token, refresh_token } = await this.generateTokens(id, name);
     return {
       id,
       name,
       access_token,
-      refresh_token
-    }
+      refresh_token,
+    };
   }
 
   async validateGoogleUser(googleUser: CreateUserDto) {
-    console.log('googleUser: ', googleUser)
-    const user = await this.usersService.findByEmail(googleUser.email)
-    if(user) return user;
-    return await this.usersService.create(googleUser)
+    console.log('googleUser: ', googleUser);
+    const user = await this.usersService.findByEmail(googleUser.email);
+    if (user) return user;
+    return await this.usersService.create(googleUser);
+  }
+
+  async getsession(id: number): Promise<UserSession | null> {
+    const user = await this.usersService.findOne(id);
+
+    if(!user) return null;
+    return{
+      userId: user.userId.toString(),
+      userName: user.userName,
+      email: user.email,
+      profile: user.profilePicture,
+      role: user.role,
+    }
   }
 
   async logout(userId: number) {
-    return await this.usersService.updateRefreshToken(null, userId);
+    await this.usersService.updateRefreshToken(null, userId);
+    return {
+      error: false,
+      success: true,
+      message: 'logout successfuly'
+    }
   }
 }

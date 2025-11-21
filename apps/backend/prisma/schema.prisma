@@ -17,7 +17,7 @@ model Users {
   hashedRefreshToken                    String?          @map("hashedrefreshtoken") @db.VarChar(255)
   phoneNumber                           String?          @map("phonenumber") @db.VarChar(25)
   profilePicture                        String?          @map("profilepicture") @db.VarChar(255)
-  userLocation                          String           @map("userlocation") @db.VarChar(255)
+  userLocation                          String?          @map("userlocation") @db.VarChar(255)
   latitude                              Decimal?         @db.Decimal(10, 8)
   longitude                             Decimal?         @db.Decimal(11, 8)
   rating                                Decimal?         @db.Decimal(3, 2)

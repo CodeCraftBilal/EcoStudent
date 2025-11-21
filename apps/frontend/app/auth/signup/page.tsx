@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -19,17 +19,17 @@ import { redirect } from "next/navigation";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { SubmitHandler, useForm } from "react-hook-form";
 
-
 type FormData = {
-  userName: string,
-    email: string,
-    phoneNumber: number | null,
-    userLocation: string | null,
-    password: string,
-    confirmPassword: string,
-    userType: string,
-    agreeToTerms: boolean,
-}
+  userName: string;
+  email: string;
+  phoneNumber: string | null;
+  userLocation: string | null;
+  password: string;
+  confirmPassword: string;
+  userType: string;
+  agreeToTerms: boolean;
+};
+
 type ServerMessage = {
   success: boolean;
   error: boolean;
@@ -38,91 +38,49 @@ type ServerMessage = {
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    userName: "",
-    email: "",
-    phoneNumber: 0,
-    userLocation: "",
-    password: "",
-    confirmPassword: "",
-    userType: "student",
-    agreeToTerms: false,
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [serverMessage, setServerMessage] = useState<ServerMessage | null>(
+    null
+  );
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({
+    defaultValues: {
+      phoneNumber: null,
+      userLocation: null,
+      userType: "student",
+    },
   });
 
-  // const {
-  //   register,
-  //   handleSubmit,
-  //   watch,
-  //   formState: { errors },
-  // } = useForm<FormData>()
+  const watchPassword = watch("password");
+  // const watchConfirmPassword = watch("confirmPassword");
+  // const watchAllFields = watch();
 
-  //   const onSubmit: SubmitHandler<FormData> = (data) => console.log(data)
+  const i = useRef(0);
+  console.log(i.current++);
 
-  // checking session
-  const { session, setSession, isLoading } = useSession();
+  // Check session
+  const { session, isLoading } = useSession();
   useEffect(() => {
-    const checkSession = async () => {
-      if (session && session.email) {
-        console.log(session);
-        redirect("/dashboard");
-      }
-    };
-
-    checkSession();
-  }, [isLoading]);
-
-  const [passwordStrength, setPasswordStrength] = useState(0);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // console.log("Signup attempt:", formData);
-
-    const { phoneNumber, userLocation, ...rest } = formData;
-    const newPhoneNumber = () => { 
-      if(phoneNumber && phoneNumber == 0) {
-        return null;
-      }
-      return phoneNumber;
+    if (!isLoading && session?.email) {
+      console.log("session: ", session);
+      redirect("/dashboard");
     }
-    const newUserLocation = () => { 
-      if(userLocation && userLocation.trim() == '') {
-        return null;
-      }
-      return userLocation;
-    }
-    // Handle signup logic here
-    const res = await fetch(`${BACKEND_URL}/auth/signup`, {
-      method: "Post",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify( {
-        ...rest,
-        newUserLocation,
-        newPhoneNumber
-      }),
-    });
-    const result = await res.json();
-    if(!res.ok) {
-      console.log('full error: ', result)
-    }
-    console.log(result);
-  };
+  }, [session, isLoading]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-    // Calculate password strength
-    if (name === "password") {
-      calculatePasswordStrength(value);
+  // Calculate password strength whenever password changes
+  useEffect(() => {
+    if (watchPassword) {
+      calculatePasswordStrength(watchPassword);
+    } else {
+      setPasswordStrength(0);
     }
-  };
+  }, [watchPassword]);
 
   const calculatePasswordStrength = (password: string) => {
     let strength = 0;
@@ -164,6 +122,118 @@ export default function SignupPage() {
         return "Strong";
       default:
         return "";
+    }
+  };
+
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
+    setServerMessage(null);
+    // Clear all previous field errors
+    Object.keys(errors).forEach((fieldName) => {
+      setError(fieldName as keyof FormData, {});
+    });
+
+    // Check if passwords match
+    if (data.password !== data.confirmPassword) {
+      setServerMessage({
+        success: false,
+        error: true,
+        message: "Passwords do not match",
+      });
+      return;
+    }
+
+    // Prepare data for API - convert empty strings to null
+    const submitData = {
+      ...data,
+      phoneNumber: data.phoneNumber || null,
+      userLocation: data.userLocation || null,
+    };
+
+    console.log("Submitting data:", submitData);
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/auth/signup`, {
+        method: "POST",
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(submitData),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        console.log("Full error: ", result);
+        if (Array.isArray(result.message)) {
+          let hasGeneralError = false;
+
+          result.message.forEach((errMsg: string) => {
+            const lowerMsg = errMsg.toLowerCase();
+
+            if (lowerMsg.includes("username") || lowerMsg.includes("name")) {
+              setError("userName", { message: errMsg });
+            } else if (lowerMsg.includes("email")) {
+              setError("email", { message: errMsg });
+            } else if (lowerMsg.includes("phone")) {
+              setError("phoneNumber", { message: errMsg });
+            } else if (lowerMsg.includes("location")) {
+              setError("userLocation", { message: errMsg });
+            } else if (lowerMsg.includes("password")) {
+              setError("password", { message: errMsg });
+            } else if (lowerMsg.includes("confirm")) {
+              setError("confirmPassword", { message: errMsg });
+            } else if (
+              lowerMsg.includes("user type") ||
+              lowerMsg.includes("usertype")
+            ) {
+              setError("userType", { message: errMsg });
+            } else if (
+              lowerMsg.includes("terms") ||
+              lowerMsg.includes("agree")
+            ) {
+              setError("agreeToTerms", { message: errMsg });
+            } else {
+              // If no specific field matched, treat as general error
+              hasGeneralError = true;
+            }
+          });
+
+          // Set general server message if there are unmatched errors
+          if (hasGeneralError || result.message.length === 0) {
+            setServerMessage({
+              success: false,
+              error: true,
+              message:
+                result.message.join(", ") ||
+                "Signup failed. Please check your information.",
+            });
+          }
+        } else {
+          // Handle non-array error response
+          setServerMessage({
+            success: false,
+            error: true,
+            message: result.message || "Signup failed. Please try again.",
+          });
+        }
+      } else {
+        console.log("Signup successful:", result);
+        setServerMessage({
+          success: true,
+          error: false,
+          message: "Account created successfully! Redirecting...",
+        });
+        // You might want to redirect to login or dashboard here
+        redirect("/dashboard");
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      setServerMessage({
+        success: false,
+        error: true,
+        message: "Network error. Please try again.",
+      });
     }
   };
 
@@ -229,7 +299,7 @@ export default function SignupPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="grid grid-cols-3 gap-4 pt-8 border-t border-eco-400"
+            className="grid grid-cols-3 gap-4 pt-8 border-t border-green-400"
           >
             <div className="text-center">
               <div className="text-2xl font-bold">10K+</div>
@@ -272,12 +342,25 @@ export default function SignupPage() {
               </p>
             </div>
 
+            {/* Server Message */}
+            {serverMessage && (
+              <div
+                className={`p-3 rounded-lg mb-4 text-sm ${
+                  serverMessage.success
+                    ? "bg-green-100 text-green-800 border border-green-200"
+                    : "bg-red-100 text-red-800 border border-red-200"
+                }`}
+              >
+                {serverMessage.message}
+              </div>
+            )}
+
             {/* Signup Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* Full Name */}
               <div>
                 <label
-                  htmlFor="fullName"
+                  htmlFor="userName"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Full Name *
@@ -286,15 +369,25 @@ export default function SignupPage() {
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    id="fullName"
-                    name="userName"
-                    required
-                    value={formData.userName ?? ""}
-                    onChange={handleChange}
+                    id="userName"
+                    {...register("userName", {
+                      required: "This field is required",
+                      minLength: {
+                        value: 3,
+                        message: "Minimum length should be 3 characters",
+                      },
+                      maxLength: {
+                        value: 60,
+                        message: "Maximum length is 60 characters",
+                      },
+                    })}
                     placeholder="Enter your full name"
-                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   />
                 </div>
+                <p className="text-sm text-red-500 pt-1">
+                  {errors.userName?.message}
+                </p>
               </div>
 
               {/* Email */}
@@ -310,21 +403,27 @@ export default function SignupPage() {
                   <input
                     type="email"
                     id="email"
-                    name="email"
-                    required
-                    value={formData.email ?? ""}
-                    onChange={handleChange}
+                    {...register("email", {
+                      required: "This field is required",
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: "Invalid email address",
+                      },
+                    })}
                     placeholder="Enter your email"
-                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   />
                 </div>
+                <p className="text-sm text-red-500 pt-1">
+                  {errors.email?.message}
+                </p>
               </div>
 
               {/* Phone & Location */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label
-                    htmlFor="phone"
+                    htmlFor="phoneNumber"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
                     Phone
@@ -332,19 +431,26 @@ export default function SignupPage() {
                   <div className="relative">
                     <Smartphone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <input
-                      type="number"
-                      id="phone"
-                      name="phoneNumber"
-                      value={formData.phoneNumber ?? ""}
-                      onChange={handleChange}
-                      placeholder="Phone"
-                      className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
+                      type="tel"
+                      id="phoneNumber"
+                      {...register("phoneNumber", {
+                        required: false,
+                        pattern: {
+                          value: /^[0-9+-\s()]*$/,
+                          message: "Invalid phone number format",
+                        },
+                      })}
+                      placeholder="03"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                     />
                   </div>
+                  <p className="text-sm text-red-500 pt-1">
+                    {errors.phoneNumber?.message}
+                  </p>
                 </div>
                 <div>
                   <label
-                    htmlFor="location"
+                    htmlFor="userLocation"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
                     Location
@@ -353,14 +459,21 @@ export default function SignupPage() {
                     <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <input
                       type="text"
-                      id="location"
-                      name="userLocation"
-                      value={formData.userLocation ?? ""}
-                      onChange={handleChange}
+                      id="userLocation"
+                      {...register("userLocation", {
+                        required: false,
+                        maxLength: {
+                          value: 60,
+                          message: "Maximum length is 60 characters",
+                        },
+                      })}
                       placeholder="City"
-                      className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                     />
                   </div>
+                  <p className="text-sm text-red-500 pt-1">
+                    {errors.userLocation?.message}
+                  </p>
                 </div>
               </div>
 
@@ -374,17 +487,19 @@ export default function SignupPage() {
                 </label>
                 <select
                   id="userType"
-                  name="userType"
-                  required
-                  value={formData.userType}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
+                  {...register("userType", {
+                    required: "Please select a user type",
+                  })}
+                  className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                 >
                   <option value="student">Student</option>
                   <option value="teacher">Teacher</option>
                   <option value="alumni">Alumni</option>
                   <option value="other">Other</option>
                 </select>
+                <p className="text-sm text-red-500 pt-1">
+                  {errors.userType?.message}
+                </p>
               </div>
 
               {/* Password */}
@@ -400,12 +515,19 @@ export default function SignupPage() {
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
-                    name="password"
-                    required
-                    value={formData.password ?? ""}
-                    onChange={handleChange}
+                    {...register("password", {
+                      required: "Password is required",
+                      minLength: {
+                        value: 8,
+                        message: "Minimum length is 8 characters",
+                      },
+                      maxLength: {
+                        value: 32,
+                        message: "Maximum length is 32 characters",
+                      },
+                    })}
                     placeholder="Create a password"
-                    className="w-full pl-10 pr-12 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-12 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   />
                   <button
                     type="button"
@@ -419,8 +541,12 @@ export default function SignupPage() {
                     )}
                   </button>
                 </div>
+                <p className="text-sm text-red-500 pt-1">
+                  {errors.password?.message}
+                </p>
+
                 {/* Password Strength */}
-                {formData.password && (
+                {watchPassword && (
                   <div className="mt-2">
                     <div className="flex justify-between text-xs mb-1">
                       <span>Password strength:</span>
@@ -463,20 +589,18 @@ export default function SignupPage() {
                   <input
                     type={showPassword ? "text" : "password"}
                     id="confirmPassword"
-                    name="confirmPassword"
-                    required
-                    value={formData.confirmPassword ?? ""}
-                    onChange={handleChange}
+                    {...register("confirmPassword", {
+                      required: "Please confirm your password",
+                      validate: (value) =>
+                        value === watchPassword || "Passwords do not match",
+                    })}
                     placeholder="Confirm your password"
-                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   />
                 </div>
-                {formData.confirmPassword &&
-                  formData.password !== formData.confirmPassword && (
-                    <p className="text-red-500 text-xs mt-1">
-                      Passwords do not match
-                    </p>
-                  )}
+                <p className="text-sm text-red-500 pt-1">
+                  {errors.confirmPassword?.message}
+                </p>
               </div>
 
               {/* Terms and Conditions */}
@@ -484,11 +608,10 @@ export default function SignupPage() {
                 <input
                   type="checkbox"
                   id="agreeToTerms"
-                  name="agreeToTerms"
-                  required
-                  checked={formData.agreeToTerms}
-                  onChange={handleChange}
-                  className="w-4 h-4 text-green-600 focus:ring-eco-500 border-gray-300 rounded mt-0.5"
+                  {...register("agreeToTerms", {
+                    required: "You must agree to the terms and conditions",
+                  })}
+                  className="w-4 h-4 text-green-600 focus:ring-green-500 border-gray-300 rounded mt-0.5"
                 />
                 <label htmlFor="agreeToTerms" className="text-sm text-gray-700">
                   I agree to the{" "}
@@ -507,17 +630,17 @@ export default function SignupPage() {
                   </Link>
                 </label>
               </div>
+              <p className="text-sm text-red-500 pt-1">
+                {errors.agreeToTerms?.message}
+              </p>
 
               {/* Sign Up Button */}
               <button
                 type="submit"
-                disabled={
-                  !formData.agreeToTerms ||
-                  formData.password !== formData.confirmPassword
-                }
-                className="w-full bg-green-500 text-white py-3 px-6 rounded-xl font-semibold hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-eco-500 focus:ring-offset-2"
+                disabled={isSubmitting}
+                className="w-full bg-green-500 text-white py-3 px-6 rounded-xl font-semibold hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               >
-                Create Account
+                {isSubmitting ? "Creating Account..." : "Create Account"}
               </button>
 
               {/* Divider */}
@@ -531,8 +654,8 @@ export default function SignupPage() {
 
               {/* Social Signup */}
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
+                <a
+                  href={`${BACKEND_URL}/auth/google/login`}
                   className="flex items-center justify-center space-x-2 py-2.5 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -554,7 +677,7 @@ export default function SignupPage() {
                     />
                   </svg>
                   <span className="font-medium text-gray-700">Google</span>
-                </button>
+                </a>
                 <button
                   type="button"
                   className="flex items-center justify-center space-x-2 py-2.5 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors text-sm"

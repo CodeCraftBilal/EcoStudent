@@ -1,5 +1,6 @@
 "use client";
-import { TimerOff } from "lucide-react";
+import { authFetch } from "@/lib/authFetch";
+import { BACKEND_URL } from "@/lib/types/constants";
 import React, { useContext, useEffect, useState } from "react";
 import { createContext } from "react";
 
@@ -24,35 +25,18 @@ const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
-
     const fetchSession = async () => {
       try {
-        // Todo: fetch the session from backend
-        // const response = fetch('/auth/session');
-        await new Promise((resolve, reject) => {
-          timeout = setTimeout(() => {
-            setSession(null)
-            // setSession({
-            //   userId: "123456789",
-            //   userName: "Bilal Khan",
-            //   email: "bilal.khan@example.com",
-            //   role: "student",
-            //   profile: '/ali.png'
-            // });
-            resolve(1);
-          }, 5000);
-        });
+        const session = await authFetch(`${BACKEND_URL}/auth/session`);
+        setSession(session);
       } catch (error) {
         console.log('Error in Fetching the Session ', error);
+        setSession(null);
       } finally {
         setIsLoading(false);
       }
     };
     fetchSession();
-    return () => {
-        if(timeout) clearTimeout(timeout);
-    };
   }, []);
 
   const value: SessionContextType = {

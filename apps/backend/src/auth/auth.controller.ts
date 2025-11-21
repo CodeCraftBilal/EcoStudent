@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Request, Res, SetMetadata, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Request, Res, SetMetadata, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './gaurds/local-auth/local-auth.guard';
 import { RefreshAuthGuard } from './gaurds/refresh-auth/refresh-auth.guard';
@@ -7,7 +7,6 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { GoogleAuthGuard } from './gaurds/google-auth/google-auth.guard';
 import { Public } from './decorators/public.decorator';
 import { Roles } from './decorators/roles.decorators';
-import { RolesGuard } from './gaurds/roles/roles.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -15,9 +14,42 @@ export class AuthController {
 
   @Public()
   @Post('signup')
-  registerUser(@Body() createUserDto: CreateUserDto) {
+  async registerUser(@Req() req, @Res() res, @Body() createUserDto: CreateUserDto ) {
+    console.log('request recieved ', createUserDto)
+    const result = await this.authService.registerUser(createUserDto);
     
-    return this.authService.registerUser(createUserDto);
+    if(!result.user) {
+      console.log(result.user)
+      return result;
+    };
+    
+    const tokens = await this.authService.login(result.user?.id, result.user?.name);
+    console.log('tokens generate: ', tokens)
+    const clientType = req.headers['x-client-type'];
+    if(clientType === 'mobile') {
+      return { tokens}
+    } else {
+      
+      res.cookie('access_token', tokens.access_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 15,
+        path: '/'
+      })
+
+      res.cookie('refresh_token', tokens.refresh_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 24 * 7,
+        path: '/'
+      })
+    }
+    console.log('result is: ', result)
+    const {user, ...finalResult} = result;
+    console.log('final result', finalResult);
+    res.json(finalResult);
   }
 
   @Public()
@@ -125,9 +157,15 @@ export class AuthController {
     // 
   }
 
-  @Post('signout')
+  @Get('/session')
+  getSession(@Req() req) {
+    return this.authService.getsession(req.user.id);
+  }
+
+  @Get('signout')
   logout(@Request() req) {
-    this.authService.logout(req.user.id)
+    console.log('signout request recieved')
+    return this.authService.logout(req.user.id)
   }
 
   @Roles('USER', 'ADMIN')

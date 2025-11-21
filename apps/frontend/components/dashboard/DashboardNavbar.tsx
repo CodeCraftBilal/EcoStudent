@@ -18,11 +18,13 @@ import {
   ShoppingBasket,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 import NotificationDropdown from "./Notification";
 import UploadItemModal from "./UploadItemModal";
 import { UploadItemData } from "@/lib/types/dashboard/types";
 import { useSession } from "@/context/useSession";
+import { BACKEND_URL } from "@/lib/types/constants";
+import { authFetch } from "@/lib/authFetch";
 
 // mock notifications
 export const notificationsData = [
@@ -128,6 +130,15 @@ export default function DashboardNavbar() {
   const handleMarkAllAsRead = () => {
     setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
   };
+
+  const handleLogout = async () => {
+    const res = await authFetch(`${BACKEND_URL}/auth/signout`, {
+      method: 'Get'
+    });
+    console.log(res);
+    console.log('logout succfull', res)
+    // redirect('/shop');
+  }
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -287,6 +298,7 @@ export default function DashboardNavbar() {
                         closeAllMenus();
                         // Handle logout
                         console.log("Logging out...");
+                        handleLogout();
                       }}
                       className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left transition-colors"
                     >
