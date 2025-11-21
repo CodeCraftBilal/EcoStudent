@@ -229,7 +229,9 @@ export default function SignupPage() {
         });
         console.log('singup successfuly')
         // You might want to redirect to login or dashboard here
-        router.push("/dashboard");
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1500);
       }
     } catch (error) {
       console.error("Network error:", error);
@@ -697,7 +699,7 @@ export default function SignupPage() {
                 <p className="text-gray-600 text-sm">
                   Already have an account?{" "}
                   <Link
-                    href="/auth/login"
+                    href="/auth/signin"
                     className="text-green-600 hover:text-green-700 font-semibold transition-colors"
                   >
                     Sign in

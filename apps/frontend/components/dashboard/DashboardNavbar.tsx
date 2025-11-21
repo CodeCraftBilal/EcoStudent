@@ -137,7 +137,7 @@ export default function DashboardNavbar() {
     });
     console.log(res);
     console.log('logout succfull', res)
-    redirect('/auth/login');
+    redirect('/auth/signin');
   }
 
   return (

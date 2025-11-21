@@ -73,7 +73,7 @@ const HomeNavBar = () => {
               </Link>
             ) : (
               <Link
-                href={"/auth/login"}
+                href={"/auth/signin"}
                 className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors font-bold"
               >
                 Login
