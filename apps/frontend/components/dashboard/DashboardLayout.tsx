@@ -8,6 +8,8 @@ import RecentActivity from "./RecentActivity";
 import MyListings from "./MyListings";
 import UploadItemModal from "./UploadItemModal";
 import { DashboardStats, Listing, Activity, UploadItemData } from "@/lib/types/dashboard/types";
+import { BACKEND_URL } from "@/lib/types/constants";
+import { authFetch } from "@/lib/authFetch";
 
 interface DashboardLayoutProps {
   userName: string;
@@ -23,12 +25,67 @@ export default function DashboardLayout({
   activities
 }: DashboardLayoutProps) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const handleUploadItem = (data: UploadItemData) => {
-    console.log("Uploading item:", data);
-    // Here you would typically send the data to your backend
-    // For now, we'll just log it and show a success message
-    alert("Item listed successfully!");
+  const handleUploadItem = async (data: UploadItemData): Promise<void> => {
+    setIsLoading(true);
+    setUploadError(null);
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      
+      // Append basic fields
+      formData.append('title', data.title);
+      formData.append('description', data.description || '');
+      formData.append('price', data.price.toString());
+      formData.append('originalPrice', data.originalPrice?.toString() || '0');
+      formData.append('productType', data.category);
+      formData.append('subCategory', data.subCategory || '');
+      formData.append('productCondition', data.condition);
+      formData.append('exchangeType', data.exchangeType);
+
+      // Append images
+      data.images.forEach((image, index) => {
+        formData.append('images', image);
+      });
+
+      // API call to upload item
+      const response = await authFetch(`${BACKEND_URL}/product`, {
+        method: 'POST',
+        body: formData,
+        // headers are automatically set by browser for FormData
+      });
+      console.log('response is ', response)
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData || `Upload failed with status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      console.log("Item uploaded successfully:", result);
+      
+      // Show success message
+      alert("Item listed successfully!");
+      
+      // Close modal
+      setIsUploadModalOpen(false);
+      
+      // You might want to refresh the listings here
+      // refreshListings();
+
+    } catch (error: any) {
+      console.error("Error uploading item:", error);
+      setUploadError(error.message || "Failed to upload item. Please try again.");
+      
+      // Re-throw the error so the modal can handle it too
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

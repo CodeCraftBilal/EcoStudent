@@ -138,3 +138,155 @@ log all commits
 git log
 ```
 
+# 🚀 **Most Common NestJS CLI Commands**
+
+### **1. Create a New Project**
+
+```
+nest new project-name
+```
+
+Creates a fresh NestJS project with recommended structure.
+
+---
+
+### **2. Generate (Scaffold) Files**
+
+#### **Module**
+
+```
+nest g module users
+```
+
+Creates a new module.
+
+#### **Controller**
+
+```
+nest g controller users
+```
+
+Creates a controller inside `users` module.
+
+#### **Service**
+
+```
+nest g service users
+```
+
+Creates a service inside `users` module.
+
+#### **Resource (Full CRUD)**
+
+```
+nest g resource users
+```
+
+Creates module + controller + service + DTOs with CRUD boilerplate.
+
+---
+
+### **3. Run the Application**
+
+```
+nest start
+```
+
+Runs the app once.
+
+```
+nest start --watch
+```
+
+Runs in watch mode (auto reload on code changes).
+
+---
+
+### **4. Build the Project**
+
+```
+nest build
+```
+
+Compiles to JavaScript (dist folder).
+
+---
+
+### **5. Check Nest CLI Version**
+
+```
+nest --version
+```
+
+Shows installed Nest CLI version.
+
+---
+
+### **6. Add a Package (via Nest Collection)**
+
+```
+nest add @nestjs/swagger
+```
+
+Installs and configures integration packages (Swagger, Prisma, etc).
+
+---
+
+### **7. Update Nest Dependencies**
+
+```
+nest update
+```
+
+Updates Nest packages to latest versions.
+
+---
+
+### **8. Generate DTO**
+
+```
+nest g class users/dto/create-user.dto --no-spec
+```
+
+Creates a simple class (used for DTOs).
+
+---
+
+### **9. Generate Middleware/Interceptor/Guard**
+
+#### **Guard**
+
+```
+nest g guard auth
+```
+
+#### **Interceptor**
+
+```
+nest g interceptor logging
+```
+
+#### **Middleware**
+
+```
+nest g middleware auth
+```
+
+---
+
+## ⭐ Perfect Short Summary
+
+| Command                               | Purpose              |
+| ------------------------------------- | -------------------- |
+| `nest new`                            | Create project       |
+| `nest g module`                       | Generate module      |
+| `nest g controller`                   | Generate controller  |
+| `nest g service`                      | Generate service     |
+| `nest g resource`                     | Full CRUD scaffold   |
+| `nest start`                          | Run app              |
+| `nest build`                          | Compile app          |
+| `nest add`                            | Add integrations     |
+| `nest update`                         | Update Nest packages |
+| `nest g guard/middleware/interceptor` | Generate utilities   |
+
+---

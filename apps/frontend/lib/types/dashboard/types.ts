@@ -29,10 +29,13 @@ export interface Activity {
 }
 
 export interface UploadItemData {
+  originalPrice: any;
   title: string;
   description: string;
   price: number;
+  orignalPrice?: number;
   category: string;
+  subCategory?: string;
   condition: 'excellent' | 'good' | 'fair';
   exchangeType: 'sale' | 'exchange' | 'donation';
   images: File[];

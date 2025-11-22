@@ -37,7 +37,7 @@ export class JWTStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   validate(payload: AuthJwtPayload) {
-    
+    console.log('jwt strategy running...')
     return this.authservice.validateJWTUser(payload.sub, payload.tokenVersion);
   }
 }

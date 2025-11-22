@@ -1,61 +1,187 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useForm } from "react-hook-form";
 import { X, Upload, Camera } from "lucide-react";
 import { UploadItemData } from "@/lib/types/dashboard/types";
+import imageCompression from "browser-image-compression";
 
 interface UploadItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (data: UploadItemData) => void;
+  onUpload: (data: UploadItemData) => Promise<void>;
+}
+
+interface FormData {
+  title: string;
+  description: string;
+  price: number;
+  originalPrice: number;
+  category: string;
+  subCategory: string;
+  condition: string;
+  exchangeType: string;
+  images: File[];
 }
 
 export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadItemModalProps) {
-  const [formData, setFormData] = useState<UploadItemData>({
-    title: "",
-    description: "",
-    price: 0,
-    category: "books",
-    condition: "good",
-    exchangeType: "sale",
-    images: []
-  });
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, file]
-      }));
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setSelectedImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onUpload(formData);
-    onClose();
-    // Reset form
-    setFormData({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+    reset,
+    trigger
+  } = useForm<FormData>({
+    defaultValues: {
       title: "",
       description: "",
       price: 0,
+      originalPrice: 0,
       category: "books",
+      subCategory: "",
       condition: "good",
       exchangeType: "sale",
       images: []
-    });
-    setSelectedImage(null);
+    }
+  });
+
+  const watchedImages = watch("images");
+
+  // Image compression options
+  const compressionOptions = {
+    maxSizeMB: 1, // Compress to max 1MB
+    maxWidthOrHeight: 1024, // Resize to max 1024px width/height
+    useWebWorker: true,
+    fileType: "image/jpeg" as const,
+  };
+
+  const validateFile = (file: File): string | null => {
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      return 'Please upload only image files';
+    }
+
+    // Check file size (4MB)
+    if (file.size > 4 * 1024 * 1024) {
+      return 'File size must be less than 4MB';
+    }
+
+    return null;
+  };
+
+  const compressImage = async (file: File): Promise<File> => {
+    try {
+      const compressedFile = await imageCompression(file, compressionOptions);
+      return new File([compressedFile], file.name, {
+        type: 'image/jpeg',
+        lastModified: Date.now(),
+      });
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      throw new Error('Failed to compress image');
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setServerError(null);
+
+    // Check total files count
+    const currentFiles = watchedImages || [];
+    if (currentFiles.length + files.length > 3) {
+      setServerError('You can only upload up to 3 images');
+      return;
+    }
+
+    const newFiles: File[] = [];
+    const newPreviews: string[] = [];
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        // Validate file
+        const validationError = validateFile(file);
+        if (validationError) {
+          setServerError(validationError);
+          continue;
+        }
+
+        // Compress image
+        const compressedFile = await compressImage(file);
+        newFiles.push(compressedFile);
+
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          newPreviews.push(result);
+          setSelectedImages(prev => [...prev, result]);
+        };
+        reader.readAsDataURL(compressedFile);
+      }
+
+      if (newFiles.length > 0) {
+        const updatedFiles = [...currentFiles, ...newFiles];
+        setValue("images", updatedFiles);
+        await trigger("images");
+      }
+
+    } catch (error) {
+      console.error('Error processing images:', error);
+      setServerError('Failed to process images. Please try again.');
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const updatedFiles = watchedImages.filter((_, i) => i !== index);
+    const updatedPreviews = selectedImages.filter((_, i) => i !== index);
+    
+    setValue("images", updatedFiles);
+    setSelectedImages(updatedPreviews);
+  };
+
+  const onSubmit = async (data: FormData) => {
+    if (!data.images || data.images.length === 0) {
+      setServerError('Please upload at least one image');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setServerError(null);
+
+    try {
+      await onUpload(data as UploadItemData);
+      onClose();
+      reset();
+      setSelectedImages([]);
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      setServerError(error.message || 'Failed to upload item. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    reset();
+    setSelectedImages([]);
+    setServerError(null);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -67,35 +193,58 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">Sell an Item</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+            disabled={isSubmitting}
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Server Error */}
+        {serverError && (
+          <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm">{serverError}</p>
+          </div>
+        )}
+
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
           {/* Image Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Item Photos
+              Item Photos * (Max 3 images, 4MB each)
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-eco-500 transition-colors">
-              {selectedImage ? (
+              {selectedImages.length > 0 ? (
                 <div className="space-y-4">
-                  <img
-                    src={selectedImage}
-                    alt="Preview"
-                    className="w-32 h-32 object-cover rounded-lg mx-auto"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('image-upload')?.click()}
-                    className="text-green-600 hover:text-green-700 font-medium text-sm"
-                  >
-                    Change Photo
-                  </button>
+                  <div className="grid grid-cols-3 gap-4">
+                    {selectedImages.map((preview, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {selectedImages.length < 3 && (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-green-600 hover:text-green-700 font-medium text-sm"
+                    >
+                      Add More Photos ({selectedImages.length}/3)
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -105,12 +254,12 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
                       Drag and drop or click to upload
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      PNG, JPG, GIF up to 10MB
+                      PNG, JPG, GIF up to 4MB each
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => document.getElementById('image-upload')?.click()}
+                    onClick={() => fileInputRef.current?.click()}
                     className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
                   >
                     <Upload className="w-4 h-4 inline mr-2" />
@@ -119,12 +268,18 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
                 </div>
               )}
               <input
+                ref={fileInputRef}
                 id="image-upload"
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleImageUpload}
                 className="hidden"
+                disabled={isSubmitting}
               />
+              {errors.images && (
+                <p className="text-red-500 text-xs mt-2">{errors.images.message}</p>
+              )}
             </div>
           </div>
 
@@ -136,12 +291,24 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
             <input
               type="text"
               id="title"
-              required
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              disabled={isSubmitting}
+              {...register("title", {
+                required: "Title is required",
+                minLength: {
+                  value: 3,
+                  message: "Title must be at least 3 characters"
+                },
+                maxLength: {
+                  value: 100,
+                  message: "Title must be less than 100 characters"
+                }
+              })}
               placeholder="e.g., Calculus Textbook 2nd Edition"
-              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
             />
+            {errors.title && (
+              <p className="text-red-500 text-xs mt-2">{errors.title.message}</p>
+            )}
           </div>
 
           {/* Description */}
@@ -151,13 +318,25 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
             </label>
             <textarea
               id="description"
-              required
               rows={4}
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              disabled={isSubmitting}
+              {...register("description", {
+                required: "Description is required",
+                minLength: {
+                  value: 10,
+                  message: "Description must be at least 10 characters"
+                },
+                maxLength: {
+                  value: 1000,
+                  message: "Description must be less than 1000 characters"
+                }
+              })}
               placeholder="Describe your item's condition, features, and any important details..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
             />
+            {errors.description && (
+              <p className="text-red-500 text-xs mt-2">{errors.description.message}</p>
+            )}
           </div>
 
           {/* Price and Category */}
@@ -169,13 +348,26 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
               <input
                 type="number"
                 id="price"
-                required
                 min="0"
-                value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
+                step="0.01"
+                disabled={isSubmitting}
+                {...register("price", {
+                  required: "Price is required",
+                  min: {
+                    value: 0,
+                    message: "Price must be positive"
+                  },
+                  max: {
+                    value: 1000000,
+                    message: "Price must be reasonable"
+                  }
+                })}
                 placeholder="0"
-                className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
               />
+              {errors.price && (
+                <p className="text-red-500 text-xs mt-2">{errors.price.message}</p>
+              )}
             </div>
 
             <div>
@@ -184,10 +376,11 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
               </label>
               <select
                 id="category"
-                required
-                value={formData.category}
-                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent"
+                disabled={isSubmitting}
+                {...register("category", {
+                  required: "Category is required"
+                })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
               >
                 <option value="books">Books</option>
                 <option value="uniform">Uniforms</option>
@@ -196,6 +389,9 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
                 <option value="bag">Bags</option>
                 <option value="other">Other</option>
               </select>
+              {errors.category && (
+                <p className="text-red-500 text-xs mt-2">{errors.category.message}</p>
+              )}
             </div>
           </div>
 
@@ -214,11 +410,12 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
                   <label key={condition.value} className="flex items-center space-x-3">
                     <input
                       type="radio"
-                      name="condition"
                       value={condition.value}
-                      checked={formData.condition === condition.value}
-                      onChange={(e) => setFormData(prev => ({ ...prev, condition: e.target.value as any }))}
-                      className="text-green-600 focus:ring-eco-500"
+                      disabled={isSubmitting}
+                      {...register("condition", {
+                        required: "Condition is required"
+                      })}
+                      className="text-green-600 focus:ring-eco-500 disabled:cursor-not-allowed"
                     />
                     <div>
                       <span className="text-sm font-medium text-gray-900">{condition.label}</span>
@@ -227,6 +424,9 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
                   </label>
                 ))}
               </div>
+              {errors.condition && (
+                <p className="text-red-500 text-xs mt-2">{errors.condition.message}</p>
+              )}
             </div>
 
             <div>
@@ -242,11 +442,12 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
                   <label key={type.value} className="flex items-center space-x-3">
                     <input
                       type="radio"
-                      name="exchangeType"
                       value={type.value}
-                      checked={formData.exchangeType === type.value}
-                      onChange={(e) => setFormData(prev => ({ ...prev, exchangeType: e.target.value as any }))}
-                      className="text-green-600 focus:ring-eco-500"
+                      disabled={isSubmitting}
+                      {...register("exchangeType", {
+                        required: "Exchange type is required"
+                      })}
+                      className="text-green-600 focus:ring-eco-500 disabled:cursor-not-allowed"
                     />
                     <div>
                       <span className="text-sm font-medium text-gray-900">{type.label}</span>
@@ -255,6 +456,9 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
                   </label>
                 ))}
               </div>
+              {errors.exchangeType && (
+                <p className="text-red-500 text-xs mt-2">{errors.exchangeType.message}</p>
+              )}
             </div>
           </div>
 
@@ -262,16 +466,25 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
           <div className="flex space-x-4 pt-4">
             <button
               type="button"
-              onClick={onClose}
-              className="flex-1 border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-2xl font-semibold hover:bg-gray-50 transition-colors"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="flex-1 border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-2xl font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 bg-green-500 text-white py-3 px-6 rounded-2xl font-semibold hover:bg-green-600 transition-colors shadow-lg"
+              disabled={isSubmitting}
+              className="flex-1 bg-green-500 text-white py-3 px-6 rounded-2xl font-semibold hover:bg-green-600 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              List Item
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Uploading...
+                </>
+              ) : (
+                'List Item'
+              )}
             </button>
           </div>
         </form>

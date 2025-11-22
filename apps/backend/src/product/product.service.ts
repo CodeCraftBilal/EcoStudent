@@ -28,7 +28,7 @@ export class ProductService {
           categoryId: categoryId.categoryId
         }
       })
-      return product;
+      return {success: true, error: false, message: 'Product uploaded Successfuly', productId: product.productId};
     } catch (err) {
       console.log('product upload error: ', err)
       return {success: false, message: 'something went wrong!'}

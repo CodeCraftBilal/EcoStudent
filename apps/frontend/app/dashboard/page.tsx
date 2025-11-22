@@ -3,7 +3,8 @@
 import { DashboardLayout } from "@/components/dashboard";
 import { useSession } from "@/context/useSession";
 import { DashboardStats, Listing, Activity } from "@/lib/types/dashboard/types";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 // Mock data
 const mockStats: DashboardStats = {
@@ -112,17 +113,17 @@ export default function DashboardPage() {
   const email = params.get('email')
   const profile = params.get('profilePicture')
   console.log(userId, userName, role, email, profile)
-  // const {session, setSession} = useSession();
-  // if(userId && userName && role && email) {
-  //   setSession({
-  //     userId,
-  //     userName,
-  //     email,
-  //     role,
-  //     profile,
-  //   })
-  // }
-  // console.log(session)
+  const router = useRouter();
+  const {session, isLoading} = useSession();
+  useEffect(() => {
+    console.log('use effect in dashboard is running: ', session)
+    if(!session?.email)
+      router.push('/auth/signin')
+    return () => {
+      
+    }
+  },[isLoading, session?.email])
+  
   return (
     <DashboardLayout
       userName="Ali Student"

@@ -3,6 +3,7 @@ import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import React, { useContext, useEffect, useState } from "react";
 import { createContext } from "react";
+import { set } from "react-hook-form";
 
 type Session = {
   userId: string;
@@ -27,7 +28,13 @@ const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const session = await authFetch(`${BACKEND_URL}/auth/session`);
+        const res = await authFetch(`${BACKEND_URL}/auth/session`);
+        if(!res.ok) {
+          setSession(null)
+          return;
+        }
+        const session = await res.json();
+        console.log('useContext Session', session)
         setSession(session);
       } catch (error) {
         console.log('Error in Fetching the Session ', error);

@@ -83,6 +83,7 @@ export default function LoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
@@ -154,7 +155,7 @@ export default function LoginPage() {
   useEffect(() => {
     const checkSession = async () => {
       if(session && session.email) {
-        console.log(session);
+        console.log('signin page: ',session);
         router.push('/dashboard')
       }
     }
