@@ -62,13 +62,13 @@ model admin {
 }
 
 model category {
-  categoryid       Int        @id @default(autoincrement())
-  parentcategoryid Int?
-  categoryname     String?    @db.VarChar(255)
+  categoryId       Int        @id @default(autoincrement()) @map("categoryid")
+  parentCategoryId Int?       @map("parentcategoryid")
+  categoryName     String     @unique(map: "uniquename") @map("categoryname") @db.VarChar(255)
   description      String?
-  mediapath        String?    @db.VarChar(255)
-  created_at       DateTime?  @db.Timestamp(6)
-  category         category?  @relation("categoryTocategory", fields: [parentcategoryid], references: [categoryid], onDelete: NoAction, onUpdate: NoAction, map: "fk_category_parent")
+  mediaPath        String?    @map("mediapath") @db.VarChar(255)
+  createdAt        DateTime?  @default(now()) @map("created_at") @db.Timestamp(6)
+  category         category?  @relation("categoryTocategory", fields: [parentCategoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_category_parent")
   other_category   category[] @relation("categoryTocategory")
   product          product[]
 }
@@ -82,14 +82,14 @@ model chat {
   lastmessage_at               DateTime? @db.Timestamp(6)
   created_at                   DateTime? @db.Timestamp(6)
   messages                     Message[]
-  product                      product?  @relation(fields: [productid], references: [productid], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_product")
+  product                      product?  @relation(fields: [productid], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_product")
   users_chat_receiveridTousers Users?    @relation("chat_receiveridTousers", fields: [receiverid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_receiver")
   users_chat_senderidTousers   Users?    @relation("chat_senderidTousers", fields: [senderid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_sender")
 }
 
 model exchanges {
   exchangeid      Int              @id @default(autoincrement())
-  productid       Int?
+  productId       Int?  @map("productid")
   buyerid         Int?
   exchangetype    exchange_type?
   status          exchange_status?
@@ -101,7 +101,7 @@ model exchanges {
   completed_at    DateTime?        @db.Timestamp(6)
   created_at      DateTime?        @db.Timestamp(6)
   users           Users?           @relation(fields: [buyerid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_buyer")
-  product         product?         @relation(fields: [productid], references: [productid], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_product")
+  product         product?         @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_product")
   reviews         reviews[]
 }
 
@@ -119,25 +119,25 @@ model notifications {
 }
 
 model product {
-  productid       Int              @id @default(autoincrement())
-  userid          Int?
-  categoryid      Int?
-  title           String           @db.VarChar(255)
-  description     String?
-  prductcondition String?          @db.VarChar(50)
-  price           Decimal?         @db.Decimal(10, 2)
-  status          status?
-  producttype     product_type?
-  views           Int?
-  images          Json?            @db.Json
-  viewcount       Int?
-  created_at      DateTime?        @db.Timestamp(6)
-  updated_at      DateTime?        @db.Timestamp(6)
-  chat            chat[]
-  exchanges       exchanges[]
-  category        category?        @relation(fields: [categoryid], references: [categoryid], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
-  users           Users?           @relation(fields: [userid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
-  user_favorites  user_favorites[]
+  productId        Int               @id @default(autoincrement()) @map("productid")
+  userId           Int?              @map("userid")
+  categoryId       Int?              @map("categoryid")
+  title            String            @db.VarChar(255)
+  description      String?
+  price            Decimal?          @db.Decimal(10, 2)
+  views            Int?
+  images           Json?             @db.Json
+  viewCount        Int?              @map("viewcount")
+  createdAt        DateTime?         @map("created_at") @db.Timestamp(6)
+  updatedAt        DateTime?         @map("updated_at") @db.Timestamp(6)
+  originalPrice    Int?              @map("originalprice")
+  productCondition product_condition @map("productcondition")
+  productType      product_type      @map("producttype")
+  chat             chat[]
+  exchanges        exchanges[]
+  category         category?         @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
+  users            Users?            @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
+  userFavorites    user_favorites[]
 }
 
 model reviews {
@@ -166,9 +166,9 @@ model search_history {
 model user_favorites {
   favoriteid Int       @id
   userid     Int?
-  productid  Int?
+  productId  Int? @map("productid")
   created_at DateTime? @db.Timestamp(6)
-  product    product?  @relation(fields: [productid], references: [productid], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_product")
+  product    product?  @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_product")
   users      Users?    @relation(fields: [userid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_users")
 }
 
@@ -203,14 +203,23 @@ enum message_type {
 }
 
 enum product_type {
-  available
-  reserved
-  sold
-  exchanged
+  books
+  bags
+  uniforms
+  calculators
+  geomatry
+  other
+}
+
+enum product_condition {
+  excellent
+  good
+  fair
 }
 
 enum status {
-  exchange
-  sale
-  donation
+  active
+  sold
+  reserved
+  draft
 }
