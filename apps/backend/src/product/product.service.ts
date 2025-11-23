@@ -5,6 +5,27 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ProductService {
+  async findFavorits(id: number, query: any) {
+    try{
+
+      return await this.prisma.product.findMany({
+        include: {
+        userFavorites: {
+          select: {
+            product: {
+              where: {
+                userFavorites: {some:query}
+              }
+            }
+          }
+        }
+      }
+    });
+  } catch(err) {
+    console.log(err)
+    return [];
+  }
+  }
 
   constructor(private readonly prisma: PrismaService) {}
   async create(createProductDto: CreateProductDto) {

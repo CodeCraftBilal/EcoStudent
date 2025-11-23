@@ -164,12 +164,12 @@ model search_history {
 }
 
 model user_favorites {
-  favoriteid Int       @id
-  userid     Int?
+  favoriteId Int       @id  @map("favoriteid")
+  userId     Int? @map("userid")
   productId  Int? @map("productid")
-  created_at DateTime? @db.Timestamp(6)
+  createdAt DateTime?  @map("created_at") @db.Timestamp(6)
   product    product?  @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_product")
-  users      Users?    @relation(fields: [userid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_users")
+  users      Users?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_users")
 }
 
 enum role {

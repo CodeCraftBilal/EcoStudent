@@ -8,6 +8,10 @@ import {
   EmptyFavorites 
 } from "@/components/dashboard/favourites/index";
 import { FavoriteItem, FavoriteStats as FavoriteStatsType } from "@/lib/types/dashboard/favourites/favourites";
+import { authFetch } from "@/lib/authFetch";
+import { BACKEND_URL } from "@/lib/types/constants";
+import { useSession } from "@/context/useSession";
+import { useRouter } from "next/navigation";
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
@@ -17,9 +21,49 @@ export default function FavoritesPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recently-added");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+  const {isLoading, session, setSession} = useSession();
+  const router = useRouter();
 
+  // check the session
+  useEffect(() => {
+    const fetchClientSession = async () => {
+      if(!session) {
+        const res = await authFetch(`${BACKEND_URL}/auth/session`, {
+          method: 'GET',
+          headers: {
+            'Content-Type':'application/json'
+          }
+        });
+        if(!res.ok) {
+          console.log(`Session Failed to fetch: `, res.statusText, res.status)
+        }
+        const result = await res.json();
+        if(result.error) {
+          router.push('/auth/signin');
+        }
+        setSession(result);
+      }
+    }
+
+    fetchClientSession();
+  }, [])
+  
   // Mock data - replace with actual API call
   useEffect(() => {
+    const fetchFavorits = async () => {
+          const res = await authFetch(`${BACKEND_URL}/product/favorits`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          if(!res.ok) {
+            console.log(`${res.statusText} ${res.status}`)
+          }
+          const result = res.json();
+          console.log(result);
+        }
+        fetchFavorits();
     const mockFavorites: FavoriteItem[] = [
       {
         id: "1",

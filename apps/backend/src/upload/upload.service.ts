@@ -32,7 +32,7 @@ export class UploadService {
 
     await fs.writeFile(filepath, file.buffer);
 
-    return `/uploads/${subfolder}/${filename}`;
+    return `http://localhost:8000/uploads/${subfolder}/${filename}`;
   }
 
   //-- UPLOAD TO GOOGLE CLOUD STORAGE ------------------------------------------

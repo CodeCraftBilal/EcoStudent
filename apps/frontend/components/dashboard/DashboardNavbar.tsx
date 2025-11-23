@@ -266,7 +266,7 @@ export default function DashboardNavbar() {
             <UploadItemModal
               isOpen={isUploadModalOpen}
               onClose={() => setIsUploadModalOpen(false)}
-              onUpload={handleUploadItem}
+              setIsUploadModalOpen={setIsUploadModalOpen}
             />
 
             {/* Notifications */}

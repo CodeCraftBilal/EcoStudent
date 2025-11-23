@@ -8,6 +8,8 @@ import SearchAndFilters from "@/components/dashboard/listings/SearchAndFilters";
 import ListingCard from "@/components/dashboard/listings/ListingCard";
 import EmptyState from "@/components/dashboard/listings/EmptyState";
 import DeleteModal from "@/components/dashboard/listings/DeleteModal";
+import { BACKEND_URL } from "@/lib/types/constants";
+import { authFetch } from "@/lib/authFetch";
 
 export default function MyListingsPage() {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -28,6 +30,7 @@ export default function MyListingsPage() {
 
   // Mock data - replace with actual API call
   useEffect(() => {
+
     const mockListings: Listing[] = [
       {
         id: "1",

@@ -5,11 +5,14 @@ import { useForm } from "react-hook-form";
 import { X, Upload, Camera } from "lucide-react";
 import { UploadItemData } from "@/lib/types/dashboard/types";
 import imageCompression from "browser-image-compression";
+import { authFetch } from "@/lib/authFetch";
+import { BACKEND_URL } from "@/lib/types/constants";
 
 interface UploadItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (data: UploadItemData) => Promise<void>;
+  setIsUploadModalOpen: (uploadItem: boolean) => void
+  // onUpload: (data: UploadItemData) => Promise<void>;
 }
 
 interface FormData {
@@ -27,12 +30,75 @@ interface FormData {
 export default function UploadItemModal({
   isOpen,
   onClose,
-  onUpload,
+  setIsUploadModalOpen,
 }: UploadItemModalProps) {
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [isLoading, setIsLoading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const handleUploadItem = async (data: UploadItemData): Promise<void> => {
+    setIsLoading(true);
+    setUploadError(null);
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      
+      // Append basic fields
+      formData.append('title', data.title);
+      formData.append('description', data.description || '');
+      formData.append('price', data.price.toString());
+      formData.append('originalPrice', data.originalPrice?.toString() || '0');
+      formData.append('productType', data.category);
+      formData.append('subCategory', data.subCategory || '');
+      formData.append('productCondition', data.condition);
+      formData.append('exchangeType', data.exchangeType);
+
+      // Append images
+      data.images.forEach((image, index) => {
+        formData.append('images', image);
+      });
+
+      // API call to upload item
+      const response = await authFetch(`${BACKEND_URL}/product`, {
+        method: 'POST',
+        body: formData,
+        // headers are automatically set by browser for FormData
+      });
+
+      if (!response.ok) {
+        console.log(response.status, response.statusText)
+        const errorData = await response.json();
+        throw new Error(`${JSON.stringify(errorData.message)}` || `Upload failed with status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      console.log("Item uploaded successfully:", result);
+      
+      // Show success message
+      alert("Item listed successfully!");
+      
+      // Close modal
+      setIsUploadModalOpen(false);
+      
+      // You might want to refresh the listings here
+      // refreshListings();
+
+    } catch (error: any) {
+      console.error("Error uploading item:", error);
+      setUploadError(error.message || "Failed to upload item. Please try again.");
+      
+      // Re-throw the error so the modal can handle it too
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const {
     register,
@@ -187,7 +253,7 @@ export default function UploadItemModal({
 
     try {
       console.log("data: ", data);
-      await onUpload(data as UploadItemData);
+      await handleUploadItem(data as UploadItemData);
       onClose();
       reset();
       setSelectedImages([]);

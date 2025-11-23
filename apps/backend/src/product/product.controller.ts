@@ -64,6 +64,11 @@ export class ProductController {
     return this.productService.create({...createProductDto, userId: req.user.id , images: imageUrls, });
   }
 
+  @Get('/favorits')
+  getFavorits(@Query() query: any, @Req() req ) {
+    return this.productService.findFavorits(req.user.id, query);
+  }
+
   @Public()
   @Get()
   findAll(@Query() query: any) {
