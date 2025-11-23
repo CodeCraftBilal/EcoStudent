@@ -2,6 +2,8 @@
 
 import { DashboardLayout } from "@/components/dashboard";
 import { useSession } from "@/context/useSession";
+import { authFetch } from "@/lib/authFetch";
+import { BACKEND_URL } from "@/lib/types/constants";
 import { DashboardStats, Listing, Activity } from "@/lib/types/dashboard/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -112,17 +114,30 @@ export default function DashboardPage() {
   const role = params.get('role')
   const email = params.get('email')
   const profile = params.get('profilePicture')
+
+
   console.log(userId, userName, role, email, profile)
+  
   const router = useRouter();
-  const {session, isLoading} = useSession();
+  const {session,setSession ,isLoading} = useSession();
   useEffect(() => {
-    console.log('use effect in dashboard is running: ', session)
-    if(!session?.email)
-      router.push('/auth/signin')
-    return () => {
-      
+    const getSession = async () => {
+      const res = await authFetch(`${BACKEND_URL}/auth/session`, {
+        method: 'Get',
+        headers: {
+          'Content-Type':'application/json'
+        }
+      })
+      const session = await res.json();
+      if(!session && !session.email) {
+        setSession(null);
+        router.push('/auth/signin');
+      }
     }
-  },[isLoading, session?.email])
+    console.log('use effect in dashboard is running: ', session)
+
+    getSession();
+  },[])
   
   return (
     <DashboardLayout

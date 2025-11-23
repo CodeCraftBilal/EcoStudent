@@ -189,8 +189,14 @@ export default function DashboardNavbar() {
     const res = await authFetch(`${BACKEND_URL}/auth/signout`, {
       method: 'Get'
     });
-    console.log(res);
-    console.log('logout succfull', res)
+
+    if(!res.ok) {
+      console.log(`server res: ${res.status} ${res.statusText}`)
+      return;
+    }
+    const result = await res.json()
+    console.log(result);
+    console.log('logout succfull', result)
     redirect('/auth/signin');
   }
 

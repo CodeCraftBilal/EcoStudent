@@ -3,7 +3,6 @@ import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import React, { useContext, useEffect, useState } from "react";
 import { createContext } from "react";
-import { set } from "react-hook-form";
 
 type Session = {
   userId: string;
@@ -31,6 +30,7 @@ const SessionProvider = ({ children }: { children: React.ReactNode }) => {
         const res = await authFetch(`${BACKEND_URL}/auth/session`);
         if(!res.ok) {
           setSession(null)
+          console.log(`session not found: ${res.statusText} ${res.status}`)
           return;
         }
         const session = await res.json();
