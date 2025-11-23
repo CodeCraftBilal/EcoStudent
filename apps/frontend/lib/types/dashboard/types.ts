@@ -33,7 +33,7 @@ export interface UploadItemData {
   title: string;
   description: string;
   price: number;
-  orignalPrice?: number;
+  orignalPrice: number;
   category: string;
   subCategory?: string;
   condition: 'excellent' | 'good' | 'fair';

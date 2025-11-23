@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { X, Upload, Camera } from "lucide-react";
 import { UploadItemData } from "@/lib/types/dashboard/types";
@@ -24,7 +24,11 @@ interface FormData {
   images: File[];
 }
 
-export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadItemModalProps) {
+export default function UploadItemModal({
+  isOpen,
+  onClose,
+  onUpload,
+}: UploadItemModalProps) {
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -37,7 +41,8 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
     setValue,
     watch,
     reset,
-    trigger
+    trigger,
+    setError,
   } = useForm<FormData>({
     defaultValues: {
       title: "",
@@ -48,11 +53,12 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
       subCategory: "",
       condition: "good",
       exchangeType: "sale",
-      images: []
-    }
+      images: [],
+    },
   });
 
   const watchedImages = watch("images");
+  const watchCategory = watch("category");
 
   // Image compression options
   const compressionOptions = {
@@ -64,13 +70,13 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
 
   const validateFile = (file: File): string | null => {
     // Check file type
-    if (!file.type.startsWith('image/')) {
-      return 'Please upload only image files';
+    if (!file.type.startsWith("image/")) {
+      return "Please upload only image files";
     }
 
     // Check file size (4MB)
     if (file.size > 4 * 1024 * 1024) {
-      return 'File size must be less than 4MB';
+      return "File size must be less than 4MB";
     }
 
     return null;
@@ -80,12 +86,12 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
     try {
       const compressedFile = await imageCompression(file, compressionOptions);
       return new File([compressedFile], file.name, {
-        type: 'image/jpeg',
+        type: "image/jpeg",
         lastModified: Date.now(),
       });
     } catch (error) {
-      console.error('Error compressing image:', error);
-      throw new Error('Failed to compress image');
+      console.error("Error compressing image:", error);
+      throw new Error("Failed to compress image");
     }
   };
 
@@ -98,7 +104,7 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
     // Check total files count
     const currentFiles = watchedImages || [];
     if (currentFiles.length + files.length > 3) {
-      setServerError('You can only upload up to 3 images');
+      setServerError("You can only upload up to 3 images");
       return;
     }
 
@@ -125,7 +131,7 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
         reader.onload = (e) => {
           const result = e.target?.result as string;
           newPreviews.push(result);
-          setSelectedImages(prev => [...prev, result]);
+          setSelectedImages((prev) => [...prev, result]);
         };
         reader.readAsDataURL(compressedFile);
       }
@@ -135,43 +141,61 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
         setValue("images", updatedFiles);
         await trigger("images");
       }
-
     } catch (error) {
-      console.error('Error processing images:', error);
-      setServerError('Failed to process images. Please try again.');
+      console.error("Error processing images:", error);
+      setServerError("Failed to process images. Please try again.");
     }
 
     // Reset file input
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   const removeImage = (index: number) => {
     const updatedFiles = watchedImages.filter((_, i) => i !== index);
     const updatedPreviews = selectedImages.filter((_, i) => i !== index);
-    
+
     setValue("images", updatedFiles);
     setSelectedImages(updatedPreviews);
   };
 
   const onSubmit = async (data: FormData) => {
     if (!data.images || data.images.length === 0) {
-      setServerError('Please upload at least one image');
+      setServerError("Please upload at least one image");
       return;
     }
 
     setIsSubmitting(true);
     setServerError(null);
 
+    if(data.category === 'other') {
+      console.log('category: ', data.category)
+      if(data.subCategory.length < 3) {
+        setError('subCategory', {message: 'Min leght is 3'})
+      }
+
+      if(data.subCategory.length > 30) {
+        setError('subCategory', {message: 'Max length is 30'})
+      }
+    }
+
+    console.log(data.price, data.originalPrice)
+    if(data.price > data.originalPrice) {
+      setError('price', {message: 'sale price should be less than orignal price'})
+    }
+
     try {
+      console.log("data: ", data);
       await onUpload(data as UploadItemData);
       onClose();
       reset();
       setSelectedImages([]);
     } catch (error: any) {
-      console.error('Upload error:', error);
-      setServerError(error.message || 'Failed to upload item. Please try again.');
+      console.error("Upload error:", error);
+      setServerError(
+        error.message || "Failed to upload item. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -278,14 +302,19 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
                 disabled={isSubmitting}
               />
               {errors.images && (
-                <p className="text-red-500 text-xs mt-2">{errors.images.message}</p>
+                <p className="text-red-500 text-xs mt-2">
+                  {errors.images.message}
+                </p>
               )}
             </div>
           </div>
 
           {/* Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Item Title *
             </label>
             <input
@@ -296,89 +325,138 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
                 required: "Title is required",
                 minLength: {
                   value: 3,
-                  message: "Title must be at least 3 characters"
+                  message: "Title must be at least 3 characters",
                 },
                 maxLength: {
                   value: 100,
-                  message: "Title must be less than 100 characters"
-                }
+                  message: "Title must be less than 100 characters",
+                },
               })}
               placeholder="e.g., Calculus Textbook 2nd Edition"
               className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
             />
             {errors.title && (
-              <p className="text-red-500 text-xs mt-2">{errors.title.message}</p>
+              <p className="text-red-500 text-xs mt-2">
+                {errors.title.message}
+              </p>
             )}
           </div>
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-              Description *
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Description
             </label>
             <textarea
               id="description"
               rows={4}
               disabled={isSubmitting}
               {...register("description", {
-                required: "Description is required",
+                required: false,
                 minLength: {
                   value: 10,
-                  message: "Description must be at least 10 characters"
+                  message: "Description must be at least 10 characters",
                 },
                 maxLength: {
                   value: 1000,
-                  message: "Description must be less than 1000 characters"
-                }
+                  message: "Description must be less than 1000 characters",
+                },
               })}
               placeholder="Describe your item's condition, features, and any important details..."
               className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
             />
             {errors.description && (
-              <p className="text-red-500 text-xs mt-2">{errors.description.message}</p>
+              <p className="text-red-500 text-xs mt-2">
+                {errors.description.message}
+              </p>
             )}
           </div>
 
           {/* Price and Category */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="price"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Price (Rs) *
               </label>
               <input
                 type="number"
                 id="price"
                 min="0"
-                step="0.01"
+                step="1"
                 disabled={isSubmitting}
                 {...register("price", {
                   required: "Price is required",
                   min: {
                     value: 0,
-                    message: "Price must be positive"
+                    message: "Price must be positive",
                   },
                   max: {
                     value: 1000000,
-                    message: "Price must be reasonable"
-                  }
+                    message: "Price must be reasonable",
+                  },
                 })}
                 placeholder="0"
                 className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
               />
               {errors.price && (
-                <p className="text-red-500 text-xs mt-2">{errors.price.message}</p>
+                <p className="text-red-500 text-xs mt-2">
+                  {errors.price.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="price"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Orignal Price (Rs)
+              </label>
+              <input
+                type="number"
+                id="price"
+                min="0"
+                step="1"
+                disabled={isSubmitting}
+                {...register("originalPrice", {
+                  required: false,
+                  min: {
+                    value: 0,
+                    message: "Price must be positive",
+                  },
+                  max: {
+                    value: 1000000,
+                    message: "Price must be reasonable",
+                  },
+                })}
+                placeholder="0"
+                className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
+              />
+              {errors.originalPrice && (
+                <p className="text-red-500 text-xs mt-2">
+                  {errors.originalPrice?.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="category"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Category *
               </label>
               <select
                 id="category"
                 disabled={isSubmitting}
                 {...register("category", {
-                  required: "Category is required"
+                  required: "Category is required",
                 })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
               >
@@ -390,9 +468,45 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
                 <option value="other">Other</option>
               </select>
               {errors.category && (
-                <p className="text-red-500 text-xs mt-2">{errors.category.message}</p>
+                <p className="text-red-500 text-xs mt-2">
+                  {errors.category.message}
+                </p>
               )}
             </div>
+
+            {/* sub category */}
+            {watchCategory === "other" && (
+              <div>
+                <label
+                  htmlFor="subcategory"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Sub Category *
+                </label>
+                <input
+                  type="text"
+                  id="subcategory"
+                  disabled={isSubmitting}
+                  {...register("subCategory", {
+                    required: "Sub Category is required",
+                    min: {
+                      value: 3,
+                      message: "min length is 3",
+                    },
+                    max: {
+                      value: 30,
+                      message: "max value is 30",
+                    },
+                  })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
+                ></input>
+                {errors.subCategory && (
+                  <p className="text-red-500 text-xs mt-2">
+                    {errors.subCategory?.message}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Condition and Exchange Type */}
@@ -403,29 +517,42 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
               </label>
               <div className="space-y-2">
                 {[
-                  { value: 'excellent', label: 'Excellent', description: 'Like new' },
-                  { value: 'good', label: 'Good', description: 'Minor wear' },
-                  { value: 'fair', label: 'Fair', description: 'Visible use' }
+                  {
+                    value: "excellent",
+                    label: "Excellent",
+                    description: "Like new",
+                  },
+                  { value: "good", label: "Good", description: "Minor wear" },
+                  { value: "fair", label: "Fair", description: "Visible use" },
                 ].map((condition) => (
-                  <label key={condition.value} className="flex items-center space-x-3">
+                  <label
+                    key={condition.value}
+                    className="flex items-center space-x-3"
+                  >
                     <input
                       type="radio"
                       value={condition.value}
                       disabled={isSubmitting}
                       {...register("condition", {
-                        required: "Condition is required"
+                        required: "Condition is required",
                       })}
                       className="text-green-600 focus:ring-eco-500 disabled:cursor-not-allowed"
                     />
                     <div>
-                      <span className="text-sm font-medium text-gray-900">{condition.label}</span>
-                      <p className="text-xs text-gray-500">{condition.description}</p>
+                      <span className="text-sm font-medium text-gray-900">
+                        {condition.label}
+                      </span>
+                      <p className="text-xs text-gray-500">
+                        {condition.description}
+                      </p>
                     </div>
                   </label>
                 ))}
               </div>
               {errors.condition && (
-                <p className="text-red-500 text-xs mt-2">{errors.condition.message}</p>
+                <p className="text-red-500 text-xs mt-2">
+                  {errors.condition.message}
+                </p>
               )}
             </div>
 
@@ -435,29 +562,50 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
               </label>
               <div className="space-y-2">
                 {[
-                  { value: 'sale', label: 'For Sale', description: 'Sell for money' },
-                  { value: 'exchange', label: 'For Exchange', description: 'Trade for other items' },
-                  { value: 'donation', label: 'Free Donation', description: 'Give away for free' }
+                  {
+                    value: "sale",
+                    label: "For Sale",
+                    description: "Sell for money",
+                  },
+                  {
+                    value: "exchange",
+                    label: "For Exchange",
+                    description: "Trade for other items",
+                  },
+                  {
+                    value: "donation",
+                    label: "Free Donation",
+                    description: "Give away for free",
+                  },
                 ].map((type) => (
-                  <label key={type.value} className="flex items-center space-x-3">
+                  <label
+                    key={type.value}
+                    className="flex items-center space-x-3"
+                  >
                     <input
                       type="radio"
                       value={type.value}
                       disabled={isSubmitting}
                       {...register("exchangeType", {
-                        required: "Exchange type is required"
+                        required: "Exchange type is required",
                       })}
                       className="text-green-600 focus:ring-eco-500 disabled:cursor-not-allowed"
                     />
                     <div>
-                      <span className="text-sm font-medium text-gray-900">{type.label}</span>
-                      <p className="text-xs text-gray-500">{type.description}</p>
+                      <span className="text-sm font-medium text-gray-900">
+                        {type.label}
+                      </span>
+                      <p className="text-xs text-gray-500">
+                        {type.description}
+                      </p>
                     </div>
                   </label>
                 ))}
               </div>
               {errors.exchangeType && (
-                <p className="text-red-500 text-xs mt-2">{errors.exchangeType.message}</p>
+                <p className="text-red-500 text-xs mt-2">
+                  {errors.exchangeType.message}
+                </p>
               )}
             </div>
           </div>
@@ -483,7 +631,7 @@ export default function UploadItemModal({ isOpen, onClose, onUpload }: UploadIte
                   Uploading...
                 </>
               ) : (
-                'List Item'
+                "List Item"
               )}
             </button>
           </div>
