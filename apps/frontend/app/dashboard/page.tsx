@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from "@/components/dashboard";
 import { useSession } from "@/context/useSession";
+import { getSession } from "@/lib/auth";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { DashboardStats, Listing, Activity } from "@/lib/types/dashboard/types";
@@ -15,7 +16,7 @@ const mockStats: DashboardStats = {
   totalEarnings: 18500,
   unreadMessages: 3,
   itemsBought: 8,
-  positiveReviews: 15
+  positiveReviews: 15,
 };
 
 const mockListings: Listing[] = [
@@ -27,7 +28,7 @@ const mockListings: Listing[] = [
     status: "active",
     views: 24,
     createdAt: "2024-01-15",
-    category: "books"
+    category: "books",
   },
   {
     id: "2",
@@ -37,7 +38,7 @@ const mockListings: Listing[] = [
     status: "reserved",
     views: 18,
     createdAt: "2024-01-10",
-    category: "uniform"
+    category: "uniform",
   },
   {
     id: "3",
@@ -47,7 +48,7 @@ const mockListings: Listing[] = [
     status: "sold",
     views: 32,
     createdAt: "2024-01-05",
-    category: "calculator"
+    category: "calculator",
   },
   {
     id: "4",
@@ -57,7 +58,7 @@ const mockListings: Listing[] = [
     status: "active",
     views: 8,
     createdAt: "2024-01-18",
-    category: "geometry"
+    category: "geometry",
   },
   {
     id: "5",
@@ -67,8 +68,8 @@ const mockListings: Listing[] = [
     status: "draft",
     views: 0,
     createdAt: "2024-01-20",
-    category: "bag"
-  }
+    category: "bag",
+  },
 ];
 
 const mockActivities: Activity[] = [
@@ -78,7 +79,7 @@ const mockActivities: Activity[] = [
     title: "New Message from Ali",
     description: "Is the Calculus book still available?",
     time: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 minutes ago
-    read: false
+    read: false,
   },
   {
     id: "2",
@@ -86,7 +87,7 @@ const mockActivities: Activity[] = [
     title: "Item Sold",
     description: "Your Scientific Calculator was purchased",
     time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    read: true
+    read: true,
   },
   {
     id: "3",
@@ -94,7 +95,7 @@ const mockActivities: Activity[] = [
     title: "New Review Received",
     description: "Sara gave you 5 stars for the uniform",
     time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    read: true
+    read: true,
   },
   {
     id: "4",
@@ -102,49 +103,45 @@ const mockActivities: Activity[] = [
     title: "Purchase Completed",
     description: "You bought Physics Textbook from Bilal",
     time: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    read: true
-  }
+    read: true,
+  },
 ];
 
 export default function DashboardPage() {
   const params = useSearchParams();
-  // console.log('parms', params)
-  const userId = params.get('userId')
-  const userName = params.get('userName')
-  const role = params.get('role')
-  const email = params.get('email')
-  const profile = params.get('profilePicture')
+  //
+  const userId = params.get("userId");
+  const userName = params.get("userName");
+  const role = params.get("role");
+  const email = params.get("email");
+  const profile = params.get("profilePicture");
 
-
-  console.log(userId, userName, role, email, profile)
-  
   const router = useRouter();
-  const {session,setSession ,isLoading} = useSession();
-  useEffect(() => {
-    const getSession = async () => {
-      const res = await authFetch(`${BACKEND_URL}/auth/session`, {
-        method: 'Get',
-        headers: {
-          'Content-Type':'application/json'
-        }
-      })
-      const session = await res.json();
-      if(!session && !session.email) {
-        setSession(null);
-        router.push('/auth/signin');
-      }
-    }
-    console.log('use effect in dashboard is running: ', session)
+  const { session, isLoading, setSession } = useSession();
 
-    getSession();
-  },[])
+  useEffect(() => {
+    const getClientSession = async () => {
+      const session = await getSession();
+      setSession(session)
+      console.log('use effect in dashbaord', isLoading)
+      if(isLoading) return;
+      else if(!session)
+        router.push('/auth/signin');
+    }
+    getClientSession();
+  }, [isLoading]);
   
-  return (
-    <DashboardLayout
-      userName="Ali Student"
-      stats={mockStats}
-      listings={mockListings}
-      activities={mockActivities}
-    />
-  );
+  return(
+    <div>
+      {isLoading ? <div>Loading ...</div>: (
+        <DashboardLayout
+        userName="Ali Student"
+        stats={mockStats}
+        listings={mockListings}
+        activities={mockActivities}
+        />
+
+      )}
+    </div>
+  )
 }

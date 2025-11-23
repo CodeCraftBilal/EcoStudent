@@ -4,7 +4,7 @@ import { BACKEND_URL } from "@/lib/types/constants";
 import React, { useContext, useEffect, useState } from "react";
 import { createContext } from "react";
 
-type Session = {
+export interface Session {
   userId: string;
   userName: string;
   email: string;
@@ -26,18 +26,19 @@ const SessionProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchSession = async () => {
+      console.log('useeffect in session', isLoading)
       try {
         const res = await authFetch(`${BACKEND_URL}/auth/session`);
         if(!res.ok) {
           setSession(null)
-          console.log(`session not found: ${res.statusText} ${res.status}`)
+          
           return;
         }
         const session = await res.json();
-        console.log('useContext Session', session)
+        
         setSession(session);
       } catch (error) {
-        console.log('Error in Fetching the Session ', error);
+        
         setSession(null);
       } finally {
         setIsLoading(false);
@@ -46,6 +47,10 @@ const SessionProvider = ({ children }: { children: React.ReactNode }) => {
     fetchSession();
   }, []);
 
+  useEffect(() => {
+    console.log('session', session)
+  }, [isLoading])
+  
   const value: SessionContextType = {
     session,
     setSession,

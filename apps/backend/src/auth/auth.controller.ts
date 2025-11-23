@@ -15,16 +15,16 @@ export class AuthController {
   @Public()
   @Post('signup')
   async registerUser(@Req() req, @Res() res, @Body() createUserDto: CreateUserDto ) {
-    console.log('request recieved ', createUserDto)
+    
     const result = await this.authService.registerUser(createUserDto);
     
     if(!result.user) {
-      console.log(result.user)
+      
       return result;
     };
     
     const tokens = await this.authService.login(result.user?.id, result.user?.name, result.user.tokenVersion);
-    console.log('tokens generate: ', tokens)
+    
     const clientType = req.headers['x-client-type'];
     if(clientType === 'mobile') {
       return { tokens}
@@ -46,9 +46,9 @@ export class AuthController {
         path: '/'
       })
     }
-    console.log('result is: ', result)
+    
     const {user, ...finalResult} = result;
-    console.log('final result', finalResult);
+    
     res.json(finalResult);
   }
 
@@ -91,7 +91,7 @@ export class AuthController {
     const clientType = req.headers['x-client-type'];
     const tokens = await this.authService.refreshTokens(req.user.id, req.user.name, req.user.tokenVerion);
 
-    console.log('token version: ', req.user.tokenVerion)
+    
     if(clientType === 'mobile') {
       return { tokens }
     } else {
@@ -164,7 +164,7 @@ export class AuthController {
 
   @Get('signout')
   logout(@Request() req) {
-    console.log('signout request recieved')
+    
     return this.authService.logout(req.user.id, req.user.tokenVersion)
   }
 

@@ -15,8 +15,8 @@ interface UploadItemModalProps {
 interface FormData {
   title: string;
   description: string;
-  price: number;
-  originalPrice: number;
+  price: string;
+  originalPrice: string;
   category: string;
   subCategory: string;
   condition: string;
@@ -47,8 +47,8 @@ export default function UploadItemModal({
     defaultValues: {
       title: "",
       description: "",
-      price: 0,
-      originalPrice: 0,
+      price: '0',
+      originalPrice: '0',
       category: "books",
       subCategory: "",
       condition: "good",
@@ -180,8 +180,8 @@ export default function UploadItemModal({
       }
     }
 
-    console.log(data.price, data.originalPrice)
-    if(data.price > data.originalPrice) {
+    console.log(typeof(data.price), typeof(data.originalPrice))
+    if(parseFloat(data.price) > parseFloat(data.originalPrice)) {
       setError('price', {message: 'sale price should be less than orignal price'})
     }
 

@@ -57,11 +57,10 @@ export default function DashboardLayout({
         body: formData,
         // headers are automatically set by browser for FormData
       });
-      console.log('response is ', response)
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData || `Upload failed with status: ${response.status}`);
+        throw new Error(`Something went wrong: ${errorData}` || `Upload failed with status: ${response.status}`);
       }
 
       const result = await response.json();

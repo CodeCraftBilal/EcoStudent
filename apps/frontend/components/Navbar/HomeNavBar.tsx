@@ -76,7 +76,7 @@ const HomeNavBar = () => {
                 href={"/auth/signin"}
                 className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors font-bold"
               >
-                Login
+                Signin 
               </Link>
             )}
             <Link
@@ -99,10 +99,10 @@ const HomeNavBar = () => {
               </Link>
             ) : (
               <Link
-                href={"/auth/login"}
+                href={"/auth/signin"}
                 className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors text-lg font-bold"
               >
-                Login
+                Signin
               </Link>
             )}
             <button

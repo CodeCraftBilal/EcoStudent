@@ -9,6 +9,7 @@ import Lottie from "lottie-react";
 import LoadingAnim from '@/public/lotieAnim/Loading.json'
 import { useSession } from "@/context/useSession";
 import { BACKEND_URL } from "@/lib/types/constants";
+import { getSession } from "@/lib/auth";
 
 interface LoginResponse {
   id?: number;
@@ -39,6 +40,9 @@ export default function LoginPage() {
   
   const router = useRouter();
   const [isSubmiting, setIsSubmiting] = useState(false);
+
+  // useSession Context hook
+  const {session, setSession ,isLoading} = useSession();
 
   // Form validation
   const validateForm = () => {
@@ -98,6 +102,10 @@ export default function LoginPage() {
           type: 'success',
           text: data.message || 'Login successful!'
         });
+
+        const session = await getSession();
+        setSession(session);
+        // 
         
         // Redirect to dashboard after a brief delay to show success message
         setTimeout(() => {
@@ -151,17 +159,28 @@ export default function LoginPage() {
   }, [formData.email, formData.password]);
 
   // checking session
-  const {session, isLoading} = useSession();
+  
   useEffect(() => {
     const checkSession = async () => {
-      if(session && session.email) {
-        console.log('signin page: ',session);
+      
+      if(!session) {
+        const serverSession = await getSession();
+        
+        if(serverSession) {
+          
+          setSession(serverSession);
+          
+          router.push('/dashboard')
+        }
+      }
+      else {
+        
         router.push('/dashboard')
       }
     }
     
     checkSession();
-  }, [isLoading, session, router]);
+  }, []);
   
 
   return (
