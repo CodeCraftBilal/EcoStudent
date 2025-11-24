@@ -7,7 +7,7 @@ import { useSession } from "@/context/useSession";
 
 const HomeNavBar = () => {
   // checking the session
-  const { session, isLoading } = useSession();
+  const { session, isLoading, refreshSession } = useSession();
 
   const hiddenPaths = ["/auth/login", "/auth/signup", "/dashboard", "/shop"];
 
@@ -23,6 +23,10 @@ const HomeNavBar = () => {
   const [isHidden, setIsHidden] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  useEffect(() => {
+    refreshSession()
+  }, [])
+  
   useEffect(() => {
     const shouldHide = hiddenPaths.some((path) => pathname.startsWith(path));
     setIsHidden(shouldHide);

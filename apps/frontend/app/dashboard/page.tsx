@@ -1,10 +1,8 @@
 "use client";
 
 import { DashboardLayout } from "@/components/dashboard";
+import { DashboardLoader } from "@/components/Loading";
 import { useSession } from "@/context/useSession";
-import { getSession } from "@/lib/auth";
-import { authFetch } from "@/lib/authFetch";
-import { BACKEND_URL } from "@/lib/types/constants";
 import { DashboardStats, Listing, Activity } from "@/lib/types/dashboard/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -117,31 +115,23 @@ export default function DashboardPage() {
   const profile = params.get("profilePicture");
 
   const router = useRouter();
-  const { session, isLoading, setSession } = useSession();
+  const { session, isLoading } = useSession();
 
   useEffect(() => {
-    const getClientSession = async () => {
-      const session = await getSession();
-      setSession(session)
-      console.log('use effect in dashbaord', isLoading)
-      if(isLoading) return;
-      else if(!session)
-        router.push('/auth/signin');
+    console.log('dashboard ', session)
+    if (!session && !isLoading) {
+      router.push("/auth/signin");
     }
-    getClientSession();
-  }, [isLoading]);
-  
-  return(
-    <div>
-      {isLoading ? <div>Loading ...</div>: (
-        <DashboardLayout
-        userName="Ali Student"
-        stats={mockStats}
-        listings={mockListings}
-        activities={mockActivities}
-        />
+  }, [isLoading, session, router]);
 
-      )}
-    </div>
-  )
+  if (isLoading) return <DashboardLoader />
+  if (!session) return null;
+  return (
+    <DashboardLayout
+      userName="Ali Student"
+      stats={mockStats}
+      listings={mockListings}
+      activities={mockActivities}
+    />
+  );
 }

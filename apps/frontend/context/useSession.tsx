@@ -10,7 +10,7 @@ export interface Session {
   email: string;
   role: string;
   profile: string | null;
-};
+}
 
 interface SessionContextType {
   session: Session | null;
@@ -27,15 +27,15 @@ const SessionProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshSession = async () => {
     setIsLoading(true);
+
     try {
       const res = await authFetch(`${BACKEND_URL}/auth/session`);
       if (!res.ok) {
         setSession(null);
         return;
       }
-      const data = await res.json();
-      setSession(data);
-    } catch (error) {
+      setSession(await res.json());
+    } catch {
       setSession(null);
     } finally {
       setIsLoading(false);
@@ -44,6 +44,7 @@ const SessionProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Initial load
   useEffect(() => {
+    console.log("useSession hook");
     refreshSession();
   }, []);
 

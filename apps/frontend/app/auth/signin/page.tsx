@@ -41,9 +41,6 @@ export default function LoginPage() {
   const router = useRouter();
   const [isSubmiting, setIsSubmiting] = useState(false);
 
-  // useSession Context hook
-  const {session, setSession ,isLoading} = useSession();
-
   // Form validation
   const validateForm = () => {
     const errors = {
@@ -103,10 +100,6 @@ export default function LoginPage() {
           text: data.message || 'Login successful!'
         });
 
-        const session = await getSession();
-        setSession(session);
-        // 
-        
         // Redirect to dashboard after a brief delay to show success message
         setTimeout(() => {
           router.push('/dashboard');
@@ -157,31 +150,6 @@ export default function LoginPage() {
       setServerMessage(null);
     }
   }, [formData.email, formData.password]);
-
-  // checking session
-  
-  useEffect(() => {
-    const checkSession = async () => {
-      
-      if(!session) {
-        const serverSession = await getSession();
-        
-        if(serverSession) {
-          
-          setSession(serverSession);
-          
-          router.push('/dashboard')
-        }
-      }
-      else {
-        
-        router.push('/dashboard')
-      }
-    }
-    
-    checkSession();
-  }, []);
-  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-4">
