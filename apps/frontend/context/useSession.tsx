@@ -16,6 +16,7 @@ interface SessionContextType {
   session: Session | null;
   setSession: (session: Session | null) => void;
   isLoading: boolean;
+  refreshSession: () => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextType | null>(null);
@@ -24,40 +25,34 @@ const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchSession = async () => {
-      console.log('useeffect in session', isLoading)
-      try {
-        const res = await authFetch(`${BACKEND_URL}/auth/session`);
-        if(!res.ok) {
-          setSession(null)
-          
-          return;
-        }
-        const session = await res.json();
-        
-        setSession(session);
-      } catch (error) {
-        
+  const refreshSession = async () => {
+    setIsLoading(true);
+    try {
+      const res = await authFetch(`${BACKEND_URL}/auth/session`);
+      if (!res.ok) {
         setSession(null);
-      } finally {
-        setIsLoading(false);
+        return;
       }
-    };
-    fetchSession();
+      const data = await res.json();
+      setSession(data);
+    } catch (error) {
+      setSession(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    refreshSession();
   }, []);
 
-  useEffect(() => {
-    console.log('session', session)
-  }, [isLoading])
-  
-  const value: SessionContextType = {
-    session,
-    setSession,
-    isLoading,
-  };
   return (
-    <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
+    <SessionContext.Provider
+      value={{ session, setSession, isLoading, refreshSession }}
+    >
+      {children}
+    </SessionContext.Provider>
   );
 };
 
@@ -65,7 +60,7 @@ export default SessionProvider;
 
 export function useSession(): SessionContextType {
   const context = useContext(SessionContext);
-  if (context === null) {
+  if (!context) {
     throw new Error("useSession must be used within a SessionProvider");
   }
   return context;
