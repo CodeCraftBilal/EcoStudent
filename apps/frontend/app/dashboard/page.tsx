@@ -116,9 +116,10 @@ export default function DashboardPage() {
 
   const router = useRouter();
   const { session, isLoading } = useSession();
+  
 
   useEffect(() => {
-    console.log('dashboard ', session)
+    console.log('dashboard ')
     if (!session && !isLoading) {
       router.push("/auth/signin");
     }

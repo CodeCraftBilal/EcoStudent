@@ -40,6 +40,7 @@ export default function LoginPage() {
   
   const router = useRouter();
   const [isSubmiting, setIsSubmiting] = useState(false);
+  const {refreshSession} = useSession()
 
   // Form validation
   const validateForm = () => {
@@ -99,6 +100,7 @@ export default function LoginPage() {
           type: 'success',
           text: data.message || 'Login successful!'
         });
+        await refreshSession()
 
         // Redirect to dashboard after a brief delay to show success message
         setTimeout(() => {

@@ -25,6 +25,7 @@ import { UploadItemData } from "@/lib/types/dashboard/types";
 import { useSession } from "@/context/useSession";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { authFetch } from "@/lib/authFetch";
+import { getUserLocation } from "@/lib/location";
 
 
 // mock notifications
@@ -61,7 +62,7 @@ export const notificationsData = [
 export default function DashboardNavbar() {
 
   // fetching session
-  const {session, refreshSession} = useSession();
+  const {session, setSession, refreshSession} = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
@@ -70,8 +71,14 @@ export default function DashboardNavbar() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-
+  
   useEffect(() => {
+    getUserLocation()
+  
+  }, [])
+  
+  useEffect(() => {
+    console.log('dashnav refreshing session')
     refreshSession();
 }, [])
 
@@ -140,6 +147,7 @@ export default function DashboardNavbar() {
       return;
     }
     const result = await res.json()
+    setSession(null)
     console.log(result);
     console.log('logout succfull', result)
     redirect('/auth/signin');

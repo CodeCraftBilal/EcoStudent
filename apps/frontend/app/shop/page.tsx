@@ -7,8 +7,8 @@ import { FilterState, Item } from "@/lib/types/types";
 import { ShopNavBar } from "@/components/shop/header";
 import { Categories } from "@/components/shop/categories";
 import { ItemCard } from "@/components/shop/itemcard";
-import { Chat } from "@/components/shop/chat";
-
+import { authFetch } from "@/lib/authFetch";
+import { BACKEND_URL } from "@/lib/types/constants";
 
 // Mock data
 const mockItems: Item[] = [
@@ -297,7 +297,6 @@ export default function ShopPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [cart, setCart] = useState<Set<string>>(new Set());
-  const [showChat, setShowChat] = useState(false);
 
   // Filter state
   const [filters, setFilters] = useState<FilterState>({
@@ -310,8 +309,18 @@ export default function ShopPage() {
 
   // Apply filters
   useEffect(() => {
-    let filtered = mockItems;
+    const getAllItems = async () => {
+      const res = await authFetch(`${BACKEND_URL}/product`);
+      if(!res.ok) {
+        console.log(res.status, res.statusText);
+      }
 
+      const result = await res.json();
+      console.log(result)
+    }
+
+    getAllItems()
+    let filtered = mockItems;
     // Search filter
     if (searchQuery) {
       filtered = filtered.filter(item =>
