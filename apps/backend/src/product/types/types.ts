@@ -1,20 +1,19 @@
-// Add to your types file
-export interface BackendProduct {
-  productId: number;
+export interface Item {
+  id: string;
   title: string;
-  description: string | null;
-  price: number | null;
-  originalPrice: number | null;
-  productCondition: "excellent" | "good" | "fair";
-  productType: string;
-  images: string[] | null;
-  category: {
-    categoryName: string;
-  };
-  users: {
-    userName: string;
-    rating: number | null;
-    isVerified: boolean | null;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  category: string;
+  condition: "excellent" | "good" | "fair";
+  image: string;
+  distance: number;
+  rating: number;
+  seller: {
+    name: string;
+    rating: number;
+    verified: boolean;
+    profilePicture?: string;
   };
   exchangeType: "sale" | "exchange" | "donation";
 }

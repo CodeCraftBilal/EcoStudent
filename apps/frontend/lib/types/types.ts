@@ -13,6 +13,7 @@ export interface Item {
     name: string;
     rating: number;
     verified: boolean;
+    profilePicture?: string;
   };
   exchangeType: "sale" | "exchange" | "donation";
 }
