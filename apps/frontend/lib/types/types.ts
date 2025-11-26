@@ -25,3 +25,4 @@ export interface FilterState {
   exchangeType: string[];
   distance: number;
 }
+

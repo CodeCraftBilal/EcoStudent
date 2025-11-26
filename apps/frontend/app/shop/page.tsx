@@ -317,10 +317,9 @@ export default function ShopPage() {
 
       const result = await res.json();
       console.log(result)
-    }
 
-    getAllItems()
-    let filtered = mockItems;
+      let filtered = mockItems;
+      console.log('mockItems ', mockItems)
     // Search filter
     if (searchQuery) {
       filtered = filtered.filter(item =>
@@ -353,6 +352,10 @@ export default function ShopPage() {
     filtered = filtered.filter(item => item.distance <= filters.distance);
 
     setItems(filtered);
+    }
+
+    getAllItems()
+    
   }, [filters, searchQuery]);
 
   const toggleFavorite = (itemId: string) => {

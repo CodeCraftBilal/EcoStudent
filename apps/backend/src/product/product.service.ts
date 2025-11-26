@@ -92,12 +92,20 @@ export class ProductService {
   return this.prisma.product.findMany({
     where,
     include: {
-      category: true,
+      category: {
+        select: {
+          categoryId: true,
+          categoryName: true
+        }
+      },
       users: {
         select: {
+          userId: true,
           userName: true,
           rating: true,
           isVerified: true,
+          longitude: true,
+          latitude: true
         }
       }
     },
