@@ -197,7 +197,7 @@ export function ShopNavBar({
                     className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-colors"
                   >
                     <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                      <img className="rounded-full" src={session.profile} alt={session.userName} />
+                      <img className="rounded-full" src={session.profile ?? ''} alt={session.userName} />
                     </div>
                     <div className="hidden md:block text-left">
                       <div className="text-sm font-medium text-gray-900">

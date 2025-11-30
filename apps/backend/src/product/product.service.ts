@@ -3,7 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Item } from './types/types';
-import { filter } from 'rxjs';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProductService {
@@ -62,92 +62,116 @@ export class ProductService {
   }
 
   async findAll(filters: any) {
-    let conditions: string[] = [];
+    const conditions: string[] = [];
     const params: any[] = [];
-    let havingSQL = '';
 
+    console.log('filters ', filters);
     if (filters.category) {
-      conditions.push(`c.categoryname = '${filters.category}'`);
-      params.push(filters.category);
+      const categories = Array.isArray(filters.category)
+        ? filters.category
+        : [filters.category];
+
+      const placeholders = categories
+        .map((_, i) => `$${params.length + i + 1}`)
+        .join(', ');
+
+      conditions.push(`c.categoryname IN (${placeholders})`);
+      params.push(...categories);
     }
 
+    // Condition filter (single or array)
+    if (filters.condition) {
+      const conditionsArr = Array.isArray(filters.condition)
+        ? filters.condition
+        : [filters.condition];
+
+      conditions.push(
+        `p.productcondition = ANY($${params.length + 1}::product_condition[])`,
+      );
+
+      params.push(conditionsArr);
+    }
+
+    // exchangeType filter (single or array)
+    if (filters.exchangeType) {
+      const exchangeArr = Array.isArray(filters.exchangeType)
+        ? filters.exchangeType
+        : [filters.exchangeType];
+
+      conditions.push(
+        `p.exchangetype = ANY($${params.length + 1}::exchange_type[])`,
+      );
+
+      params.push(exchangeArr);
+    }
+
+    // Min price filter
     if (filters.minPrice) {
-      conditions.push(`p.price >= ${filters.minPrice}`);
+      conditions.push(`p.price >= $${params.length + 1}`);
       params.push(Number(filters.minPrice));
     }
 
+    // Max price filter
     if (filters.maxPrice) {
-      conditions.push(`p.price <= ${filters.maxPrice}`);
+      conditions.push(`p.price <= $${params.length + 1}`);
       params.push(Number(filters.maxPrice));
-    }
-
-    if (filters.condition) {
-      const conditionsFilter = filters.condition;
-      if (Array.isArray(conditionsFilter)) {
-        conditionsFilter.forEach((c) => {
-          conditions.push(`p.productcondition = '${c}'`);
-        });
-        console.log('array: ', conditionsFilter);
-      } else {
-        conditions.push(`p.productcondition = '${conditionsFilter}'`);
-        console.log('non array: ', conditionsFilter);
-      }
     }
 
     const whereSQL = conditions.length
       ? `WHERE ${conditions.join(' AND ')}`
       : '';
-    console.log('where sql: ', whereSQL);
+    console.log('whereSql: ', whereSQL);
+    // Latitude & Longitude
+    const lat = filters.lat ? Number(filters.lat) : null;
+    const lng = filters.lng ? Number(filters.lng) : null;
 
-    let lng: number = 0;
-    let lat: number = 0;
-    if (filters.lng && filters.lat && filters.maxdistance) {
-      lng = Number(filters.lng);
-      lat = Number(filters.lat);
-      havingSQL = `
-    HAVING (
-      6371 * acos(
-        cos(radians(${lat})) * cos(radians(u.latitude)) *
-        cos(radians(u.longitude) - radians(${lng})) +
-        sin(radians(${lat})) * sin(radians(u.latitude))
-      )
-    ) <= ${Number(filters.maxdistance)}
-  `;
-    }
+    // Max distance
+    const maxDistance = filters.maxDistance
+      ? Number(filters.maxDistance)
+      : null;
 
     try {
-      const rawProducts: any[] = await this.prisma.$queryRawUnsafe(`
-  SELECT 
-    p.productid,
-    p.title,
-    p.description,
-    p.price,
-    p.originalprice,
-    p.images,
-    p.productcondition,
-    p.producttype,
-    p.created_at,
-    p.updated_at,
-    c.categoryname,
-    u.username AS seller_name,
-    u.isverified,
-    u.rating,
-    u.profilepicture,
-    (
-           6371 * acos(
-             cos(radians(${lat})) * cos(radians(u.latitude)) *
-             cos(radians(u.longitude) - radians(${lng})) +
-             sin(radians(${lat})) * sin(radians(u.latitude))
-           )
-         ) AS distance
-  FROM product p
-  LEFT JOIN category c ON p.categoryid = c.categoryid
-  LEFT JOIN users u ON p.userid = u.userid
-  ${whereSQL}
-  ${havingSQL}
-`);
+      const rawProducts: any[] = await this.prisma.$queryRawUnsafe(
+        `
+      SELECT *
+      FROM (
+        SELECT
+          p.productid,
+          p.title,
+          p.description,
+          p.images,
+          p.price,
+          p.originalprice,
+          p.productcondition,
+          p.exchangetype,
+          p.created_at,
+          p.updated_at,
+          c.categoryname,
+          u.username AS seller_name,
+          u.isverified,
+          u.rating,
+          u.profilepicture,
+          ${
+            lat !== null && lng !== null
+              ? `(6371 * acos(
+                   cos(radians(${lat})) * cos(radians(u.latitude)) *
+                   cos(radians(u.longitude) - radians(${lng})) +
+                   sin(radians(${lat})) * sin(radians(u.latitude))
+                 ))`
+              : '0'
+          } AS distance
+        FROM product p
+        LEFT JOIN category c ON p.categoryid = c.categoryid
+        LEFT JOIN users u ON p.userid = u.userid
+        ${whereSQL}
+      ) AS sub
+      ${maxDistance !== null ? `WHERE sub.distance <= ${maxDistance}` : ''}
+      ORDER BY distance ASC
+    `,
+        ...params,
+      );
 
-      const product: Item[] = rawProducts.map((p: any) => ({
+      return rawProducts.map((p) => ({
         id: p.productid.toString(),
         title: p.title,
         description: p.description,
@@ -155,25 +179,22 @@ export class ProductService {
         originalPrice: p.originalprice ? Number(p.originalprice) : undefined,
         category: p.categoryname,
         condition: p.productcondition,
-        image: Array.isArray(p.images) ? p.images[0] : null, // if images is JSON array
-        distance: p.distance ? Number(Number(p.distance).toFixed(1)) : 0, // You did not calculate it yet (optional)
-        rating: p.seller_rating ? Number(p.seller_rating) : 0,
+        image: Array.isArray(p.images) ? p.images[0] : null,
+        distance: p.distance ? Number(Number(p.distance).toFixed(1)) : 0,
         seller: {
           name: p.seller_name,
           rating: p.rating ? Number(p.rating) : 0,
           verified: Boolean(p.isverified),
           profilePicture: p.profilepicture,
         },
-        exchangeType: p.producttype, // If your product type maps directly
+        exchangeType: p.exchangetype,
       }));
-
-      return product;
     } catch (err) {
-      console.log(err);
+      console.error('findAll error:', err);
       return {
         error: true,
         success: false,
-        message: `something went wrong!`,
+        message: 'Something went wrong!',
       };
     }
   }

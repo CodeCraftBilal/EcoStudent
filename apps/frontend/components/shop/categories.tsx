@@ -22,10 +22,11 @@ const categoriesData: Category[] = [
   { id: "uniform", name: "Uniforms", icon: <Shirt className="w-5 h-5" />, color: "bg-gradient-to-r from-blue-500 to-indigo-500" },
   { id: "calculator", name: "Calculators", icon: <Calculator className="w-5 h-5" />, color: "bg-gradient-to-r from-purple-500 to-pink-500" },
   { id: "geometry", name: "Geometry", icon: <Ruler className="w-5 h-5" />, color: "bg-gradient-to-r from-orange-500 to-red-500" },
-  { id: "bag", name: "Bags", icon: <Briefcase className="w-5 h-5" />, color: "bg-gradient-to-r from-yellow-500 to-orange-500" }
+  { id: "bags", name: "Bags", icon: <Briefcase className="w-5 h-5" />, color: "bg-gradient-to-r from-yellow-500 to-orange-500" }
 ];
 
-export function Categories({ selectedCategory, onCategorySelect }: CategoriesProps) {
+export function Categories({ selectedCategory, onCategorySelect, categories }: CategoriesProps) {
+  console.log('selected category in category: ', selectedCategory)
   return (
     <div className="mb-0">
       <div className="flex overflow-x-auto space-x-4 pb-2 scrollbar-hide">
