@@ -10,7 +10,6 @@ import { ItemCard } from "@/components/shop/itemcard";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { mockItems } from "@/data/Shop";
-import { SkeletonCard } from "@/components/Loading";
 
 export default function ShopPage() {
   const [items, setItems] = useState<Item[]>(mockItems);
@@ -31,57 +30,56 @@ export default function ShopPage() {
 
   // Apply filters
   useEffect(() => {
+    console.log('filter.category: ', filters.category)
     const getAllItems = async () => {
       setLoading(true);
-      let query: string = `category=${filters.category == "all" ? "" : filters.category}&minPrice=${filters.priceRange[0]}&maxPrice=${filters.priceRange[1]}&maxDistance=${filters.distance}`;
-      filters.condition.forEach((c) => {
-        query = query + `&condition=${c}`;
-      });
+      let query: string[] = [];
+      // Search filter
+      if (searchQuery) {
+        query.push(`searchQuery=${searchQuery}`);
+      }
 
-      filters.exchangeType.forEach((e) => {
-        query = query + `&exchangeType=${e}`;
-      });
+      // Category filter
+      if (filters.category !== "all") {
+        query.push(`category=${filters.category}`);
+      }
+
+      // Price filter
+      if (filters.priceRange.length > 0) {
+        const minPrice = filters.priceRange[0];
+        const maxPrice = filters.priceRange[1];
+        query.push(`minPrice=${minPrice}`);
+        query.push(`maxPrice=${maxPrice}`);
+      }
+
+      // Condition filter
+      if (filters.condition.length > 0) {
+        filters.condition.forEach((c) => {
+          query.push(`condition=${c}`);
+        });
+      }
+
+      // Exchange type filter
+
+      if (filters.exchangeType.length > 0) {
+        filters.exchangeType.forEach((e) => {
+          query.push(`exchangeType=${e}`);
+        });
+      }
+
+      // Distance filter
+      query.push(`maxDistance=${filters.distance}`);
+
+      const params = query.join("&");
+      console.log(params);
       try {
-        const res = await authFetch(`${BACKEND_URL}/product?${query}`);
+        const res = await authFetch(`${BACKEND_URL}/product?${params}`);
         if (!res.ok) {
         }
 
         const result = await res.json();
+        console.log('result ', result)
 
-        //   let filtered = mockItems;
-        //
-        // // Search filter
-        // if (searchQuery) {
-        //   filtered = filtered.filter(item =>
-        //     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        //     item.description.toLowerCase().includes(searchQuery.toLowerCase())
-        //   );
-        // }
-
-        // // Category filter
-        // if (filters.category !== "") {
-        //   filtered = filtered.filter(item => item.category === filters.category);
-        // }
-
-        // // Price filter
-        // filtered = filtered.filter(item =>
-        //   item.price >= filters.priceRange[0] && item.price <= filters.priceRange[1]
-        // );
-
-        // // Condition filter
-        // if (filters.condition.length > 0) {
-        //   filtered = filtered.filter(item => filters.condition.includes(item.condition));
-        // }
-
-        // // Exchange type filter
-        // if (filters.exchangeType.length > 0) {
-        //   filtered = filtered.filter(item => filters.exchangeType.includes(item.exchangeType));
-        // }
-
-        // // Distance filter
-        // filtered = filtered.filter(item => item.distance <= filters.distance);
-
-        // setItems(filtered)
         if (result.error) {
           setItems([]);
         } else {
@@ -96,7 +94,6 @@ export default function ShopPage() {
 
     getAllItems();
   }, [filters, searchQuery]);
-
 
   const toggleFavorite = (itemId: string) => {
     const newFavorites = new Set(favorites);
@@ -129,8 +126,6 @@ export default function ShopPage() {
     setSearchQuery("");
   };
 
-  
-  // if(loading) return <SkeletonCard />;
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       {/* Header with Search */}

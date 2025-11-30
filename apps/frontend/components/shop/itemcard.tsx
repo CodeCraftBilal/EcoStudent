@@ -143,12 +143,13 @@ export function ItemCard({
           {/* Seller Info */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-gray-300 rounded-full">
+              <div className="w-6 h-6 bg-gray-300 rounded-full relative">
                 {item.seller.profilePicture ? (
                   <Image
-                  fill
-                    src={item.seller.profilePicture || ""}
+                    fill
+                    src={item.seller.profilePicture}
                     alt={item.seller.name}
+                    className="object-cover rounded-full"
                   />
                 ) : (
                   <div className="flex items-center justify-center font-bold text-green-600">
