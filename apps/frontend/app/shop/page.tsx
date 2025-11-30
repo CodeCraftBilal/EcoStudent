@@ -10,9 +10,10 @@ import { ItemCard } from "@/components/shop/itemcard";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { mockItems } from "@/data/Shop";
+import { getUserLocation } from "@/lib/location";
 
 export default function ShopPage() {
-  const [items, setItems] = useState<Item[]>(mockItems);
+  const [items, setItems] = useState<Item[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -30,10 +31,16 @@ export default function ShopPage() {
 
   // Apply filters
   useEffect(() => {
-    console.log('filter.category: ', filters.category)
     const getAllItems = async () => {
+      const location = await getUserLocation()
+      console.log('location', location);
       setLoading(true);
       let query: string[] = [];
+
+      // location filter
+      if(location) {
+        query.push(`lat=${location.latitude}&lng=${location.latitude}`)
+      }
       // Search filter
       if (searchQuery) {
         query.push(`searchQuery=${searchQuery}`);
@@ -71,22 +78,22 @@ export default function ShopPage() {
       query.push(`maxDistance=${filters.distance}`);
 
       const params = query.join("&");
-      console.log(params);
+      
       try {
         const res = await authFetch(`${BACKEND_URL}/product?${params}`);
         if (!res.ok) {
         }
 
         const result = await res.json();
-        console.log('result ', result)
-
+        
+        console.log(result)
         if (result.error) {
           setItems([]);
         } else {
           setItems(result);
         }
       } catch (err) {
-        console.log(err);
+        
       } finally {
         setLoading(false);
       }

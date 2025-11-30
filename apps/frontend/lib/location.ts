@@ -1,21 +1,43 @@
-export const getUserLocation = () => {
-    navigator.permissions.query({ name: "geolocation" }).then((result) => {
-      let userLocation;
-    console.log(result.state); // "granted" | "prompt" | "denied"
+type GeoLocation = {
+  accuracy: number,
+  latitude: number,
+  longitude: number,
+  altitude: number | null,
+  altitudeAccuracy: number | null,
+  heading: number | null,
+  speed: number | null
+};
 
-    if (result.state === "granted") {
-      // You can directly get location without triggering popup
-      userLocation = navigator.geolocation.getCurrentPosition((pos) => {
-        console.log("Location:", pos.coords);
+export const getUserLocation = async (): Promise<GeoLocation | null> => {
+  try {
+    const permission = await navigator.permissions.query({ name: "geolocation" });
+
+    // Helper to wrap getCurrentPosition into a Promise
+    const getPosition = () =>
+      new Promise<GeoLocation>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve(pos.coords),
+          (err) => reject(err),
+        );
       });
-    } else if (result.state === "prompt") {
-      // User has not decided yet → this will trigger the browser popup
-      userLocation = navigator.geolocation.getCurrentPosition((pos) => {
-        console.log("Location allowed now:", pos.coords);
-      });
-    } else if (result.state === "denied") {
-      // User blocked it permanently
-      console.log("User denied location access");
+
+    if (permission.state === "granted") {
+      return await getPosition();
     }
-  });
+
+    if (permission.state === "prompt") {
+      // Will trigger browser popup
+      return await getPosition();
+    }
+
+    if (permission.state === "denied") {
+      console.log("User denied location access");
+      return null;
+    }
+
+    return null;
+  } catch (err) {
+    console.error("Location error:", err);
+    return null;
+  }
 };
