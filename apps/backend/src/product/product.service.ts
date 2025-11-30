@@ -3,6 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Item } from './types/types';
+import { filter } from 'rxjs';
 
 @Injectable()
 export class ProductService {
@@ -61,49 +62,61 @@ export class ProductService {
   }
 
   async findAll(filters: any) {
-    const where: any = {};
+    let conditions: string[] = [];
+    const params: any[] = [];
+    let havingSQL = '';
 
-    // Filter by category
     if (filters.category) {
-      where.category = { categoryName: filters.category };
+      conditions.push(`c.categoryname = '${filters.category}'`);
+      params.push(filters.category);
     }
 
-    // Filter by price range
-    if (filters.minPrice || filters.maxPrice) {
-      where.price = {};
-      if (filters.minPrice) where.price.gte = Number(filters.minPrice);
-      if (filters.maxPrice) where.price.lte = Number(filters.maxPrice);
+    if (filters.minPrice) {
+      conditions.push(`p.price >= ${filters.minPrice}`);
+      params.push(Number(filters.minPrice));
     }
 
-    // Filter by condition (array)
+    if (filters.maxPrice) {
+      conditions.push(`p.price <= ${filters.maxPrice}`);
+      params.push(Number(filters.maxPrice));
+    }
+
     if (filters.condition) {
-      const conditionArray = Array.isArray(filters.condition)
-        ? filters.condition
-        : filters.condition.split(',');
-      where.productCondition = { in: conditionArray };
+      const conditionsFilter = filters.condition;
+      if (Array.isArray(conditionsFilter)) {
+        conditionsFilter.forEach((c) => {
+          conditions.push(`p.productcondition = '${c}'`);
+        });
+        console.log('array: ', conditionsFilter);
+      } else {
+        conditions.push(`p.productcondition = '${conditionsFilter}'`);
+        console.log('non array: ', conditionsFilter);
+      }
     }
 
-    // Filter by exchangeType (array)
-    if (filters.exchangeType) {
-      const exchangeArray = Array.isArray(filters.exchangeType)
-        ? filters.exchangeType
-        : filters.exchangeType.split(',');
-      where.exchangeType = { in: exchangeArray };
+    const whereSQL = conditions.length
+      ? `WHERE ${conditions.join(' AND ')}`
+      : '';
+    console.log('where sql: ', whereSQL);
+
+    let lng: number = 0;
+    let lat: number = 0;
+    if (filters.lng && filters.lat && filters.maxdistance) {
+      lng = Number(filters.lng);
+      lat = Number(filters.lat);
+      havingSQL = `
+    HAVING (
+      6371 * acos(
+        cos(radians(${lat})) * cos(radians(u.latitude)) *
+        cos(radians(u.longitude) - radians(${lng})) +
+        sin(radians(${lat})) * sin(radians(u.latitude))
+      )
+    ) <= ${Number(filters.maxdistance)}
+  `;
     }
 
-    // latitude and longitude
-    if (filters.lat && filters.lng) {
-      where.lat = filters.lat;
-      where.lng = filters.lng;
-    }
-
-    const lat = Number(where.lat);
-    const lng = Number(where.lng);
-    console.log('lat ', lat, 'lng', lng);
-
-    console.log('where: ', where);
     try {
-      const rawProducts: any[] = await this.prisma.$queryRaw`
+      const rawProducts: any[] = await this.prisma.$queryRawUnsafe(`
   SELECT 
     p.productid,
     p.title,
@@ -130,9 +143,9 @@ export class ProductService {
   FROM product p
   LEFT JOIN category c ON p.categoryid = c.categoryid
   LEFT JOIN users u ON p.userid = u.userid
-`;
-
-      console.log(rawProducts);
+  ${whereSQL}
+  ${havingSQL}
+`);
 
       const product: Item[] = rawProducts.map((p: any) => ({
         id: p.productid.toString(),
@@ -155,14 +168,12 @@ export class ProductService {
       }));
 
       return product;
-
-      // TODO: distance filter requires location logic if you have latitude/longitude
     } catch (err) {
       console.log(err);
       return {
         error: true,
         success: false,
-        message: `something went wrong! ${err}`,
+        message: `something went wrong!`,
       };
     }
   }
