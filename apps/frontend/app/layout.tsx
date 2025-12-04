@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import TopLoader from "@/components/topLoader";
 import SessionProvider from "@/context/useSession";
+import InfiniteScrollProvider from "@/providers/InfiniteScrollProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,9 +35,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SessionProvider>
+          <InfiniteScrollProvider>
+
           <TopLoader />
           <Navbar />
           {children}
+          </InfiniteScrollProvider>
         </SessionProvider>
       </body>
     </html>

@@ -171,8 +171,6 @@ export class ProductService {
         ...params,
       );
 
-      console.log(rawProducts)
-
       return rawProducts.map((p) => ({
         id: p.productid.toString(),
         title: p.title,
