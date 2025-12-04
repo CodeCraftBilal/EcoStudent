@@ -75,9 +75,10 @@ export class ProductController {
     return this.productService.findAll(query);
   }
 
+  @Public()
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.productService.findOne(+id);
+  findOne(@Param('id') id: string, @Query() query: any) {
+    return this.productService.findOne(+id, query);
   }
 
   @Patch(':id')

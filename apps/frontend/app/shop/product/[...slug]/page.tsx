@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import {
@@ -14,8 +14,11 @@ import {
 import { ItemCard } from "@/components/shop/itemcard";
 import { Item } from "@/lib/types/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { mockItems } from "@/data/Shop";
-
+import { mockItems, mockReviews } from "@/data/Shop";
+import { authFetch } from "@/lib/authFetch";
+import { BACKEND_URL } from "@/lib/types/constants";
+import { getUserLocation } from "@/lib/location";
+import { filter } from "framer-motion/client";
 // Mock data (same as before)
 const mockItem = {
   id: "1",
@@ -64,144 +67,37 @@ const mockItem = {
   views: 156
 };
 
-const mockReviews = [
-  {
-    id: "rev1",
-    user: {
-      name: "Sarah Khan",
-      avatar: "/api/placeholder/50/50",
-      verified: true
-    },
-    rating: 5,
-    comment: "The book was in perfect condition, just as described. Seller was very professional and punctual. Highly recommended!",
-    date: "2024-01-20",
-    helpful: 12
-  },
-  {
-    id: "rev2",
-    user: {
-      name: "Ali Raza",
-      avatar: "/api/placeholder/50/50",
-      verified: true
-    },
-    rating: 4,
-    comment: "Fast delivery and good packaging. The book had a few pencil marks but overall great value for money.",
-    date: "2024-02-10",
-    helpful: 8
-  },
-  {
-    id: "rev3",
-    user: {
-      name: "Hina Malik",
-      avatar: "/api/placeholder/50/50",
-      verified: false
-    },
-    rating: 5,
-    comment: "Exactly what I needed for my course. Seller responded quickly and was very cooperative.",
-    date: "2024-03-15",
-    helpful: 15
-  },
-  {
-    id: "rev4",
-    user: {
-      name: "Usman Ahmed",
-      avatar: "/api/placeholder/50/50",
-      verified: true
-    },
-    rating: 3,
-    comment: "Book was slightly worn out from the edges but readable. Could improve packaging.",
-    date: "2024-04-02",
-    helpful: 5
-  },
-  {
-    id: "rev5",
-    user: {
-      name: "Zara Fatima",
-      avatar: "/api/placeholder/50/50",
-      verified: true
-    },
-    rating: 5,
-    comment: "Amazing experience! The seller kept me updated and the quality was superb. Would buy again.",
-    date: "2024-05-21",
-    helpful: 22
-  },
-  {
-    id: "rev6",
-    user: {
-      name: "Hamza Sheikh",
-      avatar: "/api/placeholder/50/50",
-      verified: false
-    },
-    rating: 4,
-    comment: "Good deal for the price. Some pages were slightly folded but overall it’s a great purchase.",
-    date: "2024-06-18",
-    helpful: 7
-  },
-  {
-    id: "rev7",
-    user: {
-      name: "Maryam Ali",
-      avatar: "/api/placeholder/50/50",
-      verified: true
-    },
-    rating: 5,
-    comment: "Seller was kind and responsive. The book looked brand new and arrived earlier than expected.",
-    date: "2024-07-05",
-    helpful: 19
-  },
-  {
-    id: "rev8",
-    user: {
-      name: "Bilal Khan",
-      avatar: "/api/placeholder/50/50",
-      verified: true
-    },
-    rating: 2,
-    comment: "Book was missing a few pages. Seller apologized but refund took a while.",
-    date: "2024-08-14",
-    helpful: 3
-  },
-  {
-    id: "rev9",
-    user: {
-      name: "Ayesha Noor",
-      avatar: "/api/placeholder/50/50",
-      verified: false
-    },
-    rating: 4,
-    comment: "The content of the book was excellent. Some wear on the cover but acceptable for the price.",
-    date: "2024-09-03",
-    helpful: 11
-  },
-  {
-    id: "rev10",
-    user: {
-      name: "Farhan Iqbal",
-      avatar: "/api/placeholder/50/50",
-      verified: true
-    },
-    rating: 5,
-    comment: "Perfectly described and delivered. This seller knows how to maintain trust!",
-    date: "2024-10-11",
-    helpful: 14
-  },
-  {
-    id: "rev11",
-    user: {
-      name: "Noor Hassan",
-      avatar: "/api/placeholder/50/50",
-      verified: true
-    },
-    rating: 4,
-    comment: "Good communication, fair price, and book in decent shape. Would recommend to others.",
-    date: "2024-11-01",
-    helpful: 9
-  }
-];
-
 const relatedItems: Item[] = mockItems;
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default function ProductDetailPage({ params }: { params: Promise<{ slug:string }>}) {
+
+  const [item, setItem] = useState(null)
+  useEffect(() => {
+    const getProduct = async () => {
+      const query: string[] = [];
+      const userLocation = await getUserLocation();
+      const {slug} = await params;
+      console.log('slug ', slug[0])
+
+      if(userLocation) {
+        query.push(`lat=${userLocation.latitude}&lng=${userLocation.longitude}`)
+      }
+
+      const filters = query.join('&')
+      try {
+        const res = await authFetch(`${BACKEND_URL}/product/${slug}?${filters}`)
+        if(!res.ok) return;
+
+        const result = await res.json();
+        console.log('result item: ', result)
+      }
+      catch(err) {
+        console.log(`Failed to fetch Product `, err)
+      }
+    }
+
+    getProduct();
+  }, [])
   
   // related items state
   const [isFavorite, setIsFavorite] = useState(false);

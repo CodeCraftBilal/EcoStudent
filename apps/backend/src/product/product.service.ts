@@ -68,9 +68,8 @@ export class ProductService {
     console.log('filters ', filters);
 
     // Pagination values
- const limit = filters.limit ? Number(filters.limit) : 10;
-const offset = filters.offset ? Number(filters.offset) : 0;
-
+    const limit = filters.limit ? Number(filters.limit) : 10;
+    const offset = filters.offset ? Number(filters.offset) : 0;
 
     if (filters.category) {
       const categories = Array.isArray(filters.category)
@@ -207,11 +206,52 @@ const offset = filters.offset ? Number(filters.offset) : 0;
     }
   }
 
-  findOne(id: number) {
+  async findOne(id: number, filters: any) {
+    console.log('filters ', filters);
+    console.log('id: ', id);
+    const lat = filters.lat ? Number(filters.lat) : null;
+    const lng = filters.lng ? Number(filters.lng) : null;
     try {
-      return this.prisma.product.findUnique({
-        where: { productId: id },
-      });
+      const product: any[] = await this.prisma.$queryRaw`
+  SELECT 
+    p.productid,
+    p.title,
+    p.description,
+    p.price,
+    p.productcondition,
+    p.images,
+    p.created_at,
+    p.viewcount,
+    c.categoryname,
+    u.userid,
+    u.rating,
+    u.created_at AS userCreatedAt,
+    u.profilepicture,
+    u.userlocation,
+    u.latitude,
+    u.longitude,
+    (
+      6371 * acos(
+        cos(radians(${lat}))
+        * cos(radians(u.latitude))
+        * cos(radians(u.longitude) - radians(${lng}))
+        + sin(radians(${lat})) * sin(radians(u.latitude))
+      )
+    ) AS distance
+  FROM product p
+  JOIN users u ON p.userid = u.userid
+  JOIN category c ON p.categoryid = c.categoryid
+  WHERE p.productid = ${id}
+`;
+
+      console.log('product ', product);
+
+      if (product.length > 0) return product;
+      else
+        return {
+          success: false,
+          message: 'no product found',
+        };
     } catch (err) {
       console.log('Product FindOne: ', err);
       return { success: true, error: true, message: 'product not found!' };
