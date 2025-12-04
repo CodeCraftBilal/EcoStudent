@@ -28,6 +28,10 @@ export default function ShopPage() {
   const [cart, setCart] = useState<Set<string>>(new Set());
   const lastItemRef = useRef<HTMLDivElement | null>(null);
 
+  const ref = useRef(0);
+  ref.current = ref.current + 1;
+  console.log(ref.current)
+
   // ------------------------
   // API Fetch Function
   // ------------------------
@@ -155,17 +159,17 @@ export default function ShopPage() {
         />
 
         <div className="flex justify-between items-center mb-2">
-          <p className="text-gray-600">
+          <p className="text-gray-600 py-2">
             Showing {items.length} of {items.length} items
           </p>
 
-          <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+          {/* <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
             <option>Sort by: Newest</option>
             <option>Price Low → High</option>
             <option>Price High → Low</option>
             <option>Distance</option>
             <option>Rating</option>
-          </select>
+          </select> */}
         </div>
 
         {items.length === 0 ? (

@@ -66,6 +66,12 @@ export class ProductService {
     const params: any[] = [];
 
     console.log('filters ', filters);
+
+    // Pagination values
+ const limit = filters.limit ? Number(filters.limit) : 10;
+const offset = filters.offset ? Number(filters.offset) : 0;
+
+
     if (filters.category) {
       const categories = Array.isArray(filters.category)
         ? filters.category
@@ -167,6 +173,8 @@ export class ProductService {
       ) AS sub
       ${maxDistance !== null ? `WHERE sub.distance <= ${maxDistance}` : ''}
       ORDER BY distance ASC
+      LIMIT ${limit}
+      OFFSET ${offset}
     `,
         ...params,
       );

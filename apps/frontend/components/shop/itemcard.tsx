@@ -36,7 +36,7 @@ export function ItemCard({
       <div className="relative overflow-hidden">
         <Link
           className="relative overflow-hidden"
-          href={`/shop/product/${item.title}`}
+          href={`/shop/product/${item.id}`}
         >
           <img
             src={item.image}
@@ -80,7 +80,7 @@ export function ItemCard({
       {/* Content Section */}
       <div className="px-2 sm:p-4">
         {/* Mobile Compact View */}
-        <Link href={`/shop/product/${item.title}`} className="sm:hidden">
+        <Link href={`/shop/product/${item.id}`} className="sm:hidden">
           <h3
             className={`font-semibold text-gray-900 text-sm max-md:h-10 line-clamp-2 ${item.title.length < 25 ? "min-h-[2rem]" : ""}`}
           >
@@ -105,7 +105,7 @@ export function ItemCard({
 
         {/* Desktop Detailed View */}
         <div className="hidden sm:block">
-          <Link href={`/shop/product/${item.title}`}>
+          <Link href={`/shop/product/${item.id}`}>
             <div className="flex justify-between items-start mb-1">
               <h3 className="font-semibold text-gray-900 line-clamp-2 flex-1">
                 {item.title}

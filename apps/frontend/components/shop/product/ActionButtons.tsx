@@ -40,7 +40,7 @@ export default function ActionButtons({
         </button>
         <button
           onClick={onMessageSeller}
-          className="flex-1 border-2 border-eco-500 text-green-600 hover:bg-green-50 py-4 px-6 rounded-2xl font-semibold transition-colors flex items-center justify-center space-x-2"
+          className="flex-1 border-2 border-green-500 text-green-600 hover:bg-green-50 py-4 px-6 rounded-2xl font-semibold transition-colors flex items-center justify-center space-x-2"
         >
           <MessageCircle className="w-5 h-5" />
           <span>Message Seller</span>
