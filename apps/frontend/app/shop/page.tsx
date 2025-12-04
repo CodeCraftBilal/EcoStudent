@@ -39,7 +39,7 @@ export default function ShopPage() {
 
       // location filter
       if(location) {
-        query.push(`lat=${location.latitude}&lng=${location.latitude}`)
+        query.push(`lat=${location.latitude}&lng=${location.longitude}`)
       }
       // Search filter
       if (searchQuery) {

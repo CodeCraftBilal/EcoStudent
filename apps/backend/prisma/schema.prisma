@@ -173,12 +173,6 @@ model user_favorites {
   users      Users?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_users")
 }
 
-enum role {
-  USER
-  GUEST
-  ADMIN
-}
-
 enum ROLE {
   GUEST
   USER
