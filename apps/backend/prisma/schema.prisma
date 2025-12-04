@@ -8,6 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model Users {
   userId                                Int              @id @default(autoincrement()) @map("userid")
   userName                              String           @map("username") @db.VarChar(255)

@@ -217,11 +217,6 @@ export default function ShopPage() {
           </motion.div>
         )}
       </div>
-
-      {/* Chat Component */}
-      {/* <div className="bg-transparent">
-      <Chat showChat={showChat} setShowChat={setShowChat} draggable={true}/>
-      </div> */}
     </div>
   );
 }
