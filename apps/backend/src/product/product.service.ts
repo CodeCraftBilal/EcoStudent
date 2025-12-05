@@ -212,18 +212,20 @@ export class ProductService {
     const lat = filters.lat ? Number(filters.lat) : null;
     const lng = filters.lng ? Number(filters.lng) : null;
     try {
-      const product: any[] = await this.prisma.$queryRaw`
+      const rawProduct: any[] = await this.prisma.$queryRaw`
   SELECT 
     p.productid,
     p.title,
     p.description,
     p.price,
+    p.originalprice,
     p.productcondition,
     p.images,
     p.created_at,
     p.viewcount,
     c.categoryname,
     u.userid,
+    u.username,
     u.rating,
     u.created_at AS userCreatedAt,
     u.profilepicture,
@@ -244,17 +246,43 @@ export class ProductService {
   WHERE p.productid = ${id}
 `;
 
-      console.log('product ', product);
-
-      if (product.length > 0) return product;
+      console.log(rawProduct);
+      if (rawProduct.length > 0)
+        return rawProduct.map((p) => ({
+          id: p.productid,
+          title: p.title,
+          description: p.description,
+          price: p.price,
+          originalPrice: p.originalprice,
+          condition: p.productcondition,
+          images: p.images,
+          postedDate: p.created_at,
+          views: p.viewcount,
+          category: p.categoryname,
+          distance: p.distance,
+          seller: {
+            id: p.userid,
+            name: p.username,
+            rating: p.rating,
+            verified: p.isverified,
+            memberSince: p.userCreatedAt,
+            avatar: p.profilepicture,
+          },
+          location: {
+            address: p.userlocation,
+            latitude: p.latitude,
+            longitude: p.longitude,
+          },
+        }));
       else
         return {
+          error: true,
           success: false,
           message: 'no product found',
         };
     } catch (err) {
       console.log('Product FindOne: ', err);
-      return { success: true, error: true, message: 'product not found!' };
+      return { success: false, error: true, message: 'product not found!' };
     }
   }
 
