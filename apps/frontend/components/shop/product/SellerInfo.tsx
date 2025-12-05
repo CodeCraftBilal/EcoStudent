@@ -7,8 +7,8 @@ interface Seller {
   rating: number;
   verified: boolean;
   memberSince: string;
-  itemsSold: number;
-  responseRate: number;
+  // itemsSold: number;
+  // responseRate: number;
   avatar: string;
 }
 
@@ -46,8 +46,8 @@ export default function SellerInfo({
               <span>{seller.rating} Rating</span>
             </div>
             <span>•</span>
-            <span>{seller.itemsSold} Items Sold</span>
-            <span>•</span>
+            {/* <span>{seller.itemsSold} Items Sold</span> */}
+            {/* <span>•</span> */}
             <span>Member since {seller.memberSince}</span>
           </div>
         </div>
@@ -56,7 +56,7 @@ export default function SellerInfo({
       <div className="grid grid-cols-2 gap-4 text-sm mb-4">
         <div className="flex items-center space-x-2">
           <Shield className="w-4 h-4 text-green-500" />
-          <span>{seller.responseRate}% Response Rate</span>
+          {/* <span>{seller.responseRate}% Response Rate</span> */}
         </div>
         <div className="flex items-center space-x-2">
           <MapPin className="w-4 h-4 text-green-600" />

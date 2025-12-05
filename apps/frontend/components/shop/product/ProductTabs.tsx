@@ -7,7 +7,7 @@ import ProductLocation from "./ProductLocation";
 
 interface ProductTabsProps {
   description: string;
-  specifications: { [key: string]: string };
+  specifications?: { [key: string]: string };
   reviews: any[];
   location: {
     address: string;
@@ -79,7 +79,7 @@ export default function ProductTabs({
             >
               <h3 className="text-lg font-semibold mb-4">Specifications</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(specifications).map(([key, value]) => (
+                {specifications && Object.entries(specifications).map(([key, value]) => (
                   <div key={key} className="flex justify-between py-2 border-b border-gray-100">
                     <span className="font-medium text-gray-600">{key}:</span>
                     <span className="text-gray-900">{value}</span>

@@ -19,9 +19,9 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   };
 
   const colorClasses = {
-    primary: 'text-eco-500',
+    primary: 'text-green-500',
     white: 'text-white',
-    muted: 'text-eco-300'
+    muted: 'text-green-300'
   };
 
   return (

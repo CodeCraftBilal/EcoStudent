@@ -4,13 +4,12 @@ import { useState } from "react";
 interface ProductInfoProps {
   title: string;
   description: string;
-  detailedDescription: string;
   price: number;
   originalPrice?: number;
   rating: number;
   reviewCount: number;
   condition: string;
-  exchangeType: "sale" | "exchange" | "donation";
+  exchangeType: string;
   postedDate: string;
   views: number;
   onShare: () => void;
@@ -20,7 +19,6 @@ interface ProductInfoProps {
 export default function ProductInfo({
   title,
   description,
-  detailedDescription,
   price,
   originalPrice,
   rating,
@@ -128,8 +126,8 @@ export default function ProductInfo({
       <div className="bg-white rounded-2xl p-6 shadow-sm">
         <p className="text-gray-700 leading-relaxed">
           {showFullDescription 
-            ? detailedDescription 
-            : `${detailedDescription.slice(0, 200)}...`
+            ? description 
+            : `${description.slice(0, 200)}...`
           }
           <button
             onClick={() => setShowFullDescription(!showFullDescription)}
