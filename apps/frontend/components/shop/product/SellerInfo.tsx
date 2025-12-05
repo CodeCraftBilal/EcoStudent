@@ -26,11 +26,19 @@ export default function SellerInfo({
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm">
       <div className="flex items-center space-x-4 mb-4">
-        <img
+        {seller.avatar ? (
+          <img
           src={seller.avatar}
           alt={seller.name}
           className="w-16 h-16 rounded-full object-cover"
         />
+        ) : (
+          <div className="md:w-16 md:h-16 w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
+            <p className="font-bold md:text-3xl text-lg">{seller.name[0].toUpperCase()}</p>
+            
+            </div>
+        )}
+        
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-1">
             <h3 className="text-lg font-semibold text-gray-900">
@@ -48,16 +56,16 @@ export default function SellerInfo({
             <span>•</span>
             {/* <span>{seller.itemsSold} Items Sold</span> */}
             {/* <span>•</span> */}
-            <span>Member since {seller.memberSince}</span>
+            <span>Member since { seller.memberSince && new Date(seller.memberSince).toISOString().split('T')[0]}</span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-        <div className="flex items-center space-x-2">
+        {/* <div className="flex items-center space-x-2">
           <Shield className="w-4 h-4 text-green-500" />
-          {/* <span>{seller.responseRate}% Response Rate</span> */}
-        </div>
+          <span>{seller.responseRate}% Response Rate</span>
+        </div> */}
         <div className="flex items-center space-x-2">
           <MapPin className="w-4 h-4 text-green-600" />
           <span>{distance} km away</span>

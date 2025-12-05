@@ -247,7 +247,7 @@ export class ProductService {
   WHERE p.productid = ${id}
 `;
 
-      console.log(rawProduct);
+      console.log('raw product lenght', rawProduct.length);
       if (rawProduct.length > 0)
         return rawProduct.map((p) => ({
           id: p.productid,

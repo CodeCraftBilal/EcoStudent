@@ -84,7 +84,7 @@ export default function ProductImageGallery({
         </div>
       )}
       {/* Thumbnail Images */}
-      {images && images.length > 1 && (
+      {images && images.length > 0 && (
         <div className="flex space-x-2 overflow-x-auto">
           {images.map((image, index) => (
             <button
