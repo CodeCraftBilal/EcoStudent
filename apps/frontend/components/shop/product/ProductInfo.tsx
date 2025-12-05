@@ -81,10 +81,10 @@ export default function ProductInfo({
             <span>•</span>
             <div className="flex items-center space-x-1">
               <Clock className="w-4 h-4" />
-              <span>Posted {postedDate}</span>
+              <span>Posted {new Date(postedDate).toISOString().split('T')[0]}</span>
             </div>
-            <span>•</span>
-            <span>{views} views</span>
+            {/* <span>•</span>
+            <span>{views} views</span> */}
           </div>
         </div>
 

@@ -18,8 +18,8 @@ export default function ProductImageGallery({
   onFavoriteToggle,
 }: ProductImageGalleryProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  console.log("Images prop:", images);
-  console.log("CurrentImageIndex:", currentImageIndex);
+  
+  
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   };

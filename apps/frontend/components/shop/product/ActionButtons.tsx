@@ -2,7 +2,7 @@ import { ShoppingCart, MessageCircle } from "lucide-react";
 import { useState } from "react";
 
 interface ActionButtonsProps {
-  exchangeType: "sale" | "exchange" | "donation";
+  exchangeType: string;
   price: number;
   onAddToCart: (quantity: number) => void;
   onMessageSeller: () => void;

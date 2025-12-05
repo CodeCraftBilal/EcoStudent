@@ -19,7 +19,6 @@ import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { getUserLocation } from "@/lib/location";
 import { LoadingSpinner } from "@/components/Loading";
-import { div } from "framer-motion/client";
 
 type Product = {
   id: string;
@@ -59,50 +58,50 @@ type Product = {
   };
 };
 
-// Mock data (same as before)
-const mockItem: Product = {
-  id: "1",
-  title: "Calculus Early Transcendentals 2nd Edition",
-  description:
-    "Like new condition, barely used. Perfect for engineering students.",
-  price: 2500,
-  originalPrice: 4000,
-  category: "books",
-  condition: "excellent" as const,
-  images: [
-    "/imgshop/calc.png",
-    "/imgshop/phybook.png",
-    "/api/placeholder/600/400",
-    "/api/placeholder/600/400",
-  ],
-  distance: 1.2,
-  seller: {
-    id: "user1",
-    name: "Ali Ahmed",
-    rating: 4.9,
-    reviewCount: 24,
-    verified: true,
-    memberSince: "2023",
-    avatar: "/api/placeholder/100/100",
-  },
-  exchangeType: "sale" as const,
-  location: {
-    address: "University of Mianwali, Main Campus",
-    longitude: 33.0004,
-    latitude: 71.00023,
-  },
-  specifications: {
-    Author: "James Stewart",
-    Edition: "2nd Edition",
-    Publisher: "Cengage Learning",
-    ISBN: "978-1285741550",
-    Condition: "Like New",
-    Pages: "1368",
-    Language: "English",
-  },
-  postedDate: "2024-01-15",
-  views: 156,
-};
+// Mock data
+// const item: Product = {
+//   id: "1",
+//   title: "Calculus Early Transcendentals 2nd Edition",
+//   description:
+//     "Like new condition, barely used. Perfect for engineering students.",
+//   price: 2500,
+//   originalPrice: 4000,
+//   category: "books",
+//   condition: "excellent" as const,
+//   images: [
+//     "/imgshop/calc.png",
+//     "/imgshop/phybook.png",
+//     "/api/placeholder/600/400",
+//     "/api/placeholder/600/400",
+//   ],
+//   distance: 1.2,
+//   seller: {
+//     id: "user1",
+//     name: "Ali Ahmed",
+//     rating: 4.9,
+//     reviewCount: 24,
+//     verified: true,
+//     memberSince: "2023",
+//     avatar: "/api/placeholder/100/100",
+//   },
+//   exchangeType: "sale" as const,
+//   location: {
+//     address: "University of Mianwali, Main Campus",
+//     longitude: 33.0004,
+//     latitude: 71.00023,
+//   },
+//   specifications: {
+//     Author: "James Stewart",
+//     Edition: "2nd Edition",
+//     Publisher: "Cengage Learning",
+//     ISBN: "978-1285741550",
+//     Condition: "Like New",
+//     Pages: "1368",
+//     Language: "English",
+//   },
+//   postedDate: "2024-01-15",
+//   views: 156,
+// };
 
 const relatedItems: Item[] = mockItems;
 
@@ -136,19 +135,27 @@ export default function ProductDetailPage({
         if (!res.ok) return;
 
         const result = await res.json();
+        console.log("result item: ", result[0]);
+
         if (!result.error) {
-          setItem(result);
+          setItem(result[0]);
         }
-        console.log("result item: ", result);
       } catch (err) {
         console.log(`Failed to fetch Product `, err);
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     getProduct();
   }, []);
+  
+  useEffect(() => {
+    console.log("isLoading: ", isLoading);
+    console.log("item in us: ", item);
+
+    return () => {};
+  }, [isLoading]);
 
   // related items state
   const [isFavorite, setIsFavorite] = useState(false);
@@ -201,7 +208,7 @@ export default function ProductDetailPage({
     // Implement message seller functionality
   };
 
-  console.log(item?.seller)
+  console.log(item?.seller);
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       {/* Navigation */}
@@ -218,15 +225,19 @@ export default function ProductDetailPage({
           </div>
         </div>
       </nav>
-      { isLoading || !item ? <div className="w-full h-[500px] flex items-center justify-center"><LoadingSpinner /></div> : (
+      {isLoading || !item ? (
+        <div className="w-full h-[500px] flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      ) : (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             {/* Left Column - Images */}
             <div>
               <ProductImageGallery
-                images={mockItem.images}
-                title={mockItem.title}
+                images={item.images}
+                title={item.title}
                 isFavorite={isFavorite}
                 onFavoriteToggle={handleFavoriteToggle}
               />
@@ -235,29 +246,29 @@ export default function ProductDetailPage({
             {/* Right Column - Product Info */}
             <div className="space-y-6">
               <ProductInfo
-                title={mockItem.title}
-                description={mockItem.description}
-                price={mockItem.price}
-                originalPrice={mockItem.originalPrice}
-                rating={mockItem.seller.rating}
-                reviewCount={mockItem.seller.reviewCount}
-                condition={mockItem.condition}
-                exchangeType={mockItem.exchangeType}
-                postedDate={mockItem.postedDate}
-                views={mockItem.views}
+                title={item.title}
+                description={item.description}
+                price={item.price}
+                originalPrice={item.originalPrice}
+                rating={item.seller.rating}
+                reviewCount={item.seller.reviewCount}
+                condition={item.condition}
+                exchangeType={item.exchangeType}
+                postedDate={item.postedDate}
+                views={item.views}
                 onShare={handleShare}
                 onReport={handleReport}
               />
 
               <SellerInfo
-                seller={mockItem.seller}
-                distance={mockItem.distance}
+                seller={item.seller}
+                distance={item.distance}
                 onMessageSeller={handleMessageSeller}
               />
 
               {/* <ActionButtons
-              exchangeType={mockItem.exchangeType}
-              price={mockItem.price}
+              exchangeType={item.exchangeType}
+              price={item.price}
               onAddToCart={handleAddToCart}
               onMessageSeller={handleMessageSeller}
             /> */}
@@ -267,11 +278,11 @@ export default function ProductDetailPage({
           {/* Tabs Section */}
           <div className="mb-12">
             <ProductTabs
-              description={mockItem.description}
-              specifications={mockItem.specifications}
+              description={item.description}
+              specifications={item.specifications}
               reviews={mockReviews}
-              location={mockItem.location}
-              distance={mockItem.distance}
+              location={item.location}
+              distance={item.distance}
             />
           </div>
 
@@ -286,8 +297,8 @@ export default function ProductDetailPage({
                   key={item.id}
                   item={item}
                   index={index}
-                  isFavorite={favorites.has(mockItem.id)}
-                  isInCart={cart.has(mockItem.id)}
+                  isFavorite={favorites.has(item.id)}
+                  isInCart={cart.has(item.id)}
                   onToggleFavorite={toggleFavorite}
                   onToggleCart={toggleCart}
                 />
