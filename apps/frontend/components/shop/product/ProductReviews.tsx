@@ -1,3 +1,4 @@
+
 import { Star, Verified } from "lucide-react";
 
 interface Review {
@@ -18,6 +19,7 @@ interface ProductReviewsProps {
 }
 
 export default function ProductReviews({ reviews }: ProductReviewsProps) {
+  console.log('hey i am a review...')
   const averageRating = reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length;
 
   return (

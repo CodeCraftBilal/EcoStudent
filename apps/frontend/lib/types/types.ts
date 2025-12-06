@@ -10,6 +10,7 @@ export interface Item {
   distance: number;
   rating: number;
   seller: {
+    id: string;
     name: string;
     rating: number;
     verified: boolean;

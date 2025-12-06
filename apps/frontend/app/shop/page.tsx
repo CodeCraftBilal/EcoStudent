@@ -11,7 +11,7 @@ import { ItemCard } from "@/components/shop/itemcard";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { getUserLocation } from "@/lib/location";
-import { mockItems } from "@/data/Shop";
+import { LoadingSpinner } from "@/components/Loading";
 
 export default function ShopPage() {
   const [filters, setFilters] = useState<FilterState>({
@@ -55,7 +55,7 @@ export default function ShopPage() {
     query.push(`maxDistance=${filters.distance}`);
 
     query.push(`offset=${pageParam}`);
-    query.push(`limit=10`);
+    query.push(`limit=12`);
 
     const url = `${BACKEND_URL}/product?${query.join("&")}`;
 
@@ -78,8 +78,8 @@ export default function ShopPage() {
     initialPageParam: 0,
 
     getNextPageParam: (lastPage, allPages) => {
-      if (lastPage.length < 10) return undefined;
-      return allPages.length * 10;
+      if (lastPage.length < 12) return undefined;
+      return allPages.length * 12;
     },
 
     refetchOnReconnect: false,
@@ -218,7 +218,9 @@ export default function ShopPage() {
         )}
 
         {isFetchingNextPage && (
-          <p className="text-center mt-4 text-gray-600">Loading more...</p>
+          <div className="w-full h-20 flex items-center justify-center">
+            <LoadingSpinner />
+          </div>
         )}
       </div>
     </div>

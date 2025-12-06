@@ -15,13 +15,12 @@ interface Seller {
 interface SellerInfoProps {
   seller: Seller;
   distance: number;
-  onMessageSeller: () => void;
+  // onMessageSeller: () => void;
 }
 
 export default function SellerInfo({ 
   seller, 
-  distance, 
-  onMessageSeller 
+  distance,
 }: SellerInfoProps) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm">

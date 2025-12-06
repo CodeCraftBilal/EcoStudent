@@ -1,265 +1,328 @@
-  "use client";
+"use client";
 
-  import { useEffect, useState } from "react";
-  import { ChevronLeft } from "lucide-react";
-  import Link from "next/link";
-  import {
-    ProductImageGallery,
-    ProductInfo,
-    SellerInfo,
-    ActionButtons,
-    ProductTabs,
-    RelatedItems,
-  } from "@/components/shop/product";
-  import { ItemCard } from "@/components/shop/itemcard";
-  import { Item } from "@/lib/types/types";
-  import { AnimatePresence, motion } from "framer-motion";
-  import { mockItems, mockReviews } from "@/data/Shop";
-  import { authFetch } from "@/lib/authFetch";
-  import { BACKEND_URL } from "@/lib/types/constants";
-  import { getUserLocation } from "@/lib/location";
-  import { LoadingSpinner } from "@/components/Loading";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
+
+import {
+  ProductImageGallery,
+  ProductInfo,
+  SellerInfo,
+  ProductTabs,
+} from "@/components/shop/product";
+import { ItemCard } from "@/components/shop/itemcard";
+import { LoadingSpinner } from "@/components/Loading";
 import { ProductNotFound } from "@/components/shop/product/NotFound";
 
-  type Product = {
+import { BACKEND_URL } from "@/lib/types/constants";
+import { authFetch } from "@/lib/authFetch";
+import { getUserLocation } from "@/lib/location";
+
+type Product = {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  originalPrice: number;
+  condition: string;
+  images: string[];
+  postedDate: string;
+  views: number;
+  category: string;
+  distance: number;
+  exchangeType: string;
+  seller: {
     id: string;
-    title: string;
-    description: string;
-    price: number;
-    originalPrice: number;
-    condition: string;
-    images: string[];
-    postedDate: string;
-    views: number;
-    category: string;
-    distance: number;
-    exchangeType: string;
-    seller: {
-      id: string;
-      name: string;
-      rating: number;
-      verified: boolean;
-      reviewCount: number;
-      memberSince: string;
-      avatar: string;
-    };
-    location: {
-      address: string;
-      latitude: number;
-      longitude: number;
-    };
-    specifications?: {
-      Author: string;
-      Edition: string;
-      Publisher: string;
-      ISBN: string;
-      Condition: string;
-      Pages: string;
-      Language: string;
-    };
+    name: string;
+    rating: number;
+    verified: boolean;
+    reviewCount: number;
+    memberSince: string;
+    avatar: string;
   };
+  location: {
+    address: string;
+    latitude: number;
+    longitude: number;
+  };
+  specifications?: Record<string, string>;
+};
 
-  const relatedItems: Item[] = mockItems;
+export type Review = {
+  id: string;
+  user: {
+    name: string;
+    avatar: string;
+    verified: boolean;
+  };
+  rating: number;
+  comment: string;
+  date: string;
+  helpful: number;
+};
 
-  export default function ProductDetailPage({
-    params,
-  }: {
-    params: Promise<{ slug: string }>;
-  }) {
-    const [item, setItem] = useState<Product | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+export default function ProductDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const [product, setProduct] = useState<Product | null>(null);
+  const [reviews, setReviews] = useState<Review[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-      const getProduct = async () => {
-        setIsLoading(true);
-        const query: string[] = [];
-        const userLocation = await getUserLocation();
-        const { slug } = await params;
-        console.log("slug ", slug[0]);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [cart, setCart] = useState<Set<string>>(new Set());
 
-        if (userLocation) {
-          query.push(
-            `lat=${userLocation.latitude}&lng=${userLocation.longitude}`
-          );
+  const searchParams = useSearchParams();
+
+  // loading more items on scroll
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  /** -----------------------------------------------------
+   *  FETCH PRODUCT DATA (runs once)
+   * ------------------------------------------------------ */
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setIsLoading(true);
+
+      const { slug } = await params;
+      const location = await getUserLocation();
+
+      let query = [];
+      if (location)
+        query.push(`lat=${location.latitude}&lng=${location.longitude}`);
+
+      try {
+        const res = await authFetch(
+          `${BACKEND_URL}/product/${slug}?${query.join("&")}`
+        );
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (!data.error && data[0]) {
+          setProduct(data[0]);
         }
+      } catch (e) {
+        console.log("Error fetching product", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-        const filters = query.join("&");
-        try {
-          const res = await authFetch(
-            `${BACKEND_URL}/product/${slug}?${filters}`
-          );
-          if (!res.ok) return;
+    fetchProduct();
+  }, []);
 
-          const result = await res.json();
-          console.log("result item: ", result[0]);
+  /** -----------------------------------------------------
+   *  FETCH REVIEWS
+   * ------------------------------------------------------ */
+  useEffect(() => {
+    if (!product) return;
 
-          if (!result.error) {
-            setItem(result[0]);
-          }
-        } catch (err) {
-          console.log(`Failed to fetch Product `, err);
-        } finally {
-          setIsLoading(false);
+    const fetchReviews = async () => {
+      try {
+        const res = await authFetch(
+          `${BACKEND_URL}/review/${product.seller.id}`
+        );
+        if (!res.ok) return setReviews(null);
+
+        const data = await res.json();
+        setReviews(!data.error ? data : null);
+      } catch (e) {
+        console.log("Error fetching reviews", e);
+      }
+    };
+
+    fetchReviews();
+  }, [product]);
+
+  /** -----------------------------------------------------
+   *  FAVORITES & CART TOGGLE (memoized functions)
+   * ------------------------------------------------------ */
+  const toggleFavorite = useCallback((id: string) => {
+    setFavorites((prev) => {
+      const updated = new Set(prev);
+      updated.has(id) ? updated.delete(id) : updated.add(id);
+      return updated;
+    });
+  }, []);
+
+  const toggleCart = useCallback((id: string) => {
+    setCart((prev) => {
+      const updated = new Set(prev);
+      updated.has(id) ? updated.delete(id) : updated.add(id);
+      return updated;
+    });
+  }, []);
+
+  /** -----------------------------------------------------
+   *  FETCH RELATED PRODUCTS (stable function)
+   * ------------------------------------------------------ */
+  const fetchRelatedProducts = useCallback(
+    async ({ pageParam = 0 }) => {
+      const location = await getUserLocation();
+      let query: string[] = [];
+
+      if (location)
+        query.push(`lat=${location.latitude}&lng=${location.longitude}`);
+
+      const category = searchParams.get("category");
+      if (category) query.push(`category=${category}`);
+
+      query.push("minPrice=0", "maxPrice=5000");
+      query.push(`offset=${pageParam}`, `limit=12`);
+      query.push(`maxDistance=20`);
+
+      const res = await authFetch(`${BACKEND_URL}/product?${query.join("&")}`);
+      return res.json();
+    },
+    [searchParams]
+  );
+
+  /** -----------------------------------------------------
+   *  useInfiniteQuery (perfect setup)
+   * ------------------------------------------------------ */
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["related-products"],
+      queryFn: fetchRelatedProducts,
+      initialPageParam: 0,
+      getNextPageParam: (lastPage, pages) =>
+        lastPage.length < 12 ? undefined : pages.length * 12,
+    });
+
+  /** -----------------------------------------------------
+   *  Flatten related items (memoized)
+   * ------------------------------------------------------ */
+  const relatedItems = useMemo(() => data?.pages.flat() ?? [], [data]);
+
+  // infite scroll
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
         }
-      };
-      
-      getProduct();
-    }, []);
+      },
+      { threshold: 1 }
+    );
 
-    // related items state
-    const [isFavorite, setIsFavorite] = useState(false);
-    const [cart, setCart] = useState<Set<string>>(new Set());
+    observer.observe(loadMoreRef.current);
 
-    // toogle favorite
-    const toggleFavorite = (itemId: string) => {
-      const newFavorites = new Set(favorites);
-      if (newFavorites.has(itemId)) {
-        newFavorites.delete(itemId);
-      } else {
-        newFavorites.add(itemId);
-      }
-      setFavorites(newFavorites);
-    };
+    return () => observer.disconnect();
+  }, [loadMoreRef, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-    const toggleCart = (itemId: string) => {
-      const newCart = new Set(cart);
-      if (newCart.has(itemId)) {
-        newCart.delete(itemId);
-      } else {
-        newCart.add(itemId);
-      }
-      setCart(newCart);
-    };
-
-    const [favorites, setFavorites] = useState<Set<string>>(new Set());
-
-    const handleFavoriteToggle = () => {
-      setIsFavorite(!isFavorite);
-    };
-
-    const handleShare = () => {
-      console.log("Share product:", item?.title);
-      // Implement share functionality
-    };
-
-    const handleReport = () => {
-      console.log("Report product:", item?.id);
-      // Implement report functionality
-    };
-
-    const handleAddToCart = (quantity: number) => {
-      console.log(`Added ${quantity} of ${item?.title} to cart`);
-      // Implement add to cart functionality
-    };
-
-    const handleMessageSeller = () => {
-      console.log(`Message seller: ${item?.seller.name}`);
-      // Implement message seller functionality
-    };
-
-    console.log(item?.seller);
-
+  /** -----------------------------------------------------
+   *  RENDER
+   * ------------------------------------------------------ */
+  if (isLoading)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-        {/* Navigation */}
-        <nav className="bg-white/80 backdrop-blur-md border-b border-green-200 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link
-                href="/shop"
-                className="flex items-center space-x-2 text-green-600 hover:text-green-700 transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5" />
-                <span>Back to Shop</span>
-              </Link>
-            </div>
+      <div className="w-full h-[500px] flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+
+  if (!product) return <ProductNotFound />;
+
+  function handleShare(): void {
+    throw new Error("Function not implemented.");
+  }
+
+  function handleReport(): void {
+    throw new Error("Function not implemented.");
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      {/* Navigation */}
+      <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center">
+          <Link href="/shop" className="flex items-center text-green-600">
+            <ChevronLeft className="w-5 h-5" />
+            <span>Back to Shop</span>
+          </Link>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid lg:grid-cols-2 gap-8 mb-12">
+          <ProductImageGallery
+            images={product.images}
+            title={product.title}
+            isFavorite={favorites.has(product.id)}
+            onFavoriteToggle={() => toggleFavorite(product.id)}
+          />
+
+          <div className="space-y-6">
+            <ProductInfo
+              title={product.title}
+              description={product.description}
+              price={product.price}
+              originalPrice={product.originalPrice}
+              rating={product.seller.rating}
+              reviewCount={product.seller.reviewCount}
+              condition={product.condition}
+              exchangeType={product.exchangeType}
+              postedDate={product.postedDate}
+              views={product.views}
+              onShare={handleShare}
+              onReport={handleReport}
+            />
+
+            <SellerInfo seller={product.seller} distance={product.distance} />
           </div>
-        </nav>
-        {isLoading ? (
-          <div className="w-full h-[500px] flex items-center justify-center">
-            <LoadingSpinner />
-          </div>
-        ) : (
-          item ? (<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-              {/* Left Column - Images */}
-              <div>
-                <ProductImageGallery
-                  images={item.images}
-                  title={item.title}
-                  isFavorite={isFavorite}
-                  onFavoriteToggle={handleFavoriteToggle}
-                />
-              </div>
+        </div>
 
-              {/* Right Column - Product Info */}
-              <div className="space-y-6">
-                <ProductInfo
-                  title={item.title}
-                  description={item.description}
-                  price={item.price}
-                  originalPrice={item.originalPrice}
-                  rating={item.seller.rating}
-                  reviewCount={item.seller.reviewCount}
-                  condition={item.condition}
-                  exchangeType={item.exchangeType}
-                  postedDate={item.postedDate}
-                  views={item.views}
-                  onShare={handleShare}
-                  onReport={handleReport}
-                />
+        {reviews && (
+          <ProductTabs
+            description={product.description}
+            specifications={product.specifications}
+            reviews={reviews}
+            location={product.location}
+            distance={product.distance}
+          />
+        )}
 
-                <SellerInfo
-                  seller={item.seller}
-                  distance={item.distance}
-                  onMessageSeller={handleMessageSeller}
-                />
+        {/* RELATED ITEMS */}
+        {/* RELATED ITEMS WITH INFINITE SCROLL */}
+        <motion.div
+          layout
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+        >
+          <AnimatePresence>
+            {relatedItems.map((item, idx) => {
+              const isLast = idx === relatedItems.length - 1;
 
-                {/* <ActionButtons
-                exchangeType={item.exchangeType}
-                price={item.price}
-                onAddToCart={handleAddToCart}
-                onMessageSeller={handleMessageSeller}
-              /> */}
-              </div>
-            </div>
-
-            {/* Tabs Section */}
-            <div className="mb-12">
-              <ProductTabs
-                description={item.description}
-                specifications={item.specifications}
-                reviews={mockReviews}
-                location={item.location}
-                distance={item.distance}
-              />
-            </div>
-
-            {/* Related Items */}
-            <motion.div
-              layout
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
-            >
-              <AnimatePresence>
-                {relatedItems.map((item, index) => (
+              return (
+                <div
+                  key={item.id}
+                  ref={isLast ? loadMoreRef : null} // 👈 attach observer to last item
+                >
                   <ItemCard
-                    key={item.id}
                     item={item}
-                    index={index}
+                    index={idx}
                     isFavorite={favorites.has(item.id)}
                     isInCart={cart.has(item.id)}
                     onToggleFavorite={toggleFavorite}
                     onToggleCart={toggleCart}
                   />
-                ))}
-              </AnimatePresence>
-            </motion.div>
+                </div>
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
+
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <LoadingSpinner />
           </div>
-          ) : (
-            <ProductNotFound />
-          )      
-      )}
+        )}
       </div>
-    );
-  }
+    </div>
+  );
+}

@@ -185,7 +185,7 @@ export function ItemCard({
             </button> */}
             <Link
               className={`flex-1 text-center py-2 px-4 rounded-lg text-sm font-medium transition-colors bg-green-500 text-white hover:bg-green-600`}
-              href={`/dashboard/chat?user=${item.seller.name}`}
+              href={`/dashboard/chat?user=${item.seller.id}`}
             >
               Message Seller
             </Link>

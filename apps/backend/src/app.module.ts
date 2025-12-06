@@ -7,12 +7,13 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { ProductModule } from './product/product.module';
 import { UploadModule } from './upload/upload.module';
+import { ReviewModule } from './review/review.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     UsersModule, 
-    AuthModule, ProductModule, UploadModule,
+    AuthModule, ProductModule, UploadModule, ReviewModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

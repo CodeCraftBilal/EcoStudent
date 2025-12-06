@@ -156,6 +156,7 @@ export class ProductService {
           u.isverified,
           u.rating,
           u.profilepicture,
+          u.userid,
           ${
             lat !== null && lng !== null
               ? `(6371 * acos(
@@ -189,6 +190,7 @@ export class ProductService {
         image: Array.isArray(p.images) ? p.images[0] : null,
         distance: p.distance ? Number(Number(p.distance).toFixed(1)) : 0,
         seller: {
+          id: p.userid,
           name: p.seller_name,
           rating: p.rating ? Number(p.rating) : 0,
           verified: Boolean(p.isverified),
