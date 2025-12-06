@@ -74,6 +74,7 @@ const formatDate = (dateString: string) => {
     year: 'numeric'
   });
 };
+
   return (
     <motion.div
       layout
@@ -114,12 +115,12 @@ const formatDate = (dateString: string) => {
           </h3>
         </div>
 
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+        {/* <p className="text-gray-600 text-sm mb-3 line-clamp-2">
           {listing.description}
-        </p>
+        </p> */}
 
         {/* Price and Condition */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-2">
             <span className="text-lg font-bold text-green-600">
               {listing.exchangeType === 'donation' ? 'FREE' : `Rs ${listing.price.toLocaleString()}`}
@@ -136,7 +137,7 @@ const formatDate = (dateString: string) => {
         </div>
 
         {/* Meta Info */}
-        <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+        <div className=" flex items-center justify-between text-sm text-gray-500 mb-4">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">
               <Eye className="w-4 h-4" />
@@ -148,7 +149,7 @@ const formatDate = (dateString: string) => {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div className=" flex items-center justify-between pt-3 border-t border-gray-100">
           <div className="flex items-center space-x-2">
             <Link
               href={`/item/${listing.id}`}

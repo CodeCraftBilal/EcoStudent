@@ -26,7 +26,7 @@ import { useSession } from "@/context/useSession";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { authFetch } from "@/lib/authFetch";
 import { getUserLocation } from "@/lib/location";
-
+import Image from "next/image";
 
 // mock notifications
 export const notificationsData = [
@@ -254,9 +254,10 @@ export default function DashboardNavbar() {
                 onClick={toggleProfileDropdown}
                 className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-colors"
               >
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                 {session?.profile ? <img
-                  className="rounded-full"
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm relative">
+                 {session?.profile ? <Image
+                  fill
+                  className="rounded-full object-center object-cover"
                   src={session?.profile} alt={session?.userName} /> : <span>E</span>}
                   
                 </div>
