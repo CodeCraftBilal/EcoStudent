@@ -36,7 +36,7 @@ export function ItemCard({
       <div className="relative overflow-hidden">
         <Link
           className="relative overflow-hidden"
-          href={`/shop/product/${item.id}`}
+          href={`/shop/product/${item.id}?category=${item.category}`}
         >
           <img
             src={item.image}
@@ -80,7 +80,7 @@ export function ItemCard({
       {/* Content Section */}
       <div className="px-2 sm:p-4">
         {/* Mobile Compact View */}
-        <Link href={`/shop/product/${item.id}`} className="sm:hidden">
+        <Link href={`/shop/product/${item.id}?category=${item.category}`} className="sm:hidden">
           <h3
             className={`font-semibold text-gray-900 text-sm max-md:h-10 line-clamp-2 ${item.title.length < 25 ? "min-h-[2rem]" : ""}`}
           >
@@ -105,7 +105,7 @@ export function ItemCard({
 
         {/* Desktop Detailed View */}
         <div className="hidden sm:block">
-          <Link href={`/shop/product/${item.id}`}>
+          <Link href={`/shop/product/${item.id}?category=${item.category}`}>
             <div className="flex justify-between items-start mb-1">
               <h3 className="font-semibold text-gray-900 line-clamp-2 flex-1">
                 {item.title}
@@ -185,7 +185,7 @@ export function ItemCard({
             </button> */}
             <Link
               className={`flex-1 text-center py-2 px-4 rounded-lg text-sm font-medium transition-colors bg-green-500 text-white hover:bg-green-600`}
-              href={`/dashboard/chat?user=user_id`}
+              href={`/dashboard/chat?user=${item.seller.name}`}
             >
               Message Seller
             </Link>
