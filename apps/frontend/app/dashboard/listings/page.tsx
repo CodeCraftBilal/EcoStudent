@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -16,6 +16,9 @@ import { BACKEND_URL } from "@/lib/types/constants";
 import { authFetch } from "@/lib/authFetch";
 import { useSession } from "@/context/useSession";
 import { LoadingSpinner } from "@/components/Loading";
+import { Dialog } from "@/components/ui/dialogBoxes/Dialog";
+import { ConfirmDialog } from "@/components/ui/dialogBoxes/Pre-configuredDialog";
+import { SnackbarProvider, useSnackbar } from "@/components/ui/dialogBoxes/SnackBarManager";
 
 const PAGE_SIZE = 10;
 
@@ -30,7 +33,7 @@ type ApiResponse = {
   };
 };
 
-export default function MyListingsPage() {
+const MyListingsPage = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { session, isLoading } = useSession();
@@ -52,16 +55,17 @@ export default function MyListingsPage() {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  const {showSuccess, showError, showInfo} = useSnackbar()
+
   /* ---------------- DEBOUNCED SEARCH ---------------- */
 
   useEffect(() => {
-  const timer = setTimeout(() => {
-    setDebouncedSearch(searchInput);
-  }, 400);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 400);
 
-  return () => clearTimeout(timer);
-}, [searchInput]);
-
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   /* ---------------- AUTH REDIRECT ---------------- */
   useEffect(() => {
@@ -69,9 +73,7 @@ export default function MyListingsPage() {
   }, [session, isLoading]);
 
   /* ---------------- FETCH ---------------- */
-  const fetchListings = async ({
-    pageParam = 1,
-  }): Promise<ApiResponse> => {
+  const fetchListings = async ({ pageParam = 1 }): Promise<ApiResponse> => {
     const params = new URLSearchParams({
       page: String(pageParam),
       limit: String(PAGE_SIZE),
@@ -115,9 +117,7 @@ export default function MyListingsPage() {
     queryFn: fetchListings,
     initialPageParam: 1,
     getNextPageParam: (lastPage, pages) =>
-      lastPage.items.length < PAGE_SIZE
-        ? undefined
-        : pages.length + 1,
+      lastPage.items.length < PAGE_SIZE ? undefined : pages.length + 1,
   });
 
   /* ---------------- FLATTEN ---------------- */
@@ -163,13 +163,30 @@ export default function MyListingsPage() {
   const confirmDelete = async () => {
     if (!selectedListing) return;
 
-    await authFetch(
-      `${BACKEND_URL}/product/${selectedListing.id}`,
-      { method: "DELETE" }
-    );
+    try {
 
-    setShowDeleteModal(false);
-    setSelectedListing(null);
+      const res = await authFetch(`${BACKEND_URL}/product/${selectedListing.id}`, {
+        method: "DELETE",
+      });
+      
+      if(!res.ok) {
+        return;
+      }
+        const result = await res.json();
+        if(result.success) {
+          showSuccess(`${result.message}`)
+        } else {
+          showError(`${result.message}`)
+        }
+
+      }
+      catch (err) {
+        console.log(err)
+      } finally {
+
+        setShowDeleteModal(false);
+        setSelectedListing(null);
+      }
 
     queryClient.invalidateQueries({ queryKey: ["my-listings"] });
   };
@@ -224,22 +241,33 @@ export default function MyListingsPage() {
             </div>
 
             {/* SCROLL TRIGGER */}
-            <div
-              ref={observerRef}
-              className="flex justify-center py-12"
-            >
+            <div ref={observerRef} className="flex justify-center py-12">
               {isFetchingNextPage && <LoadingSpinner />}
             </div>
           </>
         )}
 
-        <DeleteModal
+        <ConfirmDialog
           isOpen={showDeleteModal}
-          listing={selectedListing}
           onClose={() => setShowDeleteModal(false)}
+          title="Confirm Deletion"
+          description="Are you sure you want to delete this item? This action cannot be undone."
           onConfirm={confirmDelete}
+          onCancel={() => setShowDeleteModal(false)}
+          confirmText="Delete"
+          cancelText="Keep"
         />
       </div>
     </div>
   );
 }
+
+const App: React.FC = () => {
+  return (
+    <SnackbarProvider>
+      <MyListingsPage />
+    </SnackbarProvider>
+  );
+};
+
+export default App;

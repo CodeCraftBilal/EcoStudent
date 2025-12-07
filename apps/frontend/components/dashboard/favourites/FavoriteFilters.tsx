@@ -65,7 +65,7 @@ export default function FavoriteFilters({
     onPriceRangeChange([0, 10000]);
   };
 
-  return (
+  return ( 
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
         {/* Search Bar */}

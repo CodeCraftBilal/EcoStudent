@@ -23,6 +23,8 @@ export function ItemCard({
   onToggleFavorite,
   onToggleCart,
 }: ItemCardProps) {
+
+  
   return (
     <motion.div
       layout
@@ -73,6 +75,13 @@ export function ItemCard({
               : item.exchangeType === "exchange"
                 ? "Exchange"
                 : "Free"}
+          </span>
+        </div>
+        <div className="absolute top-8 left-2">
+          <span
+            className={`text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-800`}
+            >
+            {item.category}
           </span>
         </div>
       </div>

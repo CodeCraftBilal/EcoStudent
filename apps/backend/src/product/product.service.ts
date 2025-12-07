@@ -4,28 +4,216 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FindByUIDParams, Item } from './types/types';
 import { Prisma } from '@prisma/client';
+import { error } from 'console';
 
 @Injectable()
 export class ProductService {
-  async findFavorits(id: number, query: any) {
-    try {
-      return await this.prisma.product.findMany({
-        include: {
-          userFavorites: {
-            select: {
-              product: {
-                where: {
-                  userFavorites: { some: query },
-                },
-              },
-            },
-          },
-        },
-      });
-    } catch (err) {
-      console.log(err);
-      return [];
+  async findFavoritesByUserId(
+  userId: number,
+  filters: any,
+) {
+  try {
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    // Pagination
+    const limit = filters.limit ? Number(filters.limit) : 10;
+    const page = filters.page ? Number(filters.page) : 1;
+    const offset = (page - 1) * limit;
+
+    // Mandatory favorite filter
+    conditions.push(`uf.userid = $${params.length + 1}`);
+    params.push(userId);
+
+    // Search
+    if (filters.search) {
+      conditions.push(`p.title ILIKE '%' || $${params.length + 1} || '%'`);
+      params.push(filters.search);
     }
+
+    // Category
+    if (filters.category) {
+      conditions.push(`p.categoryid = $${params.length + 1}`);
+      params.push(Number(filters.category));
+    }
+
+    // Condition
+    if (filters.condition) {
+      conditions.push(
+        `p.productcondition = $${params.length + 1}::product_condition`,
+      );
+      params.push(filters.condition);
+    }
+
+    // Price filters
+    if (filters.minPrice) {
+      conditions.push(`p.price >= $${params.length + 1}`);
+      params.push(Number(filters.minPrice));
+    }
+
+    if (filters.maxPrice) {
+      conditions.push(`p.price <= $${params.length + 1}`);
+      params.push(Number(filters.maxPrice));
+    }
+
+    const whereSQL = conditions.length
+      ? `WHERE ${conditions.join(' AND ')}`
+      : '';
+
+    // Geo filters
+    const lat = filters.lat ? Number(filters.lat) : null;
+    const lng = filters.lng ? Number(filters.lng) : null;
+
+    const maxDistance = filters.maxDistance
+      ? Number(filters.maxDistance)
+      : null;
+
+    // Distance SQL
+    const distanceSQL =
+      lat !== null && lng !== null
+        ? `(6371 * acos(
+              cos(radians(${lat})) * cos(radians(u.latitude)) *
+              cos(radians(u.longitude) - radians(${lng})) +
+              sin(radians(${lat})) * sin(radians(u.latitude))
+           ))`
+        : '0';
+
+    // ---------------- RAW QUERY ----------------
+    const rawFavorites: any[] = await this.prisma.$queryRawUnsafe(
+      `
+      SELECT *
+      FROM (
+        SELECT
+          uf.favoriteid,
+          uf.created_at AS added_at,
+
+          p.productid,
+          p.title,
+          p.description,
+          p.images,
+          p.price,
+          p.originalprice,
+          p.productcondition,
+          p.exchangetype,
+          p.status,
+          p.views,
+          p.created_at,
+
+          c.categoryname,
+
+          u.userid,
+          u.username,
+          u.profilepicture,
+          u.rating,
+          u.isverified,
+          u.userlocation,
+
+          ${distanceSQL} AS distance
+
+        FROM user_favorites uf
+        JOIN product p ON uf.productid = p.productid
+        LEFT JOIN users u ON p.userid = u.userid
+        LEFT JOIN category c ON p.categoryid = c.categoryid
+
+        ${whereSQL}
+      ) AS sub
+
+      ${maxDistance !== null ? `WHERE sub.distance <= ${maxDistance}` : ''}
+
+      ORDER BY sub.added_at DESC
+
+      LIMIT ${limit}
+      OFFSET ${offset}
+    `,
+      ...params,
+    );
+
+    // -------- COUNT QUERY ----------
+    const countResult: any[] = await this.prisma.$queryRawUnsafe(
+      `
+      SELECT COUNT(*)
+      FROM user_favorites uf
+      JOIN product p ON uf.productid = p.productid
+      ${whereSQL}
+    `,
+      ...params,
+    );
+
+    const total = Number(countResult[0].count);
+
+    // ---------------- MAP TO FRONTEND TYPE ----------------
+    const favorites = rawFavorites.map((p) => ({
+      id: p.favoriteid.toString(),
+      addedAt: p.added_at,
+      item: {
+        id: p.productid.toString(),
+        title: p.title,
+        description: p.description,
+        price: Number(p.price),
+        originalPrice: p.originalprice
+          ? Number(p.originalprice)
+          : undefined,
+        image: Array.isArray(p.images) ? p.images[0] : '',
+        category: p.categoryname ?? '',
+        condition: p.productcondition,
+        status: p.status,
+        exchangeType: p.exchangetype,
+
+        seller: {
+          id: p.userid.toString(),
+          name: p.username,
+          avatar: p.profilepicture || '',
+          rating: p.rating ? Number(p.rating) : 0,
+          verified: Boolean(p.isverified),
+        },
+
+        location: p.userlocation || '',
+        distance: p.distance ? Number(Number(p.distance).toFixed(1)) : 0,
+        views: Number(p.views ?? 0),
+        createdAt: p.created_at,
+      },
+    }));
+
+    return {
+      page,
+      limit,
+      total,
+      hasMore: offset + favorites.length < total,
+      data: favorites,
+    };
+  } catch (err) {
+    console.error('findFavoritesByUserId error:', err);
+    return {
+      error: true,
+      success: false,
+      message: 'Failed to fetch favorites',
+    };
+  }
+}
+
+  /**
+   * ADD TO FAVORITES
+   */
+  async addToFavorites(userId: number, productId: number) {
+    return this.prisma.user_favorites.create({
+      data: {
+        favoriteId: Date.now(),
+        userId,
+        productId,
+      }
+    });
+  }
+
+  /**
+   * REMOVE FAVORITE
+   */
+  async removeFromFavorites(userId: number, productId: number) {
+    return this.prisma.user_favorites.deleteMany({
+      where: {
+        userId,
+        productId
+      }
+    });
   }
 
   constructor(private readonly prisma: PrismaService) {}
@@ -318,11 +506,26 @@ export class ProductService {
     }
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     try {
-      return this.prisma.product.delete({
+      const product = await this.prisma.product.findUnique({
+        where: {productId: id}
+      })
+
+      if(product?.status == 'reserved') {
+        return {
+          error: true,
+          message: 'This action can\'t be done. Your order is in Progress'
+        }
+      }
+      await this.prisma.product.delete({
         where: { productId: id },
       });
+
+      return {
+        error: false,
+        message: 'Item deleted successfuly'
+      }
     } catch (err) {
       return {
         success: false,

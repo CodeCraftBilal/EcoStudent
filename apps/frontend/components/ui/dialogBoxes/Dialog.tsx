@@ -89,17 +89,17 @@ export const Dialog: React.FC<DialogProps> = ({
       case 'outline':
         return `${base} border border-green-500 text-green-500 hover:bg-green-50`;
       case 'danger':
-        return `${base} bg-green-coral hover:bg-red-500 text-white shadow-sm hover:shadow`;
+        return `${base} bg-red-500 hover:bg-red-500 text-white shadow-sm hover:shadow`;
       default:
         return `${base} bg-gray-100 hover:bg-gray-200 text-gray-700`;
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-transparent">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black/20 bg-opacity-50 transition-opacity"
         onClick={onClose}
       />
       

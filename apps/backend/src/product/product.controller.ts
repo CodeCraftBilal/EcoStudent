@@ -67,7 +67,7 @@ export class ProductController {
 
   @Get('/favorits')
   getFavorits(@Query() query: any, @Req() req ) {
-    return this.productService.findFavorits(req.user.id, query);
+    return this.productService.findFavoritesByUserId(req.user.id, query);
   }
 
     @Get('mylisting')
