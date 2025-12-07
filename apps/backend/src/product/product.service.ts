@@ -4,83 +4,81 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FindByUIDParams, Item } from './types/types';
 import { Prisma } from '@prisma/client';
-import { error } from 'console';
 
 @Injectable()
 export class ProductService {
-  async findFavoritesByUserId(
-  userId: number,
-  filters: any,
-) {
-  try {
-    const conditions: string[] = [];
-    const params: any[] = [];
+  async findFavoritesByUserId(userId: number, filters: any) {
+    console.log('find favorite is running... ', filters);
+    try {
+      const conditions: string[] = [];
+      const params: any[] = [];
 
-    // Pagination
-    const limit = filters.limit ? Number(filters.limit) : 10;
-    const page = filters.page ? Number(filters.page) : 1;
-    const offset = (page - 1) * limit;
+      // Pagination
+      const limit = filters.limit ? Number(filters.limit) : 10;
+      const page = filters.page ? Number(filters.page) : 1;
+      const offset = (page - 1) * limit;
 
-    // Mandatory favorite filter
-    conditions.push(`uf.userid = $${params.length + 1}`);
-    params.push(userId);
+      // Mandatory favorite filter
+      conditions.push(`uf.userid = $${params.length + 1}`);
+      params.push(userId);
 
-    // Search
-    if (filters.search) {
-      conditions.push(`p.title ILIKE '%' || $${params.length + 1} || '%'`);
-      params.push(filters.search);
-    }
+      // Search
+      if (filters.search) {
+        conditions.push(`p.title ILIKE '%' || $${params.length + 1} || '%'`);
+        params.push(filters.search);
+      }
 
-    // Category
-    if (filters.category) {
-      conditions.push(`p.categoryid = $${params.length + 1}`);
-      params.push(Number(filters.category));
-    }
+      // Category
+      if (filters.category) {
+        conditions.push(`p.categoryid = $${params.length + 1}`);
+        params.push(Number(filters.category));
+      }
 
-    // Condition
-    if (filters.condition) {
-      conditions.push(
-        `p.productcondition = $${params.length + 1}::product_condition`,
-      );
-      params.push(filters.condition);
-    }
+      // Condition
+      if (filters.condition) {
+        conditions.push(
+          `p.productcondition = $${params.length + 1}::product_condition`,
+        );
+        params.push(filters.condition);
+      }
 
-    // Price filters
-    if (filters.minPrice) {
-      conditions.push(`p.price >= $${params.length + 1}`);
-      params.push(Number(filters.minPrice));
-    }
+      // Price filters
+      if (filters.minPrice) {
+        conditions.push(`p.price >= $${params.length + 1}`);
+        params.push(Number(filters.minPrice));
+      }
 
-    if (filters.maxPrice) {
-      conditions.push(`p.price <= $${params.length + 1}`);
-      params.push(Number(filters.maxPrice));
-    }
+      if (filters.maxPrice) {
+        conditions.push(`p.price <= $${params.length + 1}`);
+        params.push(Number(filters.maxPrice));
+      }
 
-    const whereSQL = conditions.length
-      ? `WHERE ${conditions.join(' AND ')}`
-      : '';
+      const whereSQL = conditions.length
+        ? `WHERE ${conditions.join(' AND ')}`
+        : '';
 
-    // Geo filters
-    const lat = filters.lat ? Number(filters.lat) : null;
-    const lng = filters.lng ? Number(filters.lng) : null;
+      // Geo filters
+      const lat = filters.lat ? Number(filters.lat) : null;
+      const lng = filters.lng ? Number(filters.lng) : null;
 
-    const maxDistance = filters.maxDistance
-      ? Number(filters.maxDistance)
-      : null;
+      const maxDistance = filters.maxDistance
+        ? Number(filters.maxDistance)
+        : null;
 
-    // Distance SQL
-    const distanceSQL =
-      lat !== null && lng !== null
-        ? `(6371 * acos(
+      // Distance SQL
+      const distanceSQL =
+        lat !== null && lng !== null
+          ? `(6371 * acos(
               cos(radians(${lat})) * cos(radians(u.latitude)) *
               cos(radians(u.longitude) - radians(${lng})) +
               sin(radians(${lat})) * sin(radians(u.latitude))
            ))`
-        : '0';
+          : '0';
 
-    // ---------------- RAW QUERY ----------------
-    const rawFavorites: any[] = await this.prisma.$queryRawUnsafe(
-      `
+      console.log('whereSQL ', whereSQL);
+      // ---------------- RAW QUERY ----------------
+      const rawFavorites: any[] = await this.prisma.$queryRawUnsafe(
+        `
       SELECT *
       FROM (
         SELECT
@@ -125,71 +123,81 @@ export class ProductService {
       LIMIT ${limit}
       OFFSET ${offset}
     `,
-      ...params,
-    );
+        ...params,
+      );
 
-    // -------- COUNT QUERY ----------
-    const countResult: any[] = await this.prisma.$queryRawUnsafe(
-      `
-      SELECT COUNT(*)
-      FROM user_favorites uf
-      JOIN product p ON uf.productid = p.productid
-      ${whereSQL}
-    `,
-      ...params,
-    );
+      // -------- COUNT QUERY ----------
 
-    const total = Number(countResult[0].count);
+      const [totalFavorites, availableItems, priceDrops] = await Promise.all([
+        this.prisma.user_favorites.count({
+          where: {
+            userId,
+          },
+        }),
+        this.prisma.user_favorites.count({
+          where: {
+            userId,
+            product: {
+              status: 'active',
+            },
+          },
+        }),
+        this.prisma.user_favorites.count({
+          where: {
+            userId,
+            product: {
+              status: 'sold',
+            },
+          },
+        }),
+      ]);
+      // ---------------- MAP TO FRONTEND TYPE ----------------
+      const favorites = rawFavorites.map((p) => ({
+        id: p.favoriteid.toString(),
+        addedAt: p.added_at,
+        item: {
+          id: p.productid.toString(),
+          title: p.title,
+          description: p.description,
+          price: Number(p.price),
+          originalPrice: p.originalprice ? Number(p.originalprice) : undefined,
+          image: Array.isArray(p.images) ? p.images[0] : '',
+          category: p.categoryname ?? '',
+          condition: p.productcondition,
+          status: p.status,
+          exchangeType: p.exchangetype,
 
-    // ---------------- MAP TO FRONTEND TYPE ----------------
-    const favorites = rawFavorites.map((p) => ({
-      id: p.favoriteid.toString(),
-      addedAt: p.added_at,
-      item: {
-        id: p.productid.toString(),
-        title: p.title,
-        description: p.description,
-        price: Number(p.price),
-        originalPrice: p.originalprice
-          ? Number(p.originalprice)
-          : undefined,
-        image: Array.isArray(p.images) ? p.images[0] : '',
-        category: p.categoryname ?? '',
-        condition: p.productcondition,
-        status: p.status,
-        exchangeType: p.exchangetype,
+          seller: {
+            id: p.userid.toString(),
+            name: p.username,
+            avatar: p.profilepicture || '',
+            rating: p.rating ? Number(p.rating) : 0,
+            verified: Boolean(p.isverified),
+          },
 
-        seller: {
-          id: p.userid.toString(),
-          name: p.username,
-          avatar: p.profilepicture || '',
-          rating: p.rating ? Number(p.rating) : 0,
-          verified: Boolean(p.isverified),
+          location: p.userlocation || '',
+          distance: p.distance ? Number(Number(p.distance).toFixed(1)) : 0,
+          views: Number(p.views ?? 0),
+          createdAt: p.created_at,
         },
+      }));
 
-        location: p.userlocation || '',
-        distance: p.distance ? Number(Number(p.distance).toFixed(1)) : 0,
-        views: Number(p.views ?? 0),
-        createdAt: p.created_at,
-      },
-    }));
-
-    return {
-      page,
-      limit,
-      total,
-      hasMore: offset + favorites.length < total,
-      data: favorites,
-    };
-  } catch (err) {
-    console.error('findFavoritesByUserId error:', err);
-    return {
-      error: true,
-      success: false,
-      message: 'Failed to fetch favorites',
-    };
+      return {
+        totalFavorites,
+        availableItems,
+        priceDrops,
+        nearbyItems: 0,
+        data: favorites,
+      };
+    } catch (err) {
+      console.error('findFavoritesByUserId error:', err);
+      return {
+        error: true,
+        success: false,
+        message: 'Failed to fetch favorites',
+      };
+    }
   }
-}
 
   /**
    * ADD TO FAVORITES
@@ -200,7 +208,7 @@ export class ProductService {
         favoriteId: Date.now(),
         userId,
         productId,
-      }
+      },
     });
   }
 
@@ -211,8 +219,8 @@ export class ProductService {
     return this.prisma.user_favorites.deleteMany({
       where: {
         userId,
-        productId
-      }
+        productId,
+      },
     });
   }
 
@@ -509,14 +517,14 @@ export class ProductService {
   async remove(id: number) {
     try {
       const product = await this.prisma.product.findUnique({
-        where: {productId: id}
-      })
+        where: { productId: id },
+      });
 
-      if(product?.status == 'reserved') {
+      if (product?.status == 'reserved') {
         return {
           error: true,
-          message: 'This action can\'t be done. Your order is in Progress'
-        }
+          message: "This action can't be done. Your order is in Progress",
+        };
       }
       await this.prisma.product.delete({
         where: { productId: id },
@@ -524,8 +532,8 @@ export class ProductService {
 
       return {
         error: false,
-        message: 'Item deleted successfuly'
-      }
+        message: 'Item deleted successfuly',
+      };
     } catch (err) {
       return {
         success: false,
