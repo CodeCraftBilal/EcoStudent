@@ -169,9 +169,9 @@ export default function FavoriteItem({
         </div>
 
         {/* Description */}
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+        {/* <p className="text-gray-600 text-sm mb-3 line-clamp-2">
           {favorite.item.description}
-        </p>
+        </p> */}
 
         {/* Meta Info */}
         <div className="flex items-center justify-between text-sm text-gray-500 mb-4">

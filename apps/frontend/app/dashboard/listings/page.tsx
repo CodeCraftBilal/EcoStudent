@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { AnimatePresence } from "framer-motion";
 import { Listing } from "@/lib/types/dashboard/listings/listings";
 import PageHeader from "@/components/dashboard/listings/PageHeader";
 import SearchAndFilters from "@/components/dashboard/listings/SearchAndFilters";
@@ -24,8 +24,8 @@ export default function MyListingsPage() {
   const [sortBy, setSortBy] = useState<string>("newest");
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const router = useRouter()
-  const {isLoading, session} = useSession();
+  const router = useRouter();
+  const { isLoading, session } = useSession();
 
   const calculateStats = (listings: Listing[]) => ({
     total: listings.length,
@@ -36,11 +36,11 @@ export default function MyListingsPage() {
 
   // checkingSession
   useEffect(() => {
-    if(!session && !isLoading) {
-      router.push('/auth/signin')
+    if (!session && !isLoading) {
+      router.push("/auth/signin");
     }
-  }, [isLoading, session])
-  
+  }, [isLoading, session]);
+
   // Mock data - replace with actual API call
   useEffect(() => {
     const mockListings = mockListingsData;
@@ -48,23 +48,27 @@ export default function MyListingsPage() {
     setFilteredListings(mockListings);
   }, []);
 
-    const fetchMyListings = () => {
-      
+  const fetchMyListings = useCallback(async ({ pageParam = 0 }) => {
+    console.log('fetch runing')
+    const res = await authFetch(`${BACKEND_URL}/product/mylisting`)
+    if(!res.ok) {
+      console.log('listings not fetched: ', res.status, res.statusText)
     }
 
-  //   const {
-  //   data,
-  //   hasNextPage,
-  //   fetchNextPage,
-  //   isFetchingNextPage,
-  //   refetch,
-  // } = useInfiniteQuery({
-  //   queryKey: ['abc'],
-  //   queryFn: fetchMyListings,
+    const result = await res.json();
+    console.log('result: ', result)
+    return [];
+  }, []);
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["related-products"],
+      queryFn: fetchMyListings,
+      initialPageParam: 0,
+      getNextPageParam: (lastPage, pages) =>
+        lastPage.length < 12 ? undefined : pages.length * 12,
+    });
     
-  // })
-
-
   // Filter and sort listings
   useEffect(() => {
     let filtered = listings;

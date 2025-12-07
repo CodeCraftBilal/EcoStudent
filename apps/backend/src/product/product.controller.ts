@@ -20,6 +20,7 @@ import multer, { diskStorage } from 'multer';
 import { UploadService } from 'src/upload/upload.service';
 import { useGCS } from 'src/upload/constants/constants';
 import { Public } from 'src/auth/decorators/public.decorator';
+import type { FindByUIDParams } from './types/types';
 
 @Controller('product')
 export class ProductController {
@@ -69,6 +70,12 @@ export class ProductController {
     return this.productService.findFavorits(req.user.id, query);
   }
 
+    @Get('mylisting')
+  findProductByUserId(@Query() query: FindByUIDParams, @Req() req) {
+    console.log('request recieved to mylisting', req.user.id)
+    return this.productService.findProductByUserId(req.user.id, query)
+  }
+
   @Public()
   @Get()
   findAll(@Query() query: any) {
@@ -78,6 +85,7 @@ export class ProductController {
   @Public()
   @Get(':id')
   findOne(@Param('id') id: string, @Query() query: any) {
+    console.log('findone is running')
     return this.productService.findOne(+id, query);
   }
 

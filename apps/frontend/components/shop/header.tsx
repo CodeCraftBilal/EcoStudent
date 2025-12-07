@@ -25,6 +25,7 @@ import { Session } from "inspector/promises";
 import NotificationDropdown from "../dashboard/Notification";
 import { notificationsData } from "../dashboard/DashboardNavbar";
 import { messagesNotificationData } from "@/data/Notifications";
+import Image from "next/image";
 
 interface HeaderProps extends FiltersProps {
   searchQuery: string;
@@ -194,10 +195,13 @@ export function ShopNavBar({
                 <div className="relative">
                   <button
                     onClick={toggleProfileDropdown}
-                    className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-colors"
+                    className="flex items-center space-x-2 px-0 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                      <img className="rounded-full" src={session.profile ?? ''} alt={session.userName} />
+                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm relative">
+                      { session.profile ?
+                        <Image fill className="rounded-full object-center object-cover" src={session.profile} alt={session.userName} />
+                        : <div className="rounded-full w-8 h-8">{session.userName[0]}</div>
+                      }
                     </div>
                     <div className="hidden md:block text-left">
                       <div className="text-sm font-medium text-gray-900">

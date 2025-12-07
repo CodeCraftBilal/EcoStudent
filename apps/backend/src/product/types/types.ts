@@ -30,3 +30,15 @@ export interface BackendFilters {
   longitude?: number;
   maxDistance?: number;
 }
+
+export interface FindByUIDParams {
+  userId: number;
+  page?: number;        // current page (1-based)
+  limit?: number;      // items per page
+  search?: string;     // text search
+  minPrice?: number;
+  maxPrice?: number;
+  category?: string;
+  condition?: string;
+  sortBy?: 'latest' | 'price-asc' | 'price-desc';
+};

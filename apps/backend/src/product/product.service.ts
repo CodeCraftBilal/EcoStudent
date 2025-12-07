@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Item } from './types/types';
+import { FindByUIDParams, Item } from './types/types';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -328,6 +328,165 @@ export class ProductService {
         success: false,
         error: true,
         message: 'some error occured',
+      };
+    }
+  }
+
+  async findProductByUserId(
+    userId: number,
+    {
+      page = 1,
+      limit = 10,
+      search,
+      minPrice,
+      maxPrice,
+      category,
+      condition,
+      sortBy = 'latest',
+    }: FindByUIDParams,
+  ) {
+    const skip = Number((page - 1) * limit);
+
+    /** Build dynamic WHERE clause */
+    const basewhere: any = {
+      userId,
+      ...(search && {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+        ],
+      }),
+
+      ...(minPrice || maxPrice
+        ? {
+            price: {
+              ...(minPrice && { gte: minPrice }),
+              ...(maxPrice && { lte: maxPrice }),
+            },
+          }
+        : {}),
+
+      ...(condition && {
+        productCondition: condition,
+      }),
+
+      ...(category && {
+        category: {
+          is: {
+            categoryName: category,
+          },
+        },
+      }),
+    };
+
+    console.log('wehre: ', basewhere);
+    /** Sorting */
+    const orderBy =
+      sortBy === 'price-asc'
+        ? { price: 'asc' as const }
+        : sortBy === 'price-desc'
+          ? { price: 'desc' as const }
+          : { createdAt: 'desc' as const }; // default latest
+
+    /** Run queries */
+    try {
+      const [
+        rawProducts,
+        totalCount,
+        activeCount,
+        soldCount,
+        draftCount,
+        reservedCount,
+      ] = await Promise.all([
+        this.prisma.product.findMany({
+          where: basewhere,
+          skip,
+          take: Number(limit),
+          orderBy,
+          select: {
+            productId: true,
+            title: true,
+            description: true,
+            price: true,
+            originalPrice: true,
+            images: true,
+            status: true,
+            category: {
+              select: {
+                categoryName: true,
+              },
+            },
+            productCondition: true,
+            viewCount: true,
+            createdAt: true,
+            updatedAt: true,
+            exchangeType: true,
+          },
+        }),
+        // total
+        this.prisma.product.count({
+          where: basewhere,
+        }),
+        // active
+        this.prisma.product.count({
+          where: {
+            ...basewhere,
+            status: 'active',
+          },
+        }),
+        // sold
+        this.prisma.product.count({
+          where: {
+            ...basewhere,
+            status: 'sold',
+          },
+        }),
+        // draft
+        this.prisma.product.count({
+          where: {
+            ...basewhere,
+            status: 'draft',
+          },
+        }),
+        // reserved
+        this.prisma.product.count({
+          where: {
+            ...basewhere,
+            status: 'reserved',
+          },
+        }),
+      ]);
+      const products = rawProducts.map((p) => ({
+        id: p.productId,
+        title: p.title,
+        description: p.description,
+        price: Number(p.price),
+        originalPrice: p.originalPrice ? Number(p.originalPrice) : null,
+        image: p.images ? p.images[0] : null,
+        status: p.status,
+        category: p.category?.categoryName,
+        condition: p.productCondition,
+        views: p.viewCount,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+        exchangeType: p.exchangeType,
+      }));
+
+      return {
+        items: products,
+        stats: {
+          totalCount,
+          activeCount,
+          soldCount,
+          draftCount,
+          reservedCount,
+        },
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        error: true,
+        message: 'something went wrong!',
       };
     }
   }

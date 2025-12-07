@@ -8,7 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model Users {
   userId                                Int              @id @default(autoincrement()) @map("userid")
   userName                              String           @map("username") @db.VarChar(255)
@@ -129,12 +128,13 @@ model product {
   views            Int?
   images           Json?             @db.Json
   viewCount        Int?              @map("viewcount")
-  createdAt        DateTime?         @map("created_at") @db.Timestamp(6)
-  updatedAt        DateTime?         @map("updated_at") @db.Timestamp(6)
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt        DateTime          @default(now()) @map("updated_at") @db.Timestamp(6)
   originalPrice    Int?              @map("originalprice")
   productCondition product_condition @map("productcondition")
   productType      product_type      @map("producttype")
   exchangeType     exchange_type?    @default(sale) @map("exchangetype")
+  status           PRODUCT_STATUS    @default(active)
   chat             chat[]
   exchanges        exchanges[]
   category         category?         @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
@@ -214,6 +214,13 @@ enum product_condition {
 }
 
 enum status {
+  active
+  sold
+  reserved
+  draft
+}
+
+enum PRODUCT_STATUS {
   active
   sold
   reserved
