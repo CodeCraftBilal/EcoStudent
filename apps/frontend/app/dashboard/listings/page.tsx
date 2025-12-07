@@ -1,157 +1,198 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+
 import { Listing } from "@/lib/types/dashboard/listings/listings";
 import PageHeader from "@/components/dashboard/listings/PageHeader";
 import SearchAndFilters from "@/components/dashboard/listings/SearchAndFilters";
 import ListingCard from "@/components/dashboard/listings/ListingCard";
 import EmptyState from "@/components/dashboard/listings/EmptyState";
 import DeleteModal from "@/components/dashboard/listings/DeleteModal";
+
 import { BACKEND_URL } from "@/lib/types/constants";
 import { authFetch } from "@/lib/authFetch";
-import { mockListingsData } from "@/data/dashboard/listings";
 import { useSession } from "@/context/useSession";
-import { useRouter } from "next/navigation";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { LoadingSpinner } from "@/components/Loading";
+
+const PAGE_SIZE = 10;
+
+type ApiResponse = {
+  items: Listing[];
+  stats: {
+    totalCount: number;
+    activeCount: number;
+    soldCount: number;
+    draftCount: number;
+    reservedCount: number;
+  };
+};
 
 export default function MyListingsPage() {
-  const [listings, setListings] = useState<Listing[]>([]);
-  const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { session, isLoading } = useSession();
+
+  const observerRef = useRef<HTMLDivElement | null>(null);
+
+  /* ---------------- FILTER STATE ---------------- */
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("newest");
+  const [conditionFilter, setConditionFilter] = useState<string>("");
+
+  const [sortBy, setSortBy] = useState<string>("latest");
+  const [minPrice, setMinPrice] = useState<number | undefined>();
+  const [maxPrice, setMaxPrice] = useState<number | undefined>();
+
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const router = useRouter();
-  const { isLoading, session } = useSession();
 
-  const calculateStats = (listings: Listing[]) => ({
-    total: listings.length,
-    active: listings.filter((item) => item.status === "active").length,
-    sold: listings.filter((item) => item.status === "sold").length,
-    draft: listings.filter((item) => item.status === "draft").length,
+  /* ---------------- DEBOUNCED SEARCH ---------------- */
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearch(searchInput);
+  }, 400);
+
+  return () => clearTimeout(timer);
+}, [searchInput]);
+
+
+  /* ---------------- AUTH REDIRECT ---------------- */
+  useEffect(() => {
+    if (!session && !isLoading) router.push("/auth/signin");
+  }, [session, isLoading]);
+
+  /* ---------------- FETCH ---------------- */
+  const fetchListings = async ({
+    pageParam = 1,
+  }): Promise<ApiResponse> => {
+    const params = new URLSearchParams({
+      page: String(pageParam),
+      limit: String(PAGE_SIZE),
+      sortBy,
+    });
+
+    if (debouncedSearch) params.append("search", debouncedSearch);
+    if (minPrice !== undefined) params.append("minPrice", String(minPrice));
+    if (maxPrice !== undefined) params.append("maxPrice", String(maxPrice));
+    if (statusFilter !== "all") params.append("status", statusFilter);
+    if (categoryFilter !== "all") params.append("category", categoryFilter);
+    if (conditionFilter) params.append("condition", conditionFilter);
+
+    const res = await authFetch(
+      `${BACKEND_URL}/product/mylisting?${params.toString()}`
+    );
+
+    if (!res.ok) throw new Error("Failed to load listings");
+
+    return res.json();
+  };
+
+  /* ---------------- INFINITE QUERY ---------------- */
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: listingsLoading,
+  } = useInfiniteQuery({
+    queryKey: [
+      "my-listings",
+      debouncedSearch,
+      statusFilter,
+      categoryFilter,
+      conditionFilter,
+      sortBy,
+      minPrice,
+      maxPrice,
+    ],
+    queryFn: fetchListings,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, pages) =>
+      lastPage.items.length < PAGE_SIZE
+        ? undefined
+        : pages.length + 1,
   });
 
-  // checkingSession
-  useEffect(() => {
-    if (!session && !isLoading) {
-      router.push("/auth/signin");
-    }
-  }, [isLoading, session]);
+  /* ---------------- FLATTEN ---------------- */
+  const listings = useMemo(
+    () => data?.pages.flatMap((p) => p.items) ?? [],
+    [data]
+  );
 
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const mockListings = mockListingsData;
-    setListings(mockListings);
-    setFilteredListings(mockListings);
-  }, []);
-
-  const fetchMyListings = useCallback(async ({ pageParam = 0 }) => {
-    console.log('fetch runing')
-    const res = await authFetch(`${BACKEND_URL}/product/mylisting`)
-    if(!res.ok) {
-      console.log('listings not fetched: ', res.status, res.statusText)
-    }
-
-    const result = await res.json();
-    console.log('result: ', result)
-    return [];
-  }, []);
-
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteQuery({
-      queryKey: ["related-products"],
-      queryFn: fetchMyListings,
-      initialPageParam: 0,
-      getNextPageParam: (lastPage, pages) =>
-        lastPage.length < 12 ? undefined : pages.length * 12,
-    });
-    
-  // Filter and sort listings
-  useEffect(() => {
-    let filtered = listings;
-
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (listing) =>
-          listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          listing.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((listing) => listing.status === statusFilter);
-    }
-
-    // Category filter
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter(
-        (listing) => listing.category === categoryFilter
-      );
-    }
-
-    // Sort
-    filtered = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-        case "oldest":
-          return (
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          );
-        case "price-high":
-          return b.price - a.price;
-        case "price-low":
-          return a.price - b.price;
-        case "views":
-          return b.views - a.views;
-        case "name":
-          return a.title.localeCompare(b.title);
-        default:
-          return 0;
+  /* ---------------- API STATS ---------------- */
+  const stats = useMemo(() => {
+    return (
+      data?.pages?.[0]?.stats ?? {
+        totalCount: 0,
+        activeCount: 0,
+        soldCount: 0,
+        draftCount: 0,
+        reservedCount: 0,
       }
-    });
+    );
+  }, [data]);
 
-    setFilteredListings(filtered);
-  }, [listings, searchQuery, statusFilter, categoryFilter, sortBy]);
+  /* ---------------- INFINITE SCROLL ---------------- */
+  useEffect(() => {
+    if (!observerRef.current || !hasNextPage) return;
 
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) fetchNextPage();
+      },
+      { threshold: 0.4 }
+    );
+
+    observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage]);
+
+  /* ---------------- HANDLERS ---------------- */
   const handleDelete = (listing: Listing) => {
     setSelectedListing(listing);
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = () => {
-    if (selectedListing) {
-      setListings((prev) =>
-        prev.filter((item) => item.id !== selectedListing.id)
-      );
-      setShowDeleteModal(false);
-      setSelectedListing(null);
-    }
+  const confirmDelete = async () => {
+    if (!selectedListing) return;
+
+    await authFetch(
+      `${BACKEND_URL}/product/${selectedListing.id}`,
+      { method: "DELETE" }
+    );
+
+    setShowDeleteModal(false);
+    setSelectedListing(null);
+
+    queryClient.invalidateQueries({ queryKey: ["my-listings"] });
   };
 
   const resetFilters = () => {
+    setSearchInput("");
+    setDebouncedSearch("");
     setStatusFilter("all");
     setCategoryFilter("all");
-    setSearchQuery("");
+    setConditionFilter("");
+    setMinPrice(undefined);
+    setMaxPrice(undefined);
   };
 
-  const stats = calculateStats(listings);
-
+  /* ---------------- UI ---------------- */
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageHeader stats={stats} />
 
         <SearchAndFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          searchQuery={searchInput}
+          onSearchChange={setSearchInput}
           sortBy={sortBy}
           onSortChange={setSortBy}
           statusFilter={statusFilter}
@@ -161,21 +202,35 @@ export default function MyListingsPage() {
           onResetFilters={resetFilters}
         />
 
-        {/* Listings Grid */}
-        {filteredListings.length === 0 ? (
-          <EmptyState hasListings={listings.length > 0} />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <AnimatePresence>
-              {filteredListings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </AnimatePresence>
+        {/* GRID */}
+        {listingsLoading && listings.length === 0 ? (
+          <div className="flex justify-center mt-14">
+            <LoadingSpinner />
           </div>
+        ) : listings.length === 0 ? (
+          <EmptyState hasListings={false} />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <AnimatePresence>
+                {listings.map((listing) => (
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {/* SCROLL TRIGGER */}
+            <div
+              ref={observerRef}
+              className="flex justify-center py-12"
+            >
+              {isFetchingNextPage && <LoadingSpinner />}
+            </div>
+          </>
         )}
 
         <DeleteModal

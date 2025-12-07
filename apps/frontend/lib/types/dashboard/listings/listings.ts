@@ -5,18 +5,19 @@ export interface Listing {
   price: number;
   originalPrice?: number;
   image: string;
-  status: 'active' | 'sold' | 'reserved' | 'draft';
+  status: "active" | "sold" | "reserved" | "draft";
   category: string;
-  condition: 'excellent' | 'good' | 'fair';
+  condition: "excellent" | "good" | "fair";
   views: number;
   createdAt: string;
   updatedAt: string;
-  exchangeType: 'sale' | 'exchange' | 'donation';
+  exchangeType: "sale" | "exchange" | "donation";
 }
 
 export interface ListingStats {
-  total: number;
-  active: number;
-  sold: number;
-  draft: number;
+  totalCount: number;
+  activeCount: number;
+  soldCount: number;
+  draftCount: number;
+  reservedCount: number;
 }

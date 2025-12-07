@@ -26,11 +26,11 @@ export default function PageHeader({ stats }: PageHeaderProps) {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-        <StatsCard title="Total Items" value={stats.total} />
-        <StatsCard title="Active" value={stats.active} color="text-green-600" />
-        <StatsCard title="Sold" value={stats.sold} color="text-gray-600" />
-        <StatsCard title="Drafts" value={stats.draft} color="text-yellow-600" />
-        <StatsCard title="Progress" value={stats.draft} color="text-yellow-600" />
+        <StatsCard title="Total Items" value={stats.totalCount} />
+        <StatsCard title="Active" value={stats.activeCount} color="text-green-600" />
+        <StatsCard title="Sold" value={stats.soldCount} color="text-gray-600" />
+        <StatsCard title="Drafts" value={stats.draftCount} color="text-yellow-600" />
+        <StatsCard title="Progress" value={stats.reservedCount} color="text-yellow-600" />
       </div>
     </div>
   );
