@@ -7,11 +7,11 @@ import { motion, AnimatePresence } from "framer-motion";
 interface FavoriteFiltersProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  statusFilter: string;
+  statusFilter: string | undefined;
   onStatusFilterChange: (status: string) => void;
-  categoryFilter: string;
+  categoryFilter: string | undefined;
   onCategoryFilterChange: (category: string) => void;
-  sortBy: string;
+  sortBy: string | undefined;
   onSortChange: (sort: string) => void;
   priceRange: [number, number];
   onPriceRangeChange: (range: [number, number]) => void;
@@ -32,14 +32,14 @@ export default function FavoriteFilters({
   const [showFilters, setShowFilters] = useState(false);
 
   const statusOptions = [
-    { value: "all", label: "All Status" },
+    { value: "", label: "All Status" },
     { value: "available", label: "Available" },
     { value: "sold", label: "Sold" },
     { value: "reserved", label: "Reserved" }
   ];
 
   const categoryOptions = [
-    { value: "all", label: "All Categories" },
+    { value: "", label: "All Categories" },
     { value: "books", label: "Books" },
     { value: "uniform", label: "Uniforms" },
     { value: "calculator", label: "Calculators" },
@@ -59,8 +59,8 @@ export default function FavoriteFilters({
 
   const resetFilters = () => {
     onSearchChange("");
-    onStatusFilterChange("all");
-    onCategoryFilterChange("all");
+    onStatusFilterChange("");
+    onCategoryFilterChange("");
     onSortChange("recently-added");
     onPriceRangeChange([0, 10000]);
   };

@@ -24,11 +24,5 @@
     "packages/*"
   ],
   "dependencies": {
-    "framer-motion": "^12.23.22",
-    "lottie-react": "^2.4.1",
-    "lucide-react": "^0.545.0",
-    "nextjs-toploader": "^3.9.17",
-    "passport-google-oauth20": "^2.0.0",
-    "react-responsive": "^10.0.1"
   }
 }

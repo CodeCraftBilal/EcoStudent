@@ -1,152 +1,184 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { 
-  FavoriteStats, 
-  FavoriteFilters, 
-  FavoriteList, 
-  EmptyFavorites 
-} from "@/components/dashboard/favourites/index";
-import { FavoriteItem, FavoriteStats as FavoriteStatsType } from "@/lib/types/dashboard/favourites/favourites";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  FavoriteStats,
+  FavoriteFilters,
+  FavoriteList,
+  EmptyFavorites,
+} from "@/components/dashboard/favourites";
+
+import { FavoriteItem } from "@/lib/types/dashboard/favourites/favourites";
+
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { useSession } from "@/context/useSession";
 import { useRouter } from "next/navigation";
-import { mockFavoritesData } from "@/data/dashboard/favorite";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { getUserLocation } from "@/lib/location";
+import { LoadingSpinner } from "@/components/Loading";
+
+const PAGE_SIZE = 10;
+
+/* ---------------- TYPES ---------------- */
+
+type ApiResponse = {
+  data: FavoriteItem[];
+
+  totalFavorites: number;
+  availableItems: number;
+  priceDrops: number;
+  nearbyItems: number;
+};
+
+/* ---------------- COMPONENT ---------------- */
 
 export default function FavoritesPage() {
-  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
-  const [filteredFavorites, setFilteredFavorites] = useState<FavoriteItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("recently-added");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
-  const {isLoading, session, setSession} = useSession();
   const router = useRouter();
+  const { session, isLoading } = useSession();
 
-  // check the session
+  /* ---------------- FILTER STATES ---------------- */
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string | undefined>();
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
+  const [sortBy, setSortBy] = useState<string | undefined>();
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+
+  /* ================= AUTH GUARD ================= */
+
   useEffect(() => {
-    const fetchClientSession = async () => {
-      if(!session) {
-        const res = await authFetch(`${BACKEND_URL}/auth/session`, {
-          method: 'GET',
-          headers: {
-            'Content-Type':'application/json'
-          }
-        });
-        if(!res.ok) {
-          console.log(`Session Failed to fetch: `, res.statusText, res.status)
-        }
-        const result = await res.json();
-        if(result.error) {
-          router.push('/auth/signin');
-        }
-        setSession(result);
-      }
+    if (!session && !isLoading) {
+      router.push("/auth/signin");
     }
+  }, [session, isLoading, router]);
 
-    fetchClientSession();
-  }, [])
-  
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const fetchFavorits = async () => {
-          const res = await authFetch(`${BACKEND_URL}/product/favorits`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          })
-          if(!res.ok) {
-            console.log(`${res.statusText} ${res.status}`)
+  /* ================= FETCHER ================= */
+
+  const fetchFavorites = useCallback(
+    async ({ pageParam = 1 }): Promise<ApiResponse> => {
+      const location = await getUserLocation();
+
+      const params = new URLSearchParams({
+        page: String(pageParam),
+        limit: String(PAGE_SIZE),
+        minPrice: String(priceRange[0]),
+        maxPrice: String(priceRange[1]),
+      });
+
+      // Only append active filters
+      if (searchQuery) params.append("search", searchQuery);
+      if (statusFilter) params.append("status", statusFilter);
+      if (categoryFilter) params.append("category", categoryFilter);
+      if (sortBy) params.append("sortBy", sortBy);
+
+      if (location) {
+        params.append("lat", String(location.latitude));
+        params.append("lng", String(location.longitude));
+      }
+
+      const res = await authFetch(
+        `${BACKEND_URL}/product/favorits?${params.toString()}`
+      );
+
+      if (!res.ok) throw new Error("Failed to fetch favorites");
+
+      return res.json();
+    },
+    [
+      searchQuery,
+      statusFilter,
+      categoryFilter,
+      sortBy,
+      priceRange[0],   // ✅ stable dependency
+      priceRange[1],   // ✅ stable dependency
+    ]
+  );
+
+  /* ================= QUERY ================= */
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isFetching,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey: [
+      "favorites",
+      searchQuery,
+      statusFilter,
+      categoryFilter,
+      sortBy,
+      priceRange[0],
+      priceRange[1],
+    ],
+    queryFn: fetchFavorites,
+    initialPageParam: 1,
+
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.data.length < PAGE_SIZE
+        ? undefined
+        : allPages.length + 1,
+  });
+
+  /* ================= DATA ================= */
+
+  const favorites = useMemo(
+    () => data?.pages.flatMap((p) => p.data) ?? [],
+    [data]
+  );
+
+  const stats = useMemo(
+    () =>
+      data?.pages?.[0]
+        ? {
+            totalFavorites: data.pages[0].totalFavorites,
+            availableItems: data.pages[0].availableItems,
+            priceDrops: data.pages[0].priceDrops,
+            nearbyItems: data.pages[0].nearbyItems,
           }
-          const result = res.json();
-          console.log(result);
-        }
-        fetchFavorits();
-    const mockFavorites = mockFavoritesData;
+        : {
+            totalFavorites: 0,
+            availableItems: 0,
+            priceDrops: 0,
+            nearbyItems: 0,
+          },
+    [data]
+  );
 
-    setFavorites(mockFavorites);
-    setFilteredFavorites(mockFavorites);
+  /* ================= ACTIONS ================= */
+
+  const handleRemoveFavorite = useCallback(
+    async (favoriteId: string) => {
+      await authFetch(
+        `${BACKEND_URL}/product/favorits/${favoriteId}`,
+        { method: "DELETE" }
+      );
+
+      refetch();
+    },
+    [refetch]
+  );
+
+  const handleAddToCart = useCallback((itemId: string) => {
+    console.log("Add to cart:", itemId);
   }, []);
 
-  // Filter and sort favorites
-  useEffect(() => {
-    let filtered = favorites;
-
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(favorite =>
-        favorite.item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        favorite.item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        favorite.item.seller.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(favorite => favorite.item.status === statusFilter);
-    }
-
-    // Category filter
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter(favorite => favorite.item.category === categoryFilter);
-    }
-
-    // Price range filter
-    filtered = filtered.filter(favorite => 
-      favorite.item.price >= priceRange[0] && favorite.item.price <= priceRange[1]
-    );
-
-    // Sort
-    filtered = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return new Date(b.item.createdAt).getTime() - new Date(a.item.createdAt).getTime();
-        case "oldest":
-          return new Date(a.item.createdAt).getTime() - new Date(b.item.createdAt).getTime();
-        case "price-high":
-          return b.item.price - a.item.price;
-        case "price-low":
-          return a.item.price - b.item.price;
-        case "recently-added":
-          return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime();
-        case "distance":
-          return a.item.distance - b.item.distance;
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredFavorites(filtered);
-  }, [favorites, searchQuery, statusFilter, categoryFilter, sortBy, priceRange]);
-
-  // Calculate stats
-  const stats: FavoriteStatsType = {
-    totalFavorites: favorites.length,
-    availableItems: favorites.filter(f => f.item.status === 'available').length,
-    priceDrops: favorites.filter(f => f.item.originalPrice && f.item.price < f.item.originalPrice).length,
-    nearbyItems: favorites.filter(f => f.item.distance <= 5).length
-  };
-
-  const handleRemoveFavorite = (favoriteId: string) => {
-    setFavorites(prev => prev.filter(fav => fav.id !== favoriteId));
-  };
-
-  const handleAddToCart = (itemId: string) => {
-    console.log("Adding item to cart:", itemId);
-    // Implement add to cart logic
-  };
+  /* ================= UI ================= */
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Favorites</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            My Favorites
+          </h1>
           <p className="text-gray-600 mt-2">
-            Your saved items for quick access and price tracking
+            Your saved items for tracking and quick access
           </p>
         </div>
 
@@ -167,15 +199,36 @@ export default function FavoritesPage() {
           onPriceRangeChange={setPriceRange}
         />
 
-        {/* Favorites List or Empty State */}
-        {favorites.length === 0 ? (
+        {/* Content */}
+        {isFetching && !favorites.length ? (
+          <p className="text-center text-gray-500 mt-12">
+            Loading favorites...
+          </p>
+        ) : favorites.length === 0 ? (
           <EmptyFavorites />
         ) : (
-          <FavoriteList
-            favorites={filteredFavorites}
-            onRemoveFavorite={handleRemoveFavorite}
-            onAddToCart={handleAddToCart}
-          />
+          <>
+            <FavoriteList
+              favorites={favorites}
+              onRemoveFavorite={handleRemoveFavorite}
+              onAddToCart={handleAddToCart}
+            />
+
+            {/* Pagination */}
+            {hasNextPage && (
+              <div className="flex justify-center mt-8">
+                <button
+                  disabled={isFetchingNextPage}
+                  onClick={() => fetchNextPage()}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg"
+                >
+                  {isFetchingNextPage
+                    ? <LoadingSpinner />
+                    : "Load More"}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
