@@ -9,7 +9,7 @@ const HomeNavBar = () => {
   // checking the session
   const { session, isLoading, refreshSession } = useSession();
 
-  const hiddenPaths = ["/auth/login", "/auth/signup", "/dashboard", "/shop"];
+  const hiddenPaths = ["/auth/signin", "/auth/signup", "/dashboard", "/shop"];
 
   const pages = [
     { id: 1, name: "Home", href: "/" },

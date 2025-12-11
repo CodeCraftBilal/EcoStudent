@@ -80,7 +80,6 @@ export default function FavoriteItem({
   };
 
   const formatTimeAgo = (dateString: string) => {
-    let favTime;
     const date = new Date(dateString);
     const now = new Date();
     const diffInDays = Math.floor(

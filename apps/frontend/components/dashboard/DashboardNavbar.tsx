@@ -6,81 +6,69 @@ import {
   Menu,
   X,
   Home,
-  Package,
-  MessageCircle,
-  User,
-  Settings,
   LogOut,
   Bell,
-  Search,
   Plus,
-  ShoppingBag,
   ShoppingBasket,
 } from "lucide-react";
 import Link from "next/link";
-import { redirect, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import NotificationDropdown from "./Notification";
 import UploadItemModal from "./UploadItemModal";
-import { UploadItemData } from "@/lib/types/dashboard/types";
 import { useSession } from "@/context/useSession";
-import { BACKEND_URL } from "@/lib/types/constants";
-import { authFetch } from "@/lib/authFetch";
 import { getUserLocation } from "@/lib/location";
 import Image from "next/image";
+import ProfileDropDown from "./ProfileDropDown";
 
 // mock notifications
 export const notificationsData = [
-    {
-      id: "1",
-      type: "message" as const,
-      title: "New Message",
-      message: "Ali sent you a message about the Calculus book",
-      time: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
-      read: false,
-      link: "/chat",
-    },
-    {
-      id: "2",
-      type: "sale" as const,
-      title: "Item Sold",
-      message: "Your Scientific Calculator has been sold",
-      time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-      read: false,
-      link: "/dashboard/listings",
-    },
-    {
-      id: "3",
-      type: "review" as const,
-      title: "New Review",
-      message: "Sara gave you 5 stars for the uniform",
-      time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-      read: true,
-      link: "/dashboard/reviews",
-    },
-  ]
+  {
+    id: "1",
+    type: "message" as const,
+    title: "New Message",
+    message: "Ali sent you a message about the Calculus book",
+    time: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
+    read: false,
+    link: "/chat",
+  },
+  {
+    id: "2",
+    type: "sale" as const,
+    title: "Item Sold",
+    message: "Your Scientific Calculator has been sold",
+    time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    read: false,
+    link: "/dashboard/listings",
+  },
+  {
+    id: "3",
+    type: "review" as const,
+    title: "New Review",
+    message: "Sara gave you 5 stars for the uniform",
+    time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    read: true,
+    link: "/dashboard/reviews",
+  },
+];
 
 export default function DashboardNavbar() {
-
   // fetching session
-  const {session, setSession, refreshSession} = useSession();
+  const { session, refreshSession } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
     useState(false);
   const pathname = usePathname();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  
+
   useEffect(() => {
-    getUserLocation()
-  
-  }, [])
-  
+    getUserLocation();
+  }, []);
+
   useEffect(() => {
-    console.log('dashnav refreshing session')
+    console.log("dashnav refreshing session");
     refreshSession();
-}, [])
+  }, []);
 
   const dashboardLinks = [
     {
@@ -102,10 +90,10 @@ export default function DashboardNavbar() {
       description: "Account settings",
     },
     {
-      name: 'Purchases',
-      href: '/dashboard/purchases',
-      descrption: 'View items you bought'
-    }
+      name: "Purchases",
+      href: "/dashboard/purchases",
+      descrption: "View items you bought",
+    },
   ];
 
   const toggleMobileMenu = () => {
@@ -136,22 +124,6 @@ export default function DashboardNavbar() {
   const handleMarkAllAsRead = () => {
     setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
   };
-
-  const handleLogout = async () => {
-    const res = await authFetch(`${BACKEND_URL}/auth/signout`, {
-      method: 'Get'
-    });
-
-    if(!res.ok) {
-      console.log(`server res: ${res.status} ${res.statusText}`)
-      return;
-    }
-    const result = await res.json()
-    setSession(null)
-    console.log(result);
-    console.log('logout succfull', result)
-    redirect('/auth/signin');
-  }
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -196,20 +168,19 @@ export default function DashboardNavbar() {
 
           {/* Right Section - Search, Actions, Profile */}
           <div className="flex items-center space-x-4">
-
             {/*Quick Action Button */}
             <button
               onClick={() => {
-                setIsUploadModalOpen(!isUploadModalOpen)
+                setIsUploadModalOpen(!isUploadModalOpen);
               }}
               className="hidden sm:flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-xl hover:bg-green-600 transition-colors shadow-sm"
             >
               <Plus className="w-4 h-4" />
               <span className="font-medium">Sell Item</span>
             </button>
-            
+
             <Link
-              href={'/shop'}
+              href={"/shop"}
               className="hidden sm:flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-xl hover:bg-green-600 transition-colors shadow-sm"
             >
               <ShoppingBasket className="w-4 h-4" />
@@ -255,11 +226,16 @@ export default function DashboardNavbar() {
                 className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm relative">
-                 {session?.profile ? <Image
-                  fill
-                  className="rounded-full object-center object-cover"
-                  src={session?.profile} alt={session?.userName} /> : <span>E</span>}
-                  
+                  {session?.profile ? (
+                    <Image
+                      fill
+                      className="rounded-full object-center object-cover"
+                      src={session?.profile}
+                      alt={session?.userName}
+                    />
+                  ) : (
+                    <span>E</span>
+                  )}
                 </div>
                 <div className="hidden md:block text-left">
                   <div className="text-sm font-medium text-gray-900">
@@ -271,56 +247,8 @@ export default function DashboardNavbar() {
 
               {/* Profile Dropdown Menu */}
               {isProfileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <div className="text-sm font-medium text-gray-900">
-                      {session?.userName}
-                    </div>
-                    <div className="text-xs text-gray-500">{session?.email}</div>
-                  </div>
-
-                  <Link
-                    href="/dashboard/profile"
-                    onClick={closeAllMenus}
-                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <User className="w-4 h-4" />
-                    <span>My Profile</span>
-                  </Link>
-
-                  <Link
-                    href="/dashboard/settings"
-                    onClick={closeAllMenus}
-                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>Settings</span>
-                  </Link>
-
-                  <div className="border-t border-gray-100 mt-2 pt-2">
-                    <Link
-                      href="/"
-                      onClick={closeAllMenus}
-                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <Home className="w-4 h-4" />
-                      <span>Back to Website</span>
-                    </Link>
-
-                    <button
-                      onClick={() => {
-                        closeAllMenus();
-                        // Handle logout
-                        console.log("Logging out...");
-                        handleLogout();
-                      }}
-                      className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                </div>
+                // <ProfileDropDown session={session} closeAllMenus={closeAllMenus}, handleLogout={handleLogout} />
+                <ProfileDropDown closeAllMenus={closeAllMenus} />
               )}
             </div>
 
@@ -341,7 +269,6 @@ export default function DashboardNavbar() {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4">
-
             {/* Mobile Navigation Links */}
             <div className="space-y-2">
               {dashboardLinks.map((link) => {
@@ -417,4 +344,3 @@ export default function DashboardNavbar() {
     </nav>
   );
 }
-

@@ -16,14 +16,15 @@ import { useSession } from "@/context/useSession";
 import { useRouter } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getUserLocation } from "@/lib/location";
-import { LoadingSpinner } from "@/components/Loading";
+import { ContentLoader, LoadingSpinner } from "@/components/Loading";
+import { Item } from "@/lib/types/types";
 
 const PAGE_SIZE = 10;
 
 /* ---------------- TYPES ---------------- */
 
 type ApiResponse = {
-  data: FavoriteItem[];
+  data: Item[];
 
   totalFavorites: number;
   availableItems: number;
@@ -202,7 +203,7 @@ export default function FavoritesPage() {
         {/* Content */}
         {isFetching && !favorites.length ? (
           <div className="text-center text-gray-500 mt-12 w-full">
-            <LoadingSpinner />
+            <ContentLoader columns={4} type="grid" count={4} />
           </div>
         ) : favorites.length === 0 ? (
           <EmptyFavorites />

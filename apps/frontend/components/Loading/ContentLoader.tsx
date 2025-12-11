@@ -26,17 +26,17 @@ const ContentLoader: React.FC<ContentLoaderProps> = ({
       {[...Array(count)].map((_, index) => (
         <div
           key={index}
-          className="bg-white rounded-2xl p-6 shadow-sm border border-eco-100 animate-pulse"
+          className="bg-white rounded-2xl p-6 shadow-sm border border-green-100 animate-pulse"
         >
           <div className="flex items-start space-x-4">
-            <div className="w-20 h-20 bg-eco-200 rounded-lg flex-shrink-0"></div>
+            <div className="w-20 h-20 bg-green-200 rounded-lg flex-shrink-0"></div>
             <div className="flex-1 space-y-3">
-              <div className="w-3/4 h-5 bg-eco-200 rounded"></div>
-              <div className="w-1/2 h-4 bg-eco-100 rounded"></div>
-              <div className="w-32 h-4 bg-eco-50 rounded"></div>
+              <div className="w-3/4 h-5 bg-green-200 rounded"></div>
+              <div className="w-1/2 h-4 bg-green-100 rounded"></div>
+              <div className="w-32 h-4 bg-green-50 rounded"></div>
               <div className="flex space-x-2">
-                <div className="w-16 h-6 bg-eco-200 rounded-full"></div>
-                <div className="w-16 h-6 bg-eco-100 rounded-full"></div>
+                <div className="w-16 h-6 bg-green-200 rounded-full"></div>
+                <div className="w-16 h-6 bg-green-100 rounded-full"></div>
               </div>
             </div>
           </div>

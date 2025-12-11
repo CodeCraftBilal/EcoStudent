@@ -1,19 +1,21 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { FavoriteItem } from '@/lib/types/dashboard/favourites/favourites';
+import { FavoriteItem } from "@/lib/types/dashboard/favourites/favourites";
 import FavoriteItemComponent from "./FavoriteItem";
+import { ItemCard } from "@/components/shop/itemcard";
+import { Item } from "@/lib/types/types";
 
 interface FavoriteListProps {
-  favorites: FavoriteItem[];
+  favorites: Item[];
   onRemoveFavorite: (favoriteId: string) => void;
   onAddToCart: (itemId: string) => void;
 }
 
-export default function FavoriteList({ 
-  favorites, 
-  onRemoveFavorite, 
-  onAddToCart 
+export default function FavoriteList({
+  favorites,
+  onRemoveFavorite,
+  onAddToCart,
 }: FavoriteListProps) {
   if (favorites.length === 0) {
     return null;
@@ -30,10 +32,11 @@ export default function FavoriteList({
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ delay: index * 0.1 }}
           >
-            <FavoriteItemComponent
-              favorite={favorite}
-              onRemoveFavorite={onRemoveFavorite}
-              onAddToCart={onAddToCart}
+            <ItemCard
+              item={favorite}
+              index={index}
+              isFavorite={true}
+              onToggleFavorite={onRemoveFavorite}
             />
           </motion.div>
         ))}

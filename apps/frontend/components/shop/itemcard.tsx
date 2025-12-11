@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, MessageCircle, MapPin } from "lucide-react";
+import { Heart, MessageCircle, MapPin, Clock, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Item } from "@/lib/types/types";
@@ -10,9 +10,9 @@ interface ItemCardProps {
   item: Item;
   index: number;
   isFavorite: boolean;
-  isInCart: boolean;
+  isInCart?: boolean;
   onToggleFavorite: (itemId: string) => void;
-  onToggleCart: (itemId: string) => void;
+  onToggleCart?: (itemId: string) => void;
 }
 
 export function ItemCard({
@@ -23,8 +23,26 @@ export function ItemCard({
   onToggleFavorite,
   onToggleCart,
 }: ItemCardProps) {
+  const formatTimeAgo = (dateString: string) => {
+    console.log("date: ", dateString);
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInDays = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
-  
+    if (diffInDays === 0) return "Today";
+    if (diffInDays === 1) return "Yesterday";
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
+    if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} months ago`;
+    return `${Math.round(diffInDays / 365)} years ago`;
+  };
+
+  const toCameCase = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  }
+
   return (
     <motion.div
       layout
@@ -60,6 +78,7 @@ export function ItemCard({
             />
           </button>
         </div>
+        {/* exchangeType */}
         <div className="absolute top-2 left-2">
           <span
             className={`text-xs px-1.5 py-0.5 rounded-full ${
@@ -77,11 +96,34 @@ export function ItemCard({
                 : "Free"}
           </span>
         </div>
+        
+        {/* category */}
         <div className="absolute top-8 left-2">
           <span
-            className={`text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-800`}
-            >
-            {item.category}
+            className={`text-xs px-1.5 py-0.5 rounded-full ${
+              item.category === "books" || item.category === "bags"
+                ? "bg-green-100 text-green-800"
+                : item.category === "uniform" || item.category === "calculator"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-purple-100 text-purple-800"
+            }`}
+          >
+            {toCameCase(item.category)}
+          </span>
+        </div>
+        
+        {/* condition */}
+        <div className="absolute bottom-2 left-2">
+          <span
+            className={`text-xs px-1.5 py-0.5 rounded-full ${
+              item.condition === "excellent"
+                ? "bg-green-100 text-green-800"
+                : item.condition === "good"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-purple-100 text-purple-800"
+            }`}
+          >
+            {toCameCase(item.condition)}
           </span>
         </div>
       </div>
@@ -89,7 +131,10 @@ export function ItemCard({
       {/* Content Section */}
       <div className="px-2 sm:p-4">
         {/* Mobile Compact View */}
-        <Link href={`/shop/product/${item.id}?category=${item.category}`} className="sm:hidden">
+        <Link
+          href={`/shop/product/${item.id}?category=${item.category}`}
+          className="sm:hidden"
+        >
           <h3
             className={`font-semibold text-gray-900 text-sm max-md:h-10 line-clamp-2 ${item.title.length < 25 ? "min-h-[2rem]" : ""}`}
           >
@@ -120,10 +165,6 @@ export function ItemCard({
                 {item.title}
               </h3>
             </div>
-
-            {/* <p className="text-gray-600 text-sm mb-1 line-clamp-2">
-            {item.description}
-          </p> */}
 
             {/* Price and Distance */}
             <div className="flex justify-between items-center mb-1">
@@ -169,30 +210,20 @@ export function ItemCard({
               <span className="text-sm text-gray-700">{item.seller.name}</span>
               {item.seller.verified && (
                 <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">
-                  ✓
+                  &#x2713;
                 </span>
               )}
             </div>
             <div className="flex items-center space-x-1">
-              <span className="text-sm text-yellow-600">⭐ {item.rating}</span>
+              <span className="text-sm text-yellow-600">
+                ⭐ {item.seller.rating}
+              </span>
             </div>
           </div>
 
           {/* Action Buttons */}
           <div className="flex space-x-2">
-            {/* <button
-              onClick={() => onToggleCart(item.id)}
-              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                isInCart
-                  ? "bg-green-500 text-white hover:bg-green-600"
-                  : "bg-green-500 text-white hover:bg-green-600"
-              }`}
-            >
-              {isInCart ? "Added to Cart" : 
-               item.exchangeType === "exchange" ? "Request Exchange" :
-               item.exchangeType === "donation" ? "Get for Free" : "Add to Cart"}
-            </button> */}
-            <Link
+                        <Link
               className={`flex-1 text-center py-2 px-4 rounded-lg text-sm font-medium transition-colors bg-green-500 text-white hover:bg-green-600`}
               href={`/dashboard/chat?user=${item.seller.id}`}
             >
@@ -204,25 +235,27 @@ export function ItemCard({
           </div>
         </div>
 
-        {/* Mobile Action Button */}
-        <div className="sm:hidden mt-2">
-          <button
-            onClick={() => onToggleCart(item.id)}
-            className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${
-              isInCart
-                ? "bg-green-500 text-white hover:bg-green-600"
-                : "bg-green-500 text-white hover:bg-green-600"
-            }`}
-          >
-            {isInCart
-              ? "Added"
-              : item.exchangeType === "exchange"
-                ? "Exchange"
-                : item.exchangeType === "donation"
-                  ? "Get Free"
-                  : "Add to Cart"}
-          </button>
-        </div>
+        {/* favorite item display */}
+        {item.favorite && (
+          <div className="flex mt-2 justify-between">
+            <div className="flex items-center space-x-1 text-gray-400">
+              <Clock className="w-3 h-3" />
+              <span className="text-xs">
+                {formatTimeAgo(item.favorite?.addedAt)}
+              </span>
+            </div>
+
+            {/* status */}
+            <div className="flex items-center space-x-2">
+            
+            {item.favorite?.status && (
+              <span className="text-sm text-gray-500 italic">
+                {item.favorite?.status.charAt(0).toUpperCase() + item.favorite.status.slice(1).toLowerCase()}
+              </span>
+            )}
+          </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

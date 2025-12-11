@@ -11,7 +11,7 @@ import { ItemCard } from "@/components/shop/itemcard";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { getUserLocation } from "@/lib/location";
-import { LoadingSpinner } from "@/components/Loading";
+import { ContentLoader, LoadingSpinner } from "@/components/Loading";
 
 export default function ShopPage() {
   const [filters, setFilters] = useState<FilterState>({
@@ -219,7 +219,7 @@ export default function ShopPage() {
 
         {isFetchingNextPage && (
           <div className="w-full h-20 flex items-center justify-center">
-            <LoadingSpinner />
+            <ContentLoader columns={4} count={8} type="grid" />
           </div>
         )}
       </div>

@@ -8,7 +8,6 @@ import { Prisma } from '@prisma/client';
 @Injectable()
 export class ProductService {
   async findFavoritesByUserId(userId: number, filters: any) {
-    
     try {
       const conditions: string[] = [];
       const params: any[] = [];
@@ -89,7 +88,6 @@ export class ProductService {
            ))`
           : '0';
 
-      
       // ---------------- RAW QUERY ----------------
       const rawFavorites: any[] = await this.prisma.$queryRawUnsafe(
         `
@@ -167,33 +165,29 @@ export class ProductService {
       ]);
       // ---------------- MAP TO FRONTEND TYPE ----------------
       const favorites = rawFavorites.map((p) => ({
-        id: p.favoriteid.toString(),
-        addedAt: p.added_at,
-        item: {
-          id: p.productid.toString(),
-          title: p.title,
-          description: p.description,
-          price: Number(p.price),
-          originalPrice: p.originalprice ? Number(p.originalprice) : undefined,
-          image: Array.isArray(p.images) ? p.images[0] : '',
-          category: p.categoryname ?? '',
-          condition: p.productcondition,
-          status: p.status,
-          exchangeType: p.exchangetype,
-
-          seller: {
-            id: p.userid.toString(),
-            name: p.username,
-            avatar: p.profilepicture || '',
-            rating: p.rating ? Number(p.rating) : 0,
-            verified: Boolean(p.isverified),
-          },
-
-          location: p.userlocation || '',
-          distance: p.distance ? Number(Number(p.distance).toFixed(1)) : 0,
-          views: Number(p.views ?? 0),
-          createdAt: p.created_at,
+        id: p.productid.toString(),
+        title: p.title,
+        description: p.description,
+        price: Number(p.price),
+        originalPrice: p.originalprice ? Number(p.originalprice) : undefined,
+        category: p.categoryname ?? '',
+        condition: p.productcondition,
+        image: Array.isArray(p.images) ? p.images[0] : '',
+        distance: p.distance ? Number(Number(p.distance).toFixed(1)) : 0,
+        seller: {
+          id: p.userid.toString(),
+          name: p.username,
+          profilePicture: p.profilepicture || '',
+          rating: p.rating ? Number(p.rating) : 0,
+          verified: Boolean(p.isverified),
         },
+        exchangeType: p.exchangetype,
+        favorite: {
+          favoriteId: p.favoriteid.toString(),
+          addedAt: p.added_at,
+          status: p.status,
+          location: p.userlocation || ''
+        }
       }));
 
       return {
@@ -240,9 +234,6 @@ export class ProductService {
 
   constructor(private readonly prisma: PrismaService) {}
   async create(createProductDto: CreateProductDto) {
-    
-    
-
     try {
       const categoryId = await this.prisma.category.findUnique({
         where: { categoryName: createProductDto.productType },
@@ -266,7 +257,6 @@ export class ProductService {
         productId: product.productId,
       };
     } catch (err) {
-      
       return { success: false, message: 'something went wrong!' };
     }
   }
@@ -274,8 +264,6 @@ export class ProductService {
   async findAll(filters: any) {
     const conditions: string[] = [];
     const params: any[] = [];
-
-    
 
     // Pagination values
     const limit = filters.limit ? Number(filters.limit) : 10;
@@ -335,7 +323,7 @@ export class ProductService {
     const whereSQL = conditions.length
       ? `WHERE ${conditions.join(' AND ')}`
       : '';
-    
+
     // Latitude & Longitude
     const lat = filters.lat ? Number(filters.lat) : null;
     const lng = filters.lng ? Number(filters.lng) : null;
@@ -419,8 +407,6 @@ export class ProductService {
   }
 
   async findOne(id: number, filters: any) {
-    
-    
     const lat = filters.lat ? Number(filters.lat) : null;
     const lng = filters.lng ? Number(filters.lng) : null;
     try {
@@ -459,7 +445,6 @@ export class ProductService {
   WHERE p.productid = ${id}
 `;
 
-      
       if (rawProduct.length > 0)
         return rawProduct.map((p) => ({
           id: p.productid,
@@ -495,7 +480,6 @@ export class ProductService {
           message: 'no product found',
         };
     } catch (err) {
-      
       return { success: false, error: true, message: 'product not found!' };
     }
   }
@@ -519,7 +503,6 @@ export class ProductService {
         },
       });
     } catch (err) {
-      
       return {
         success: true,
         error: false,
@@ -604,7 +587,6 @@ export class ProductService {
       }),
     };
 
-    
     /** Sorting */
     const orderBy =
       sortBy === 'price-asc'
@@ -708,7 +690,6 @@ export class ProductService {
         },
       };
     } catch (err) {
-      
       return {
         error: true,
         message: 'something went wrong!',
