@@ -201,9 +201,9 @@ export default function FavoritesPage() {
 
         {/* Content */}
         {isFetching && !favorites.length ? (
-          <p className="text-center text-gray-500 mt-12">
-            Loading favorites...
-          </p>
+          <div className="text-center text-gray-500 mt-12 w-full">
+            <LoadingSpinner />
+          </div>
         ) : favorites.length === 0 ? (
           <EmptyFavorites />
         ) : (

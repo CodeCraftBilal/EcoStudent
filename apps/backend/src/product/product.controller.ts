@@ -52,8 +52,8 @@ export class ProductController {
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    console.log('files recieved: ', files.length);
-    console.log(req.user)
+    
+    
     const imageUrls = await Promise.all(
       files.map((file) => {
         return useGCS
@@ -62,19 +62,24 @@ export class ProductController {
       }),
     );
 
-    return this.productService.create({...createProductDto, userId: req.user.id , images: imageUrls, });
+    return this.productService.create({
+      ...createProductDto,
+      userId: req.user.id,
+      images: imageUrls,
+    });
   }
 
   @Get('/favorits')
-  getFavorits(@Query() query: any, @Req() req ) {
-    console.log('find favo ', req.user.id)
+  getFavorits(@Query() query: any, @Req() req) {
+    
+    
     return this.productService.findFavoritesByUserId(req.user.id, query);
   }
 
-    @Get('mylisting')
+  @Get('mylisting')
   findProductByUserId(@Query() query: FindByUIDParams, @Req() req) {
-    console.log('request recieved to mylisting', req.user.id)
-    return this.productService.findProductByUserId(req.user.id, query)
+    
+    return this.productService.findProductByUserId(req.user.id, query);
   }
 
   @Public()
@@ -86,14 +91,21 @@ export class ProductController {
   @Public()
   @Get(':id')
   findOne(@Param('id') id: string, @Query() query: any) {
-    console.log('findone is running')
+    
     return this.productService.findOne(+id, query);
   }
 
   @Patch(':id')
-  update(@Req() req,@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    console.log(updateProductDto)
-    return this.productService.update(+id, {...updateProductDto, userId: req.user.id});
+  update(
+    @Req() req,
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+  ) {
+    
+    return this.productService.update(+id, {
+      ...updateProductDto,
+      userId: req.user.id,
+    });
   }
 
   @Delete(':id')

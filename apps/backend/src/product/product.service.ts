@@ -8,7 +8,7 @@ import { Prisma } from '@prisma/client';
 @Injectable()
 export class ProductService {
   async findFavoritesByUserId(userId: number, filters: any) {
-    console.log('find favorite is running... ', filters);
+    
     try {
       const conditions: string[] = [];
       const params: any[] = [];
@@ -27,6 +27,20 @@ export class ProductService {
         conditions.push(`p.title ILIKE '%' || $${params.length + 1} || '%'`);
         params.push(filters.search);
       }
+
+      // sort filter
+      const orderBy = (): string => {
+        const map: Record<string, string> = {
+          newest: 'ORDER BY sub.added_at DESC',
+          oldest: 'ORDER BY sub.added_at ASC',
+          'price-high': 'ORDER BY sub.price DESC',
+          'price-low': 'ORDER BY sub.price ASC',
+          'recently-added': 'ORDER BY sub.added_at DESC',
+          distance: 'ORDER BY sub.distance ASC',
+        };
+
+        return map[filters.sortBy] || 'ORDER BY sub.added_at DESC';
+      };
 
       // Category
       if (filters.category) {
@@ -75,7 +89,7 @@ export class ProductService {
            ))`
           : '0';
 
-      console.log('whereSQL ', whereSQL);
+      
       // ---------------- RAW QUERY ----------------
       const rawFavorites: any[] = await this.prisma.$queryRawUnsafe(
         `
@@ -118,7 +132,7 @@ export class ProductService {
 
       ${maxDistance !== null ? `WHERE sub.distance <= ${maxDistance}` : ''}
 
-      ORDER BY sub.added_at DESC
+      ${orderBy()}
 
       LIMIT ${limit}
       OFFSET ${offset}
@@ -226,8 +240,8 @@ export class ProductService {
 
   constructor(private readonly prisma: PrismaService) {}
   async create(createProductDto: CreateProductDto) {
-    console.log('product : ', createProductDto);
-    console.log('userId ', createProductDto.userId);
+    
+    
 
     try {
       const categoryId = await this.prisma.category.findUnique({
@@ -252,7 +266,7 @@ export class ProductService {
         productId: product.productId,
       };
     } catch (err) {
-      console.log('product upload error: ', err);
+      
       return { success: false, message: 'something went wrong!' };
     }
   }
@@ -261,7 +275,7 @@ export class ProductService {
     const conditions: string[] = [];
     const params: any[] = [];
 
-    console.log('filters ', filters);
+    
 
     // Pagination values
     const limit = filters.limit ? Number(filters.limit) : 10;
@@ -321,7 +335,7 @@ export class ProductService {
     const whereSQL = conditions.length
       ? `WHERE ${conditions.join(' AND ')}`
       : '';
-    console.log('whereSql: ', whereSQL);
+    
     // Latitude & Longitude
     const lat = filters.lat ? Number(filters.lat) : null;
     const lng = filters.lng ? Number(filters.lng) : null;
@@ -405,8 +419,8 @@ export class ProductService {
   }
 
   async findOne(id: number, filters: any) {
-    console.log('filters ', filters);
-    console.log('id: ', id);
+    
+    
     const lat = filters.lat ? Number(filters.lat) : null;
     const lng = filters.lng ? Number(filters.lng) : null;
     try {
@@ -445,7 +459,7 @@ export class ProductService {
   WHERE p.productid = ${id}
 `;
 
-      console.log('raw product lenght', rawProduct.length);
+      
       if (rawProduct.length > 0)
         return rawProduct.map((p) => ({
           id: p.productid,
@@ -481,7 +495,7 @@ export class ProductService {
           message: 'no product found',
         };
     } catch (err) {
-      console.log('Product FindOne: ', err);
+      
       return { success: false, error: true, message: 'product not found!' };
     }
   }
@@ -505,7 +519,7 @@ export class ProductService {
         },
       });
     } catch (err) {
-      console.log('product update err: ', err);
+      
       return {
         success: true,
         error: false,
@@ -590,7 +604,7 @@ export class ProductService {
       }),
     };
 
-    console.log('wehre: ', basewhere);
+    
     /** Sorting */
     const orderBy =
       sortBy === 'price-asc'
@@ -694,7 +708,7 @@ export class ProductService {
         },
       };
     } catch (err) {
-      console.log(err);
+      
       return {
         error: true,
         message: 'something went wrong!',

@@ -9,7 +9,6 @@ import Lottie from "lottie-react";
 import LoadingAnim from '@/public/lotieAnim/Loading.json'
 import { useSession } from "@/context/useSession";
 import { BACKEND_URL } from "@/lib/types/constants";
-import { getSession } from "@/lib/auth";
 
 interface LoginResponse {
   id?: number;
