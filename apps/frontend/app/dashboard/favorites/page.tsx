@@ -10,11 +10,13 @@ import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { useSession } from "@/context/useSession";
 import { useRouter } from "next/navigation";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { getUserLocation } from "@/lib/location";
 import { ContentLoader } from "@/components/Loading";
 import { Item } from "@/lib/types/types";
 import ItemCard from "@/components/shop/itemcard";
+import { addToFavorite, removeFromFavorite } from "@/lib/utils/favorite";
+import { SnackbarProvider, useSnackbar } from "@/components/ui/dialogBoxes/SnackBarManager";
 
 const PAGE_SIZE = 10;
 
@@ -26,7 +28,7 @@ type ApiResponse = {
   nearbyItems: number;
 };
 
-export default function FavoritesPage() {
+const FavoritesPage = () => {
   const router = useRouter();
   const { session, isLoading } = useSession();
 
@@ -131,13 +133,52 @@ export default function FavoritesPage() {
 
   /* ---------------- REMOVE FAVORITE ---------------- */
 
+  const { showSuccess, showError, showSnackbar } = useSnackbar()
+  const queryClient = useQueryClient();
+
   const handleRemoveFavorite = useCallback(
     async (favoriteId: string) => {
-      await authFetch(`${BACKEND_URL}/product/favorits/${favoriteId}`, {
-        method: "DELETE",
-      });
+      console.log("Removing favorite:", favoriteId);
+
+      try {
+        const favoriteRes = await removeFromFavorite(favoriteId);
+
+        if(!favoriteRes.error) {
+          showSuccess(`${favoriteRes.message}`, 3000, 'bottom-center')
+        } else {
+          showError(`${favoriteRes.message}`)
+        }
+        // Optimistic UI update — instantly removes from list
+        queryClient.setQueryData(
+          [
+            "favorites",
+            searchQuery,
+            statusFilter,
+            categoryFilter,
+            sortBy,
+            priceRange[0],
+            priceRange[1],
+          ],
+          (oldData: any) => {
+            if (!oldData) return oldData;
+
+            return {
+              ...oldData,
+              pages: oldData.pages.map((page: any) => ({
+                ...page,
+                data: page.data.filter((item: any) => item.id !== favoriteId),
+              })),
+            };
+          }
+        );
+
+        // Ensure backend sync (optional but safe)
+        queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      } catch (err) {
+        console.error("Failed to remove favorite:", err);
+      }
     },
-    []
+    [queryClient, searchQuery, statusFilter, categoryFilter, sortBy, priceRange]
   );
 
   /* ---------------- INFINITE SCROLL OBSERVER ---------------- */
@@ -202,10 +243,7 @@ export default function FavoritesPage() {
                 const isLast = index === favorites.length - 1;
 
                 return (
-                  <div
-                    key={favorite.id}
-                    ref={isLast ? lastItemRef : null}
-                  >
+                  <div key={index} ref={isLast ? lastItemRef : null}>
                     <ItemCard
                       item={favorite}
                       index={index}
@@ -228,4 +266,13 @@ export default function FavoritesPage() {
       </div>
     </div>
   );
-}
+};
+const App: React.FC = () => {
+  return (
+    <SnackbarProvider>
+      <FavoritesPage />
+    </SnackbarProvider>
+  );
+};
+
+export default App;

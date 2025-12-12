@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { AnimatePresence } from "framer-motion";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
@@ -10,13 +9,11 @@ import PageHeader from "@/components/dashboard/listings/PageHeader";
 import SearchAndFilters from "@/components/dashboard/listings/SearchAndFilters";
 import ListingCard from "@/components/dashboard/listings/ListingCard";
 import EmptyState from "@/components/dashboard/listings/EmptyState";
-import DeleteModal from "@/components/dashboard/listings/DeleteModal";
 
 import { BACKEND_URL } from "@/lib/types/constants";
 import { authFetch } from "@/lib/authFetch";
 import { useSession } from "@/context/useSession";
-import { ContentLoader, LoadingSpinner } from "@/components/Loading";
-import { Dialog } from "@/components/ui/dialogBoxes/Dialog";
+import { ContentLoader } from "@/components/Loading";
 import { ConfirmDialog } from "@/components/ui/dialogBoxes/Pre-configuredDialog";
 import { SnackbarProvider, useSnackbar } from "@/components/ui/dialogBoxes/SnackBarManager";
 
@@ -55,7 +52,7 @@ const MyListingsPage = () => {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const {showSuccess, showError, showInfo} = useSnackbar()
+  const {showSuccess, showError} = useSnackbar()
 
   /* ---------------- DEBOUNCED SEARCH ---------------- */
 

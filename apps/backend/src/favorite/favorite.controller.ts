@@ -27,6 +27,11 @@ export class FavoriteController {
     return this.favoriteService.findFavoritesByUserId(req.user.id, query);
   }
 
+  @Get('ids')
+  favoriteIds(@Req() req) {
+    return this.favoriteService.favoriteIds(req.user.id)
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.favoriteService.findOne(+id);

@@ -2,7 +2,6 @@
 
 import { Heart, MessageCircle, MapPin, Clock, ShoppingCart } from "lucide-react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Item } from "@/lib/types/types";
 import Image from "next/image";
 import React from "react";
@@ -45,14 +44,6 @@ const ItemCard = React.memo(({
   }
 
   return (
-    // <motion.div
-    //   layout
-    //   initial={{ opacity: 0, scale: 0.9 }}
-    //   animate={{ opacity: 1, scale: 1 }}
-    //   exit={{ opacity: 0, scale: 0.9 }}
-    //   transition={{ delay: index * 0.1 }}
-    //   className="bg-white cursor-default rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group"
-    // >
     <div className="bg-white cursor-default rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
       {/* Image Section */}
       <div className="relative overflow-hidden">
@@ -68,7 +59,7 @@ const ItemCard = React.memo(({
         </Link>
         <div className="absolute top-2 right-2 flex space-x-1">
           <button
-            onClick={() => onToggleFavorite(item.id)}
+            onClick={() => onToggleFavorite(isFavorite ? item.favorite?.favoriteId || '' : item.id)}
             className={`p-1.5 rounded-full backdrop-blur-sm transition-all ${
               isFavorite
                 ? "bg-red-500 text-white"
@@ -259,7 +250,6 @@ const ItemCard = React.memo(({
           </div>
         )}
       </div>
-    {/* </motion.div> */}
       </div>
   );
 })

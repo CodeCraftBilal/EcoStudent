@@ -1,11 +1,12 @@
-import React, { createContext, useContext, useState } from 'react';
-import { Snackbar, SnackbarType } from './Snackbar';
+import React, { createContext, useContext, useState } from "react";
+import { Snackbar, SnackbarType, SnackbarPosition } from "./Snackbar";
 
 interface SnackbarItem {
   id: string;
   message: string;
   type: SnackbarType;
   duration?: number;
+  position?: SnackbarPosition;
   action?: {
     label: string;
     onClick: () => void;
@@ -13,56 +14,66 @@ interface SnackbarItem {
 }
 
 interface SnackbarContextType {
-  showSnackbar: (message: string, type?: SnackbarType, duration?: number) => void;
-  showSuccess: (message: string, duration?: number) => void;
-  showError: (message: string, duration?: number) => void;
-  showWarning: (message: string, duration?: number) => void;
-  showInfo: (message: string, duration?: number) => void;
+  showSnackbar: (
+    message: string,
+    type?: SnackbarType,
+    duration?: number,
+    position?: SnackbarPosition
+  ) => void;
+
+  showSuccess: (message: string, duration?: number, position?: SnackbarPosition) => void;
+  showError: (message: string, duration?: number, position?: SnackbarPosition) => void;
+  showWarning: (message: string, duration?: number, position?: SnackbarPosition) => void;
+  showInfo: (message: string, duration?: number, position?: SnackbarPosition) => void;
 }
 
 const SnackbarContext = createContext<SnackbarContextType | undefined>(undefined);
 
 export const useSnackbar = () => {
-  const context = useContext(SnackbarContext);
-  if (!context) {
-    throw new Error('useSnackbar must be used within SnackbarProvider');
-  }
-  return context;
+  const ctx = useContext(SnackbarContext);
+  if (!ctx) throw new Error("useSnackbar must be used within SnackbarProvider");
+  return ctx;
 };
 
 export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [snackbars, setSnackbars] = useState<SnackbarItem[]>([]);
 
-  const showSnackbar = (message: string, type: SnackbarType = 'info', duration = 5000) => {
+  const showSnackbar = (
+    message: string,
+    type: SnackbarType = "info",
+    duration = 5000,
+    position: SnackbarPosition = "bottom-right"
+  ) => {
     const id = Math.random().toString(36).substr(2, 9);
-    setSnackbars(prev => [...prev, { id, message, type, duration }]);
+    setSnackbars((prev) => [...prev, { id, message, type, duration, position }]);
   };
 
   const removeSnackbar = (id: string) => {
-    setSnackbars(prev => prev.filter(snackbar => snackbar.id !== id));
+    setSnackbars((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const contextValue: SnackbarContextType = {
+  const ctxValue: SnackbarContextType = {
     showSnackbar,
-    showSuccess: (message, duration) => showSnackbar(message, 'success', duration),
-    showError: (message, duration) => showSnackbar(message, 'error', duration),
-    showWarning: (message, duration) => showSnackbar(message, 'warning', duration),
-    showInfo: (message, duration) => showSnackbar(message, 'info', duration),
+    showSuccess: (msg, dur, pos) => showSnackbar(msg, "success", dur, pos),
+    showError: (msg, dur, pos) => showSnackbar(msg, "error", dur, pos),
+    showWarning: (msg, dur, pos) => showSnackbar(msg, "warning", dur, pos),
+    showInfo: (msg, dur, pos) => showSnackbar(msg, "info", dur, pos)
   };
 
   return (
-    <SnackbarContext.Provider value={contextValue}>
+    <SnackbarContext.Provider value={ctxValue}>
       {children}
+
       <div className="fixed inset-0 pointer-events-none z-50">
-        {snackbars.map((snackbar, index) => (
+        {snackbars.map((snack) => (
           <Snackbar
-            key={snackbar.id}
-            message={snackbar.message}
-            type={snackbar.type}
-            duration={snackbar.duration}
-            onClose={() => removeSnackbar(snackbar.id)}
-            action={snackbar.action}
-            position={index < 3 ? 'bottom-right' : 'bottom-left'}
+            key={snack.id}
+            message={snack.message}
+            type={snack.type}
+            duration={snack.duration}
+            position={snack.position}
+            action={snack.action}
+            onClose={() => removeSnackbar(snack.id)}
           />
         ))}
       </div>

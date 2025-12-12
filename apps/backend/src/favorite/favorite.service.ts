@@ -24,7 +24,7 @@ export class FavoriteService {
       console.log(err);
       return {
         error: true,
-        message: 'Item note added to favorites',
+        message: 'Item not added to favorites',
       };
     }
   }
@@ -61,8 +61,23 @@ export class FavoriteService {
         message: 'Removed Item successfuly'
       }
     } else {
-      throw new UnauthorizedException('Item Not Found!')
+      return {
+        error: false,
+        message: 'Can\'t remove Item'
+      }
+      
     }
+  }
+
+  favoriteIds(userId: number) {
+    return this.prisma.user_favorites.findMany({
+      where: {
+        userId
+      },
+      select: {
+        favoriteId: true,
+      }
+    })
   }
 
   async findFavoritesByUserId(userId: number, filters: any) {
