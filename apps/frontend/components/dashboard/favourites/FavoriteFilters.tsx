@@ -33,19 +33,19 @@ export default function FavoriteFilters({
 
   const statusOptions = [
     { value: "", label: "All Status" },
-    { value: "available", label: "Available" },
+    { value: "active", label: "Available" },
     { value: "sold", label: "Sold" },
     { value: "reserved", label: "Reserved" }
   ];
 
   const categoryOptions = [
     { value: "", label: "All Categories" },
-    { value: "books", label: "Books" },
-    { value: "uniform", label: "Uniforms" },
-    { value: "calculator", label: "Calculators" },
-    { value: "geometry", label: "Geometry Sets" },
-    { value: "bag", label: "Bags" },
-    { value: "other", label: "Other" }
+    { value: "1", label: "Books" },
+    { value: "2", label: "Uniforms" },
+    { value: "3", label: "Calculators" },
+    { value: "4", label: "Geometry Sets" },
+    { value: "5", label: "Bags" },
+    { value: "6", label: "Other" }
   ];
 
   const sortOptions = [

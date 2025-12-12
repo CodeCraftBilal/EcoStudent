@@ -1,8 +1,6 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { FavoriteItem } from "@/lib/types/dashboard/favourites/favourites";
-import FavoriteItemComponent from "./FavoriteItem";
 import ItemCard from "@/components/shop/itemcard";
 import { Item } from "@/lib/types/types";
 
@@ -14,8 +12,7 @@ interface FavoriteListProps {
 
 export default function FavoriteList({
   favorites,
-  onRemoveFavorite,
-  onAddToCart,
+  onRemoveFavorite
 }: FavoriteListProps) {
   if (favorites.length === 0) {
     return null;

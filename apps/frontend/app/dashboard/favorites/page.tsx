@@ -1,38 +1,30 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   FavoriteStats,
   FavoriteFilters,
-  FavoriteList,
   EmptyFavorites,
 } from "@/components/dashboard/favourites";
-
-import { FavoriteItem } from "@/lib/types/dashboard/favourites/favourites";
-
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { useSession } from "@/context/useSession";
 import { useRouter } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getUserLocation } from "@/lib/location";
-import { ContentLoader, LoadingSpinner } from "@/components/Loading";
+import { ContentLoader } from "@/components/Loading";
 import { Item } from "@/lib/types/types";
+import ItemCard from "@/components/shop/itemcard";
 
 const PAGE_SIZE = 10;
 
-/* ---------------- TYPES ---------------- */
-
 type ApiResponse = {
   data: Item[];
-
   totalFavorites: number;
   availableItems: number;
   priceDrops: number;
   nearbyItems: number;
 };
-
-/* ---------------- COMPONENT ---------------- */
 
 export default function FavoritesPage() {
   const router = useRouter();
@@ -46,15 +38,13 @@ export default function FavoritesPage() {
   const [sortBy, setSortBy] = useState<string | undefined>();
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
 
-  /* ================= AUTH GUARD ================= */
+  /* ---------------- AUTH GUARD ---------------- */
 
   useEffect(() => {
-    if (!session && !isLoading) {
-      router.push("/auth/signin");
-    }
+    if (!session && !isLoading) router.push("/auth/signin");
   }, [session, isLoading, router]);
 
-  /* ================= FETCHER ================= */
+  /* ---------------- FETCHER ---------------- */
 
   const fetchFavorites = useCallback(
     async ({ pageParam = 1 }): Promise<ApiResponse> => {
@@ -67,7 +57,6 @@ export default function FavoritesPage() {
         maxPrice: String(priceRange[1]),
       });
 
-      // Only append active filters
       if (searchQuery) params.append("search", searchQuery);
       if (statusFilter) params.append("status", statusFilter);
       if (categoryFilter) params.append("category", categoryFilter);
@@ -79,7 +68,7 @@ export default function FavoritesPage() {
       }
 
       const res = await authFetch(
-        `${BACKEND_URL}/product/favorits?${params.toString()}`
+        `${BACKEND_URL}/favorite/user?${params.toString()}`
       );
 
       if (!res.ok) throw new Error("Failed to fetch favorites");
@@ -91,40 +80,31 @@ export default function FavoritesPage() {
       statusFilter,
       categoryFilter,
       sortBy,
-      priceRange[0],   // ✅ stable dependency
-      priceRange[1],   // ✅ stable dependency
+      priceRange[0],
+      priceRange[1],
     ]
   );
 
-  /* ================= QUERY ================= */
+  /* ---------------- QUERY ---------------- */
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading: isFetching,
-    refetch,
-  } = useInfiniteQuery({
-    queryKey: [
-      "favorites",
-      searchQuery,
-      statusFilter,
-      categoryFilter,
-      sortBy,
-      priceRange[0],
-      priceRange[1],
-    ],
-    queryFn: fetchFavorites,
-    initialPageParam: 1,
+  const { data, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: [
+        "favorites",
+        searchQuery,
+        statusFilter,
+        categoryFilter,
+        sortBy,
+        priceRange[0],
+        priceRange[1],
+      ],
+      queryFn: fetchFavorites,
+      initialPageParam: 1,
+      getNextPageParam: (lastPage, allPages) =>
+        lastPage.data.length < PAGE_SIZE ? undefined : allPages.length + 1,
+    });
 
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage.data.length < PAGE_SIZE
-        ? undefined
-        : allPages.length + 1,
-  });
-
-  /* ================= DATA ================= */
+  /* ---------------- DATA ---------------- */
 
   const favorites = useMemo(
     () => data?.pages.flatMap((p) => p.data) ?? [],
@@ -149,35 +129,43 @@ export default function FavoritesPage() {
     [data]
   );
 
-  /* ================= ACTIONS ================= */
+  /* ---------------- REMOVE FAVORITE ---------------- */
 
   const handleRemoveFavorite = useCallback(
     async (favoriteId: string) => {
-      await authFetch(
-        `${BACKEND_URL}/product/favorits/${favoriteId}`,
-        { method: "DELETE" }
-      );
-
-      refetch();
+      await authFetch(`${BACKEND_URL}/product/favorits/${favoriteId}`, {
+        method: "DELETE",
+      });
     },
-    [refetch]
+    []
   );
 
-  const handleAddToCart = useCallback((itemId: string) => {
-    console.log("Add to cart:", itemId);
-  }, []);
+  /* ---------------- INFINITE SCROLL OBSERVER ---------------- */
 
-  /* ================= UI ================= */
+  const lastItemRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        fetchNextPage();
+      }
+    });
+
+    if (lastItemRef.current) observer.observe(lastItemRef.current);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, fetchNextPage, isFetchingNextPage]);
+
+  /* ---------------- UI ---------------- */
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            My Favorites
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">My Favorites</h1>
           <p className="text-gray-600 mt-2">
             Your saved items for tracking and quick access
           </p>
@@ -209,24 +197,30 @@ export default function FavoritesPage() {
           <EmptyFavorites />
         ) : (
           <>
-            <FavoriteList
-              favorites={favorites}
-              onRemoveFavorite={handleRemoveFavorite}
-              onAddToCart={handleAddToCart}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {favorites.map((favorite, index) => {
+                const isLast = index === favorites.length - 1;
 
-            {/* Pagination */}
-            {hasNextPage && (
-              <div className="flex justify-center mt-8">
-                <button
-                  disabled={isFetchingNextPage}
-                  onClick={() => fetchNextPage()}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg"
-                >
-                  {isFetchingNextPage
-                    ? <LoadingSpinner />
-                    : "Load More"}
-                </button>
+                return (
+                  <div
+                    key={favorite.id}
+                    ref={isLast ? lastItemRef : null}
+                  >
+                    <ItemCard
+                      item={favorite}
+                      index={index}
+                      isFavorite={true}
+                      onToggleFavorite={handleRemoveFavorite}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Infinite Scroll Loading */}
+            {isFetchingNextPage && (
+              <div className="w-full mt-6 flex justify-center">
+                <ContentLoader columns={4} count={4} type="grid" />
               </div>
             )}
           </>

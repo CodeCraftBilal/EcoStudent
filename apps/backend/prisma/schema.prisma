@@ -166,12 +166,12 @@ model search_history {
 }
 
 model user_favorites {
-  favoriteId Int       @id @map("favoriteid")
-  userId     Int?      @map("userid")
-  productId  Int?      @map("productid")
-  createdAt  DateTime? @map("created_at") @db.Timestamp(6)
-  product    product?  @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_product")
-  users      Users?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_users")
+  favoriteId Int       @id @default(autoincrement()) @map("favoriteid")
+  userId     Int       @map("userid")
+  productId  Int       @map("productid")
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  product    product   @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_product")
+  users      Users     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_users")
 }
 
 enum ROLE {

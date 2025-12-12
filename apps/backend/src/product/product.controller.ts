@@ -69,16 +69,8 @@ export class ProductController {
     });
   }
 
-  @Get('/favorits')
-  getFavorits(@Query() query: any, @Req() req) {
-    
-    
-    return this.productService.findFavoritesByUserId(req.user.id, query);
-  }
-
   @Get('mylisting')
   findProductByUserId(@Query() query: FindByUIDParams, @Req() req) {
-    
     return this.productService.findProductByUserId(req.user.id, query);
   }
 
