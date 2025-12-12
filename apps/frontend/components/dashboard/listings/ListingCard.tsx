@@ -76,13 +76,14 @@ const formatDate = (dateString: string) => {
 };
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
-    >
+    // <motion.div
+    //   layout
+    //   initial={{ opacity: 0, scale: 0.9 }}
+    //   animate={{ opacity: 1, scale: 1 }}
+    //   exit={{ opacity: 0, scale: 0.9 }}
+    //   className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+    // >
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
       {/* Image */}
       <div className="relative">
         <img
@@ -183,6 +184,7 @@ const formatDate = (dateString: string) => {
           </div>
         </div>
       </div>
-    </motion.div>
+    {/* </motion.div> */}
+    </div>
   );
 }

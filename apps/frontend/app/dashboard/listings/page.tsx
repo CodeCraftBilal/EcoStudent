@@ -15,7 +15,7 @@ import DeleteModal from "@/components/dashboard/listings/DeleteModal";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { authFetch } from "@/lib/authFetch";
 import { useSession } from "@/context/useSession";
-import { LoadingSpinner } from "@/components/Loading";
+import { ContentLoader, LoadingSpinner } from "@/components/Loading";
 import { Dialog } from "@/components/ui/dialogBoxes/Dialog";
 import { ConfirmDialog } from "@/components/ui/dialogBoxes/Pre-configuredDialog";
 import { SnackbarProvider, useSnackbar } from "@/components/ui/dialogBoxes/SnackBarManager";
@@ -222,14 +222,14 @@ const MyListingsPage = () => {
         {/* GRID */}
         {listingsLoading && listings.length === 0 ? (
           <div className="flex justify-center mt-14">
-            <LoadingSpinner />
+            <ContentLoader type="grid" columns={4} count={8} />
           </div>
         ) : listings.length === 0 ? (
           <EmptyState hasListings={false} />
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <AnimatePresence>
+              
                 {listings.map((listing) => (
                   <ListingCard
                     key={listing.id}
@@ -237,12 +237,11 @@ const MyListingsPage = () => {
                     onDelete={handleDelete}
                   />
                 ))}
-              </AnimatePresence>
             </div>
 
             {/* SCROLL TRIGGER */}
             <div ref={observerRef} className="flex justify-center py-12">
-              {isFetchingNextPage && <LoadingSpinner />}
+              {isFetchingNextPage && <ContentLoader columns={4} type="grid" count={8} />}
             </div>
           </>
         )}

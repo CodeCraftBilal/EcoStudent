@@ -1,19 +1,22 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { FilterState, Item } from "@/lib/types/types";
 import { ShopNavBar } from "@/components/shop/header";
 import { Categories } from "@/components/shop/categories";
-import { ItemCard } from "@/components/shop/itemcard";
+import ItemCard from "@/components/shop/itemcard";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { getUserLocation } from "@/lib/location";
-import { ContentLoader, LoadingSpinner } from "@/components/Loading";
+import { ContentLoader } from "@/components/Loading";
 
 export default function ShopPage() {
+  // ----------------------------------
+  // State
+  // ----------------------------------
   const [filters, setFilters] = useState<FilterState>({
     category: "all",
     priceRange: [0, 5000],
@@ -26,89 +29,105 @@ export default function ShopPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [cart, setCart] = useState<Set<string>>(new Set());
+
   const lastItemRef = useRef<HTMLDivElement | null>(null);
 
-  const ref = useRef(0);
-  ref.current = ref.current + 1;
-  console.log(ref.current)
+  // ----------------------------------
+  // Stable memoized filters
+  // ----------------------------------
+  const stableFilters = useMemo(() => filters, [filters]);
 
-  // ------------------------
-  // API Fetch Function
-  // ------------------------
-  const fetchProducts = async ({ pageParam = 0 }): Promise<Item[]> => {
-    const location = await getUserLocation();
+  // ----------------------------------
+  // Fetch Function (Memoized)
+  // ----------------------------------
+  const fetchProducts = useCallback(
+    async ({ pageParam = 0 }): Promise<Item[]> => {
+      const location = await getUserLocation();
 
-    let query: string[] = [];
+      const params = new URLSearchParams();
 
-    if (location)
-      query.push(`lat=${location.latitude}&lng=${location.longitude}`);
+      if (location) {
+        params.append("lat", String(location.latitude));
+        params.append("lng", String(location.longitude));
+      }
 
-    if (searchQuery) query.push(`searchQuery=${searchQuery}`);
-    if (filters.category !== "all")
-      query.push(`category=${filters.category}`);
+      if (searchQuery) params.append("searchQuery", searchQuery);
+      if (stableFilters.category !== "all")
+        params.append("category", stableFilters.category);
 
-    query.push(`minPrice=${filters.priceRange[0]}`);
-    query.push(`maxPrice=${filters.priceRange[1]}`);
+      params.append(
+        "minPrice",
+        stableFilters.priceRange[0].toString()
+      );
+      params.append(
+        "maxPrice",
+        stableFilters.priceRange[1].toString()
+      );
 
-    filters.condition.forEach((c) => query.push(`condition=${c}`));
-    filters.exchangeType.forEach((e) => query.push(`exchangeType=${e}`));
-    query.push(`maxDistance=${filters.distance}`);
+      stableFilters.condition.forEach((c) =>
+        params.append("condition", c)
+      );
 
-    query.push(`offset=${pageParam}`);
-    query.push(`limit=12`);
+      stableFilters.exchangeType.forEach((e) =>
+        params.append("exchangeType", e)
+      );
 
-    const url = `${BACKEND_URL}/product?${query.join("&")}`;
+      params.append("maxDistance", stableFilters.distance.toString());
+      params.append("offset", pageParam.toString());
+      params.append("limit", "12");
 
-    const res = await authFetch(url);
-    return res.json();
-  };
+      const url = `${BACKEND_URL}/product?${params.toString()}`;
 
-  // ------------------------
-  // Infinite Query
-  // ------------------------
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    refetch,
-  } = useInfiniteQuery({
-    queryKey: ["products", filters, searchQuery],
-    queryFn: fetchProducts,
-    initialPageParam: 0,
-
-    getNextPageParam: (lastPage, allPages) => {
-      if (lastPage.length < 12) return undefined;
-      return allPages.length * 12;
+      const res = await authFetch(url);
+      return res.json();
     },
+    [searchQuery, stableFilters]
+  );
 
-    refetchOnReconnect: false,
-    refetchOnWindowFocus: false,
-  });
+  // ----------------------------------
+  // Infinite Query
+  // ----------------------------------
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
+    useInfiniteQuery({
+      queryKey: ["products", stableFilters, searchQuery],
+      queryFn: fetchProducts,
+      initialPageParam: 0,
+      getNextPageParam: (lastPage, allPages) => {
+        if (lastPage.length < 12) return undefined;
+        return allPages.length * 12;
+      },
+      refetchOnReconnect: false,
+      refetchOnWindowFocus: false,
+    });
 
-  // ------------------------
-  // Combine all pages
-  // ------------------------
-  const items = data?.pages.flat() ?? [];
+  // ----------------------------------
+  // Flatten pages (Memoized)
+  // ----------------------------------
+  const items = useMemo(() => {
+    return data?.pages?.flat() ?? [];
+  }, [data]);
 
-  // ------------------------
-  // Infinite Scroll Observer
-  // ------------------------
+  // ----------------------------------
+  // Infinite Scroll Observer (Optimized)
+  // ----------------------------------
   useEffect(() => {
     if (!lastItemRef.current || !hasNextPage) return;
 
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) fetchNextPage();
+      if (entries[0].isIntersecting) {
+        fetchNextPage();
+      }
     });
 
     observer.observe(lastItemRef.current);
-    return () => observer.disconnect();
-  }, [items, hasNextPage]);
 
-  // ------------------------
-  // Filters Reset
-  // ------------------------
-  const resetFilters = () => {
+    return () => observer.disconnect();
+  }, [hasNextPage, fetchNextPage]);
+
+  // ----------------------------------
+  // Memoized Callbacks
+  // ----------------------------------
+  const resetFilters = useCallback(() => {
     setFilters({
       category: "all",
       priceRange: [0, 5000],
@@ -116,26 +135,30 @@ export default function ShopPage() {
       exchangeType: [],
       distance: 10,
     });
+
     setSearchQuery("");
     refetch();
-  };
+  }, [refetch]);
 
-  const toggleFavorite = (id: string) => {
+  const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) => {
       const copy = new Set(prev);
       copy.has(id) ? copy.delete(id) : copy.add(id);
       return copy;
     });
-  };
+  }, []);
 
-  const toggleCart = (id: string) => {
+  const toggleCart = useCallback((id: string) => {
     setCart((prev) => {
       const copy = new Set(prev);
       copy.has(id) ? copy.delete(id) : copy.add(id);
       return copy;
     });
-  };
+  }, []);
 
+  // ----------------------------------
+  // Render
+  // ----------------------------------
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <ShopNavBar
@@ -162,14 +185,6 @@ export default function ShopPage() {
           <p className="text-gray-600 py-2">
             Showing {items.length} of {items.length} items
           </p>
-
-          {/* <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
-            <option>Sort by: Newest</option>
-            <option>Price Low → High</option>
-            <option>Price High → Low</option>
-            <option>Distance</option>
-            <option>Rating</option>
-          </select> */}
         </div>
 
         {items.length === 0 ? (
@@ -189,19 +204,15 @@ export default function ShopPage() {
             </button>
           </motion.div>
         ) : (
-          <motion.div
-            layout
+          <div
+            // layout
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
           >
-            <AnimatePresence>
               {items.map((item, idx) => {
                 const isLast = idx === items.length - 1;
 
                 return (
-                  <div
-                    key={item.id}
-                    ref={isLast ? lastItemRef : null}
-                  >
+                  <div key={item.id} ref={isLast ? lastItemRef : null}>
                     <ItemCard
                       item={item}
                       index={idx}
@@ -213,8 +224,7 @@ export default function ShopPage() {
                   </div>
                 );
               })}
-            </AnimatePresence>
-          </motion.div>
+           </div>
         )}
 
         {isFetchingNextPage && (

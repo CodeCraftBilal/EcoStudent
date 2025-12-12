@@ -13,7 +13,7 @@ import {
   SellerInfo,
   ProductTabs,
 } from "@/components/shop/product";
-import { ItemCard } from "@/components/shop/itemcard";
+import ItemCard from "@/components/shop/itemcard";
 import { LoadingSpinner } from "@/components/Loading";
 import { ProductNotFound } from "@/components/shop/product/NotFound";
 

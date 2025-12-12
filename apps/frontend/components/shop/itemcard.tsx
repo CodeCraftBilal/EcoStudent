@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Item } from "@/lib/types/types";
 import Image from "next/image";
+import React from "react";
 
 interface ItemCardProps {
   item: Item;
@@ -15,14 +16,14 @@ interface ItemCardProps {
   onToggleCart?: (itemId: string) => void;
 }
 
-export function ItemCard({
+const ItemCard = React.memo(({
   item,
   index,
   isFavorite,
   isInCart,
   onToggleFavorite,
   onToggleCart,
-}: ItemCardProps) {
+}: ItemCardProps) => {
   const formatTimeAgo = (dateString: string) => {
     console.log("date: ", dateString);
     const date = new Date(dateString);
@@ -44,14 +45,15 @@ export function ItemCard({
   }
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ delay: index * 0.1 }}
-      className="bg-white cursor-default rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group"
-    >
+    // <motion.div
+    //   layout
+    //   initial={{ opacity: 0, scale: 0.9 }}
+    //   animate={{ opacity: 1, scale: 1 }}
+    //   exit={{ opacity: 0, scale: 0.9 }}
+    //   transition={{ delay: index * 0.1 }}
+    //   className="bg-white cursor-default rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group"
+    // >
+    <div className="bg-white cursor-default rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
       {/* Image Section */}
       <div className="relative overflow-hidden">
         <Link
@@ -257,6 +259,9 @@ export function ItemCard({
           </div>
         )}
       </div>
-    </motion.div>
+    {/* </motion.div> */}
+      </div>
   );
-}
+})
+
+export default ItemCard;
