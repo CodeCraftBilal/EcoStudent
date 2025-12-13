@@ -59,7 +59,7 @@ const ItemCard = React.memo(({
         </Link>
         <div className="absolute top-2 right-2 flex space-x-1">
           <button
-            onClick={() => onToggleFavorite(isFavorite ? item.favorite?.favoriteId || '' : item.id)}
+            onClick={() => onToggleFavorite(item.id)}
             className={`p-1.5 rounded-full backdrop-blur-sm transition-all ${
               isFavorite
                 ? "bg-red-500 text-white"

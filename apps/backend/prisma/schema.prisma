@@ -172,6 +172,8 @@ model user_favorites {
   createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
   product    product   @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_product")
   users      Users     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_users")
+
+  @@unique([userId, productId], map: "user_favorites_userid_productid_unique")
 }
 
 enum ROLE {

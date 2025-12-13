@@ -8,10 +8,24 @@ export class FavoriteService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(userId: number, createFavoriteDto: CreateFavoriteDto) {
-    console.log('data: ', userId, 'productId ', createFavoriteDto.productId)
+    console.log('data: ', userId, 'productId ', createFavoriteDto.productId);
     try {
+      const isInFavorite = await this.prisma.user_favorites.findUnique({
+        where: {
+          userId_productId: {
+            userId: userId,
+            productId: createFavoriteDto.productId,
+          },
+        },
+      });
+      if (isInFavorite)
+        return {
+          error: true,
+          alreadyInFavorite: true,
+          message: `Already in favorite`,
+        };
       await this.prisma.user_favorites.create({
-        data: { 
+        data: {
           productId: createFavoriteDto.productId,
           userId,
         },
@@ -45,44 +59,51 @@ export class FavoriteService {
     });
   }
 
-  async remove(id: number, userId: any) {
-
-    const favoriteItem = await this.prisma.user_favorites.findUnique({where: {favoriteId: id}});
-    if(favoriteItem?.userId === userId) {
-
+  async remove(productId: number, userId: any) {
+    const favoriteItem = await this.prisma.user_favorites.findUnique({
+      where: { 
+        userId_productId: {
+          productId,
+          userId
+        }
+       },
+    });
+    if (favoriteItem?.userId === userId) {
       const deletedItem = await this.prisma.user_favorites.delete({
         where: {
-          favoriteId: id
+          userId_productId: {
+            productId,
+            userId,
+          }
         },
       });
       return {
         error: false,
         id: deletedItem.favoriteId,
-        message: 'Removed Item successfuly'
-      }
+        message: 'Removed Item successfuly',
+      };
     } else {
       return {
         error: false,
-        message: 'Can\'t remove Item'
-      }
-      
+        message: "Can't remove Item",
+      };
     }
   }
 
   favoriteIds(userId: number) {
     return this.prisma.user_favorites.findMany({
       where: {
-        userId
+        userId,
       },
       select: {
         favoriteId: true,
-      }
-    })
+      },
+    });
   }
 
   async findFavoritesByUserId(userId: number, filters: any) {
     console.log('favorite filters ', filters);
-    console.log('userId: ', userId)
+    console.log('userId: ', userId);
     try {
       const conditions: string[] = [];
       const params: any[] = [];
@@ -170,7 +191,7 @@ export class FavoriteService {
            ))`
           : '0';
 
-          console.log('where sql: ', whereSQL)
+      console.log('where sql: ', whereSQL);
 
       // ---------------- RAW QUERY ----------------
       const rawFavorites: any[] = await this.prisma.$queryRawUnsafe(

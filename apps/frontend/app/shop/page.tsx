@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Search } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { FilterState, Item } from "@/lib/types/types";
 import { ShopNavBar } from "@/components/shop/header";
@@ -45,6 +45,7 @@ const ShopPage = () => {
     const loadFavs = async () => {
       console.log("fetcing fav ids");
       const res = await authFetch(`${BACKEND_URL}/favorite/ids`);
+      if(!res.ok) return;
       const ids = await res.json(); // must return array of favorite item IDs
       console.log("ids ", ids);
       const strIds = ids.map((id: any) => String(id));
@@ -149,15 +150,15 @@ const ShopPage = () => {
   }, [refetch]);
 
   const {showSuccess, showError} = useSnackbar()
-  const toggleFavorite = useCallback(async (id: string) => {
+  const toggleFavorite = useCallback(async (productId: string) => {
     let wasFavorite = false;
 
     setFavorites((prev) => {
       const newSet = new Set(prev);
-      wasFavorite = newSet.has(id); // <- read BEFORE modifying
+      wasFavorite = newSet.has(productId); // <- read BEFORE modifying
 
-      if (wasFavorite) newSet.delete(id);
-      else newSet.add(id);
+      if (wasFavorite) newSet.delete(productId);
+      else newSet.add(productId);
 
       return newSet;
     });
@@ -166,13 +167,14 @@ const ShopPage = () => {
       let res;
       if (wasFavorite) {
         console.log('removing')
-        res = await removeFromFavorite(id);
+        res = await removeFromFavorite(productId);
       } else {
         console.log('adding')
-        res = await addToFavorite(id);
+        res = await addToFavorite(productId);
       }
       if(!res.error) {
         showSuccess(`${res.message}`, 4000, 'bottom-center')
+        
       } else {
         showError(`${res.message}`, 4000, 'bottom-center')
       }
@@ -182,8 +184,8 @@ const ShopPage = () => {
       // rollback UI
       setFavorites((prev) => {
         const newSet = new Set(prev);
-        if (wasFavorite) newSet.add(id);
-        else newSet.delete(id);
+        if (wasFavorite) newSet.add(productId);
+        else newSet.delete(productId);
         return newSet;
       });
     }

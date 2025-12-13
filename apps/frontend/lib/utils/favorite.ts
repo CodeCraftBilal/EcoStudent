@@ -4,6 +4,7 @@ import { BACKEND_URL } from "../types/constants"
 type AddToFavorite = {
     error: boolean,
     message: string,
+    alreadyInFavorite?: boolean
 }
 
 export const addToFavorite = async (itemId: string): Promise<AddToFavorite> => {
@@ -28,8 +29,8 @@ export const addToFavorite = async (itemId: string): Promise<AddToFavorite> => {
     return result;
 }
 
-export const removeFromFavorite = async (favoriteId: string): Promise<AddToFavorite> => {
-    const res = await authFetch(`${BACKEND_URL}/favorite/${favoriteId}`, {
+export const removeFromFavorite = async (itemId: string): Promise<AddToFavorite> => {
+    const res = await authFetch(`${BACKEND_URL}/favorite/${itemId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json'
