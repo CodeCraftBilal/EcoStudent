@@ -88,20 +88,20 @@ model chat {
 }
 
 model exchanges {
-  exchangeid      Int              @id @default(autoincrement())
-  productId       Int?             @map("productid")
-  buyerid         Int?
-  exchangetype    exchange_type?
-  status          exchange_status?
-  agreedprice     Decimal?         @db.Decimal(10, 2)
-  meetuplocation  String?          @db.VarChar(255)
-  meetuplatitude  Decimal?         @db.Decimal(10, 8)
-  meetuplongitude Decimal?         @db.Decimal(11, 8)
-  meetuptime      DateTime?        @db.Timestamp(6)
-  completed_at    DateTime?        @db.Timestamp(6)
-  created_at      DateTime?        @db.Timestamp(6)
-  users           Users?           @relation(fields: [buyerid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_buyer")
-  product         product?         @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_product")
+  exchangeId      Int              @id @default(autoincrement()) @map("exchangeid")
+  productId       Int              @map("productid")
+  buyerId         Int              @map("buyerid")
+  exchangeType    exchange_type    @map("exchangetype")
+  status          exchange_status? @default(pending)
+  agreedPrice     Decimal          @map("agreedprice") @db.Decimal(10, 2)
+  meetupLocation  String           @map("meetuplocation") @db.VarChar(255)
+  meetupLatitude  Decimal          @map("meetuplatitude") @db.Decimal(10, 8)
+  meetupLongitude Decimal          @map("meetuplongitude") @db.Decimal(11, 8)
+  meetupTime      DateTime         @map("meetuptime") @db.Timestamp(6)
+  completedAt     DateTime?        @map("completed_at") @db.Timestamp(6)
+  createdAt       DateTime?        @default(now()) @map("created_at") @db.Timestamp(6)
+  users           Users            @relation(fields: [buyerId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_buyer")
+  product         product          @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_product")
   reviews         reviews[]
 }
 
@@ -133,7 +133,7 @@ model product {
   originalPrice    Int?              @map("originalprice")
   productCondition product_condition @map("productcondition")
   productType      product_type      @map("producttype")
-  exchangeType     exchange_type?    @default(sale) @map("exchangetype")
+  exchangeType     exchange_type    @default(sale) @map("exchangetype")
   status           PRODUCT_STATUS    @default(active)
   chat             chat[]
   exchanges        exchanges[]
@@ -144,13 +144,13 @@ model product {
 
 model reviews {
   reviewid                            Int        @id @default(autoincrement())
-  exchangeid                          Int?
+  exchangeId                          Int?       @map("exchangeid")
   reviewerid                          Int?
   revieweduserid                      Int?
   rating                              Int?
   comment                             String?    @db.VarChar(500)
   created_at                          DateTime?  @db.Timestamp(6)
-  exchanges                           exchanges? @relation(fields: [exchangeid], references: [exchangeid], onDelete: NoAction, onUpdate: NoAction, map: "fk_reviews_exchange")
+  exchanges                           exchanges? @relation(fields: [exchangeId], references: [exchangeId], onDelete: NoAction, onUpdate: NoAction, map: "fk_reviews_exchange")
   users_reviews_revieweduseridTousers Users?     @relation("reviews_revieweduseridTousers", fields: [revieweduserid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_reviews_revieweduser")
   users_reviews_revieweridTousers     Users?     @relation("reviews_revieweridTousers", fields: [reviewerid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_reviews_reviewer")
 }
