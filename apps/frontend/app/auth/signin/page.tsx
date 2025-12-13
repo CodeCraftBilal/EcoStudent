@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, Leaf, BookOpen, User, Lock, Smartphone, Frown, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Lottie from "lottie-react";
 import LoadingAnim from '@/public/lotieAnim/Loading.json'
 import { useSession } from "@/context/useSession";
@@ -22,6 +22,7 @@ interface LoginResponse {
 }
 
 export default function LoginPage() {
+  const params = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -103,7 +104,7 @@ export default function LoginPage() {
 
         // Redirect to dashboard after a brief delay to show success message
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push(`${params.get('from') || '/dashboard'}`);
         }, 1500);
         
       } else {

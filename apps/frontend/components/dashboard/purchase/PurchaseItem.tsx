@@ -120,10 +120,10 @@ export default function PurchaseItem({ purchase, onRatePurchase }: PurchaseItemP
               </span>
               <span>•</span>
               <span>Qty: {purchase.quantity}</span>
-              <span>•</span>
-              <span className="font-medium text-gray-900">
-                {formatCurrency(purchase.item.price)} each
-              </span>
+              {/* <span>•</span> */}
+              {/* <span className="font-medium text-gray-900"> */}
+                {/* {formatCurrency(purchase.item.price)} each */}
+              {/* </span> */}
             </div>
           </div>
         </div>

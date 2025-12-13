@@ -10,15 +10,17 @@ import {
   Bell,
   Plus,
   ShoppingBasket,
+  Info,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import NotificationDropdown from "./Notification";
 import UploadItemModal from "./UploadItemModal";
 import { useSession } from "@/context/useSession";
 import { getUserLocation } from "@/lib/location";
 import Image from "next/image";
 import ProfileDropDown from "./ProfileDropDown";
+import { InfoDialog } from "../ui/dialogBoxes/Pre-configuredDialog";
 
 // mock notifications
 export const notificationsData = [
@@ -53,22 +55,22 @@ export const notificationsData = [
 
 export default function DashboardNavbar() {
   // fetching session
-  const { session, refreshSession } = useSession();
+  const { session, isLoading ,refreshSession } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
     useState(false);
   const pathname = usePathname();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     getUserLocation();
   }, []);
 
   useEffect(() => {
-    console.log("dashnav refreshing session");
     refreshSession();
-  }, []);
+  }, [pathname]);
 
   const dashboardLinks = [
     {
@@ -124,6 +126,21 @@ export default function DashboardNavbar() {
   const handleMarkAllAsRead = () => {
     setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
   };
+  
+  // session expiry dialog
+  const handleClose = () => {
+    router.push(`/auth/signin?from=${pathname}`)
+  }
+
+  if(!isLoading && !session) {
+    return <InfoDialog description="Your Session is Expired. Signin again." title="Session" isOpen={true} onClose={handleClose} buttons={[
+      {
+        text: 'Signin',
+        onClick: handleClose,
+        variant: 'outline'
+      }
+    ]} />
+  }
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">

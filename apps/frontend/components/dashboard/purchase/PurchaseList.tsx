@@ -27,7 +27,7 @@ export default function PurchaseList({ purchases, onRatePurchase }: PurchaseList
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <AnimatePresence>
         {purchases.map((purchase, index) => (
           <motion.div
