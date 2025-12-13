@@ -27,7 +27,7 @@ export default function PurchaseList({ purchases, onRatePurchase }: PurchaseList
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <AnimatePresence>
         {purchases.map((purchase, index) => (
           <motion.div
@@ -35,7 +35,7 @@ export default function PurchaseList({ purchases, onRatePurchase }: PurchaseList
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ delay: index * 0.1 }}
+            // transition={{ delay: index * 0.1 }}
           >
             <PurchaseItem
               purchase={purchase}

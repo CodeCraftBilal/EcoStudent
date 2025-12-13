@@ -3,6 +3,7 @@
 import { Star, MapPin, Calendar, CreditCard, MessageCircle, Shield } from "lucide-react";
 import Link from "next/link";
 import { Purchase } from "@/lib/types/dashboard/purchase/purchase";
+import { usePathname } from "next/navigation";
 
 interface PurchaseItemProps {
   purchase: Purchase;
@@ -65,10 +66,12 @@ export default function PurchaseItem({ purchase, onRatePurchase }: PurchaseItemP
     return `Rs ${amount.toLocaleString()}`;
   };
 
+  const pathName = usePathname();
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+    <div className="bg-white h-90 rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
       {/* Header */}
-      <div className="border-b border-gray-200 p-4">
+      <div className="border-b border-gray-200 py-3 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(purchase.status)}`}>
@@ -79,7 +82,7 @@ export default function PurchaseItem({ purchase, onRatePurchase }: PurchaseItemP
               {formatDate(purchase.purchaseDate)}
             </span>
           </div>
-          <div className="text-lg font-bold text-eco-600">
+          <div className="text-lg font-bold text-green-600">
             {formatCurrency(purchase.totalAmount)}
           </div>
         </div>
@@ -97,11 +100,11 @@ export default function PurchaseItem({ purchase, onRatePurchase }: PurchaseItemP
           {/* Item Details */}
           <div className="flex-1 min-w-0">
             <Link 
-              href={`/item/${purchase.item.id}`}
+              href={`/shop/product/${purchase.item.id}?from=${pathName}`}
               className="block"
             >
-              <h3 className="font-semibold text-gray-900 hover:text-eco-600 transition-colors line-clamp-2">
-                {purchase.item.title}
+              <h3 className="font-semibold text-gray-900 hover:text-green-600 transition-colors line-clamp-2">
+                {purchase.item.title.length > 30 ? `${purchase.item.title.slice(0,30)}...`: purchase.item.title}
               </h3>
             </Link>
             
@@ -118,8 +121,8 @@ export default function PurchaseItem({ purchase, onRatePurchase }: PurchaseItemP
               }`}>
                 {purchase.item.condition.charAt(0).toUpperCase() + purchase.item.condition.slice(1)}
               </span>
-              <span>•</span>
-              <span>Qty: {purchase.quantity}</span>
+              {/* <span>•</span>
+              <span>Qty: {purchase.quantity}</span> */}
               {/* <span>•</span> */}
               {/* <span className="font-medium text-gray-900"> */}
                 {/* {formatCurrency(purchase.item.price)} each */}
@@ -139,7 +142,7 @@ export default function PurchaseItem({ purchase, onRatePurchase }: PurchaseItemP
             <div>
               <Link 
                 href={`/profile/${purchase.seller.id}`}
-                className="font-medium text-gray-900 hover:text-eco-600 transition-colors text-sm"
+                className="font-medium text-gray-900 hover:text-green-600 transition-colors text-sm"
               >
                 {purchase.seller.name}
               </Link>
@@ -155,7 +158,7 @@ export default function PurchaseItem({ purchase, onRatePurchase }: PurchaseItemP
 
           <Link
             href={`/chat?user=${purchase.seller.id}`}
-            className="flex items-center space-x-1 text-eco-600 hover:text-eco-700 transition-colors text-sm"
+            className="flex items-center space-x-1 text-green-600 hover:text-green-700 transition-colors text-sm"
           >
             <MessageCircle className="w-4 h-4" />
             <span>Message</span>
@@ -163,14 +166,14 @@ export default function PurchaseItem({ purchase, onRatePurchase }: PurchaseItemP
         </div>
 
         {/* Purchase Details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-100">
+        <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-100">
           <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <MapPin className="w-4 h-4 text-eco-600" />
+            <MapPin className="w-4 h-4 text-green-600" />
             <span className="truncate">{purchase.meetupLocation}</span>
           </div>
           
           <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Calendar className="w-4 h-4 text-eco-600" />
+            <Calendar className="w-4 h-4 text-green-600" />
             <span>
               {purchase.deliveredDate 
                 ? `Delivered ${formatDate(purchase.deliveredDate)}`
@@ -179,10 +182,10 @@ export default function PurchaseItem({ purchase, onRatePurchase }: PurchaseItemP
             </span>
           </div>
 
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
+          {/* <div className="flex items-center space-x-2 text-sm text-gray-600">
             {getPaymentMethodIcon(purchase.paymentMethod)}
             <span className="capitalize">{purchase.paymentMethod}</span>
-          </div>
+          </div> */}
         </div>
 
         {/* Rating Section */}
@@ -192,7 +195,7 @@ export default function PurchaseItem({ purchase, onRatePurchase }: PurchaseItemP
               <p className="text-sm text-gray-600">How was your experience?</p>
               <button
                 onClick={() => onRatePurchase(purchase.id, 5, "Great experience!")}
-                className="flex items-center space-x-1 text-eco-600 hover:text-eco-700 transition-colors text-sm font-medium"
+                className="flex items-center space-x-1 text-green-600 hover:text-green-700 transition-colors text-sm font-medium"
               >
                 <Star className="w-4 h-4" />
                 <span>Leave a Review</span>
@@ -202,8 +205,8 @@ export default function PurchaseItem({ purchase, onRatePurchase }: PurchaseItemP
         )}
 
         {/* Existing Review */}
-        {purchase.rating && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
+        {purchase.rating && purchase.review && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
             <div className="flex items-center space-x-2">
               <div className="flex items-center space-x-1">
                 {[...Array(5)].map((_, i) => (
@@ -217,7 +220,8 @@ export default function PurchaseItem({ purchase, onRatePurchase }: PurchaseItemP
                   />
                 ))}
               </div>
-              <p className="text-sm text-gray-600">{purchase.review}</p>
+              <p className="text-sm text-gray-600">{purchase.review.length > 30 ? `${purchase.review.slice(0,38)}...`: purchase.review}</p>
+              {/* <p className="text-sm text-gray-600">{purchase.review}</p> */}
             </div>
           </div>
         )}

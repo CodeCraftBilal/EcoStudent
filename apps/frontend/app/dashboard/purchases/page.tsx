@@ -9,6 +9,7 @@ import {
 } from "@/components/dashboard/purchase/index";
 import { Purchase, PurchaseStats as PurchaseStatsType } from "@/lib/types/dashboard/purchase/purchase";
 import { mockPurchasesData } from "@/data/dashboard/purchases";
+import { useSession } from "@/context/useSession";
 
 export default function PurchasesPage() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -17,6 +18,7 @@ export default function PurchasesPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const {isLoading, session} = useSession()
 
   // Mock data - replace with actual API call
   useEffect(() => {
@@ -89,7 +91,11 @@ export default function PurchasesPage() {
       )
     );
   };
-
+  
+  if(!isLoading && !session) {
+    return <div></div>;
+  }
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
