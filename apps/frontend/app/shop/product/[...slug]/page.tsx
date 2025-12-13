@@ -17,7 +17,7 @@ import ItemCard from "@/components/shop/itemcard";
 import { LoadingSpinner } from "@/components/Loading";
 import { ProductNotFound } from "@/components/shop/product/NotFound";
 
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL, FRONTEND_URL } from "@/lib/types/constants";
 import { authFetch } from "@/lib/authFetch";
 import { getUserLocation } from "@/lib/location";
 
@@ -77,7 +77,6 @@ export default function ProductDetailPage({
   const [cart, setCart] = useState<Set<string>>(new Set());
 
   const searchParams = useSearchParams();
-
   // loading more items on scroll
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -242,9 +241,9 @@ export default function ProductDetailPage({
       {/* Navigation */}
       <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center">
-          <Link href="/shop" className="flex items-center text-green-600">
+          <Link href={`${FRONTEND_URL}/${searchParams.get('from') || 'shop'}`} className="flex items-center text-green-600">
             <ChevronLeft className="w-5 h-5" />
-            <span>Back to Shop</span>
+            <span>Back</span>
           </Link>
         </div>
       </nav>

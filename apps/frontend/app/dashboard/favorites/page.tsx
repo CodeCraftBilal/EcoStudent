@@ -9,7 +9,7 @@ import {
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { useSession } from "@/context/useSession";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { getUserLocation } from "@/lib/location";
 import { ContentLoader } from "@/components/Loading";
@@ -39,7 +39,7 @@ const FavoritesPage = () => {
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
   const [sortBy, setSortBy] = useState<string | undefined>();
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
-
+  
   /* ---------------- AUTH GUARD ---------------- */
 
   useEffect(() => {

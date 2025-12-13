@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Item } from "@/lib/types/types";
 import Image from "next/image";
 import React from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 interface ItemCardProps {
   item: Item;
@@ -23,8 +24,12 @@ const ItemCard = React.memo(({
   onToggleFavorite,
   onToggleCart,
 }: ItemCardProps) => {
+
+  // from filter
+  const pathName = usePathname();
+  console.log(pathName)
+
   const formatTimeAgo = (dateString: string) => {
-    console.log("date: ", dateString);
     const date = new Date(dateString);
     const now = new Date();
     const diffInDays = Math.floor(
@@ -49,7 +54,7 @@ const ItemCard = React.memo(({
       <div className="relative overflow-hidden">
         <Link
           className="relative overflow-hidden"
-          href={`/shop/product/${item.id}?category=${item.category}`}
+          href={`/shop/product/${item.id}?category=${item.category}&from=${pathName}`}
         >
           <img
             src={item.image}
@@ -125,7 +130,7 @@ const ItemCard = React.memo(({
       <div className="px-2 sm:p-4">
         {/* Mobile Compact View */}
         <Link
-          href={`/shop/product/${item.id}?category=${item.category}`}
+          href={`/shop/product/${item.id}?category=${item.category}&from=${pathName}`}
           className="sm:hidden"
         >
           <h3
@@ -152,7 +157,7 @@ const ItemCard = React.memo(({
 
         {/* Desktop Detailed View */}
         <div className="hidden sm:block">
-          <Link href={`/shop/product/${item.id}?category=${item.category}`}>
+          <Link href={`/shop/product/${item.id}?category=${item.category}&from=${pathName}`}>
             <div className="flex justify-between items-start mb-1">
               <h3 className="font-semibold text-gray-900 line-clamp-2 flex-1">
                 {item.title}
@@ -218,7 +223,7 @@ const ItemCard = React.memo(({
           <div className="flex space-x-2">
                         <Link
               className={`flex-1 text-center py-2 px-4 rounded-lg text-sm font-medium transition-colors bg-green-500 text-white hover:bg-green-600`}
-              href={`/dashboard/chat?user=${item.seller.id}`}
+              href={`/dashboard/chat?user=${item.seller.id}&from="${pathName}"`}
             >
               Message Seller
             </Link>
