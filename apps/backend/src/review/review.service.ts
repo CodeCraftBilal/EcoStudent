@@ -7,7 +7,11 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class ReviewService {
   constructor(private readonly prisma: PrismaService) {}
   create(createReviewDto: CreateReviewDto) {
-    return 'This action adds a new review';
+    this.prisma.reviews.create({
+      data: {
+        ...createReviewDto
+      }
+    })
   }
 
   async findAll(pid: number) {
