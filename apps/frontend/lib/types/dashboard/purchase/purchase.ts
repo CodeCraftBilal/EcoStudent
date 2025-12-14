@@ -17,13 +17,15 @@ export interface Purchase {
     rating: number;
     verified: boolean;
   };
-  status: 'completed' | 'cancelled' | 'refunded' | 'disputed';
+  status: 'completed' | 'cancelled' | 'disputed' | 'pending';
   purchaseDate: string;
-  deliveredDate?: string;
+  deliveredDate: string;
   quantity: number;
   totalAmount: number;
   paymentMethod: 'jazzcash' | 'easypaisa' | 'cash';
   meetupLocation: string;
+  latitude: number;
+  longitude: number;
   rating?: number;
   review?: string;
 }

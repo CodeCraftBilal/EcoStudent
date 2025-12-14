@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   PurchaseStats,
   PurchaseFilters,
-  PurchaseList,
   EmptyPurchases,
   PurchaseItem,
 } from "@/components/dashboard/purchase/index";
@@ -12,13 +11,10 @@ import {
   Purchase,
   PurchaseStats as PurchaseStatsType,
 } from "@/lib/types/dashboard/purchase/purchase";
-import { mockPurchasesData } from "@/data/dashboard/purchases";
 import { useSession } from "@/context/useSession";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
-import { param } from "framer-motion/client";
-import { AnimatePresence, motion } from "framer-motion";
 import { ContentLoader } from "@/components/Loading";
 
 const PAGE_SIZE = 12;
@@ -29,8 +25,6 @@ type ApiResponse = {
 };
 
 export default function PurchasesPage() {
-  // const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [filteredPurchases, setFilteredPurchases] = useState<Purchase[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -88,8 +82,6 @@ export default function PurchasesPage() {
         lastPage.data.length < PAGE_SIZE ? undefined : allPages.length + 1,
     });
 
-  //
-
   const purchases = useMemo(
     () => data?.pages.flatMap((p) => p.data) ?? [],
     [data]
@@ -106,18 +98,34 @@ export default function PurchasesPage() {
     );
   }, [data]);
 
-  const handleRatePurchase = (
+  // Update the handleRatePurchase function in PurchasesPage
+  const handleRatePurchase = async (
     purchaseId: string,
     rating: number,
     review: string
   ) => {
-    // setPurchases(prev =>
-    //   prev.map(purchase =>
-    //     purchase.id === purchaseId
-    //       ? { ...purchase, rating, review }
-    //       : purchase
-    //   )
-    // );
+    try {
+      // Call your API endpoint
+      const res = await authFetch(
+        `${BACKEND_URL}/order/purchases/${purchaseId}/rate`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ rating, review }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to submit review");
+
+      console.log('review update, ', await res.json())
+      // Invalidate and refetch to update the UI
+      await refetch();
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      // You might want to show a toast notification here
+    }
   };
 
   /* ---------------- INFINITE SCROLL OBSERVER ---------------- */
@@ -187,7 +195,9 @@ export default function PurchasesPage() {
         {hasNextPage && (
           <div className="w-full">
             <div>
-              {isFetchingNextPage && <ContentLoader columns={3} count={8} type="grid" />}
+              {isFetchingNextPage && (
+                <ContentLoader columns={3} count={8} type="grid" />
+              )}
             </div>
           </div>
         )}
