@@ -94,6 +94,7 @@ export class OrderService {
       this.prisma.exchanges.findMany({
         where,
         select: {
+          exchangeId: true, status: true, createdAt: true, meetupTime: true, agreedPrice: true, meetupLocation: true, meetupLatitude: true, meetupLongitude: true, 
           product: {
             select: {
               productId: true, title: true, description: true, price: true, images: true, category: true, productCondition: true,
@@ -153,8 +154,33 @@ export class OrderService {
     ])
 
     const mapedData = data.map((d) => ({
-      
+      id: d.exchangeId,
+  item: {
+    id: d.product.productId,
+    title: d.product.title,
+    description: d.product.description,
+    price: d.agreedPrice,
+    image: d.product.images ? d.product.images[0] : '',
+    category: d.product.category?.categoryName,
+    condition: d.product.productCondition,
+  },
+  seller: {
+    id: d.product.users?.userId,
+    name: d.product.users?.userName,
+    avatar: d.product.users?.profilePicture,
+    rating: d.product.users?.rating,
+    verified: d.product.users?.isVerified,
+  },
+  status: d.status,
+  purchaseDate: d.createdAt,
+  deliveredDate: d.meetupTime,
+  quantity: 1,
+  totalAmount: Number(d.agreedPrice),
+  paymentMethod: 'cash',
+  meetupLocation: d.meetupLocation,
+  rating: d.product.users?.reviews_reviews_revieweduseridTousers,
+  review: d.product.users?.reviews_reviews_revieweduseridTousers,
     }))
-    return {data, totalOrders, TotalSpent, CompltedOrders, PendingReviews};
+    return {mapedData, totalOrders, TotalSpent, CompltedOrders, PendingReviews};
   }
 }
