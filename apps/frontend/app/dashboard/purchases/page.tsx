@@ -1,101 +1,145 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { 
-  PurchaseStats, 
-  PurchaseFilters, 
-  PurchaseList, 
-  EmptyPurchases 
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import {
+  PurchaseStats,
+  PurchaseFilters,
+  PurchaseList,
+  EmptyPurchases,
+  PurchaseItem,
 } from "@/components/dashboard/purchase/index";
-import { Purchase, PurchaseStats as PurchaseStatsType } from "@/lib/types/dashboard/purchase/purchase";
+import {
+  Purchase,
+  PurchaseStats as PurchaseStatsType,
+} from "@/lib/types/dashboard/purchase/purchase";
 import { mockPurchasesData } from "@/data/dashboard/purchases";
 import { useSession } from "@/context/useSession";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { authFetch } from "@/lib/authFetch";
+import { BACKEND_URL } from "@/lib/types/constants";
+import { param } from "framer-motion/client";
+import { AnimatePresence, motion } from "framer-motion";
+import { ContentLoader } from "@/components/Loading";
+
+const PAGE_SIZE = 12;
+
+type ApiResponse = {
+  data: Purchase[];
+  purchaseStats: PurchaseStatsType;
+};
 
 export default function PurchasesPage() {
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  // const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [filteredPurchases, setFilteredPurchases] = useState<Purchase[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
-  const {isLoading, session} = useSession()
+  const { isLoading, session } = useSession();
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  // Mock data - replace with actual API call
+  // debounce search
   useEffect(() => {
-    const mockPurchases = mockPurchasesData;
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
 
-    setPurchases(mockPurchases);
-    setFilteredPurchases(mockPurchases);
-  }, []);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
 
-  // Filter and sort purchases
-  useEffect(() => {
-    let filtered = purchases;
+  // fetch Purchases
+  const fetchPurchases = useCallback(
+    async ({ pageParam = 1 }): Promise<ApiResponse> => {
+      const params = new URLSearchParams({
+        page: String(pageParam),
+        limit: String(PAGE_SIZE),
+      });
 
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(purchase =>
-        purchase.item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        purchase.item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        purchase.seller.name.toLowerCase().includes(searchQuery.toLowerCase())
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      if (statusFilter) params.append("status", statusFilter);
+      if (categoryFilter) params.append("category", categoryFilter);
+      if (sortBy) params.append("sortBy", sortBy);
+
+      const res = await authFetch(
+        `${BACKEND_URL}/order/purchases?${params.toString()}`
       );
-    }
+      if (!res.ok) throw new Error("Failed to fetch Purchases");
+      const result = await res.json();
+      return result;
+    },
+    [searchQuery, statusFilter, categoryFilter, sortBy]
+  );
 
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(purchase => purchase.status === statusFilter);
-    }
+  // Infinte Scroll
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
+    useInfiniteQuery({
+      queryKey: [
+        "purchase",
+        debouncedSearch,
+        statusFilter,
+        categoryFilter,
+        sortBy,
+      ],
+      queryFn: fetchPurchases,
+      initialPageParam: 1,
+      getNextPageParam: (lastPage, allPages) =>
+        lastPage.data.length < PAGE_SIZE ? undefined : allPages.length + 1,
+    });
 
-    // Category filter
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter(purchase => purchase.item.category === categoryFilter);
-    }
+  //
 
-    // Sort
-    filtered = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime();
-        case "oldest":
-          return new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime();
-        case "price-high":
-          return b.item.price - a.item.price;
-        case "price-low":
-          return a.item.price - b.item.price;
-        case "amount-high":
-          return b.totalAmount - a.totalAmount;
-        case "amount-low":
-          return a.totalAmount - b.totalAmount;
-        default:
-          return 0;
+  const purchases = useMemo(
+    () => data?.pages.flatMap((p) => p.data) ?? [],
+    [data]
+  );
+
+  const stats: PurchaseStatsType = useMemo(() => {
+    return (
+      data?.pages?.[0]?.purchaseStats ?? {
+        totalPurchases: 0,
+        totalSpent: 0,
+        completedOrders: 0,
+        pendingReviews: 0,
+      }
+    );
+  }, [data]);
+
+  const handleRatePurchase = (
+    purchaseId: string,
+    rating: number,
+    review: string
+  ) => {
+    // setPurchases(prev =>
+    //   prev.map(purchase =>
+    //     purchase.id === purchaseId
+    //       ? { ...purchase, rating, review }
+    //       : purchase
+    //   )
+    // );
+  };
+
+  /* ---------------- INFINITE SCROLL OBSERVER ---------------- */
+  const lastItemRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        fetchNextPage();
       }
     });
 
-    setFilteredPurchases(filtered);
-  }, [purchases, searchQuery, statusFilter, categoryFilter, sortBy]);
+    if (lastItemRef.current) observer.observe(lastItemRef.current);
+    return () => {};
+  }, [hasNextPage, fetchNextPage, isFetchingNextPage]);
 
-  // Calculate stats
-  const stats: PurchaseStatsType = {
-    totalPurchases: purchases.length,
-    totalSpent: purchases.reduce((sum, purchase) => sum + purchase.totalAmount, 0),
-    completedOrders: purchases.filter(p => p.status === 'completed').length,
-    pendingReviews: purchases.filter(p => p.status === 'completed' && !p.rating).length
-  };
-
-  const handleRatePurchase = (purchaseId: string, rating: number, review: string) => {
-    setPurchases(prev => 
-      prev.map(purchase => 
-        purchase.id === purchaseId 
-          ? { ...purchase, rating, review }
-          : purchase
-      )
-    );
-  };
-  
-  if(!isLoading && !session) {
+  if (!isLoading && !session) {
     return <div></div>;
   }
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -126,10 +170,26 @@ export default function PurchasesPage() {
         {purchases.length === 0 ? (
           <EmptyPurchases />
         ) : (
-          <PurchaseList
-            purchases={filteredPurchases}
-            onRatePurchase={handleRatePurchase}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {purchases.map((purchase, index) => {
+              const isLast = index === purchases.length - 1;
+              return (
+                <div key={purchase.id} ref={isLast ? lastItemRef : null}>
+                  <PurchaseItem
+                    purchase={purchase}
+                    onRatePurchase={handleRatePurchase}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {hasNextPage && (
+          <div className="w-full">
+            <div>
+              {isFetchingNextPage && <ContentLoader columns={3} count={8} type="grid" />}
+            </div>
+          </div>
         )}
       </div>
     </div>

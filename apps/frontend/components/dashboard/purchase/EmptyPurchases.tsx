@@ -6,8 +6,8 @@ import Link from "next/link";
 export default function EmptyPurchases() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
-      <div className="w-20 h-20 bg-eco-50 rounded-full flex items-center justify-center mx-auto mb-6">
-        <ShoppingBag className="w-10 h-10 text-eco-600" />
+      <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+        <ShoppingBag className="w-10 h-10 text-gree-600" />
       </div>
       
       <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -25,7 +25,7 @@ export default function EmptyPurchases() {
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Link
           href="/shop"
-          className="inline-flex items-center justify-center space-x-2 bg-eco-500 text-white px-8 py-4 rounded-xl hover:bg-eco-600 transition-colors shadow-lg font-semibold"
+          className="inline-flex items-center justify-center space-x-2 bg-green-500 text-white px-8 py-4 rounded-xl hover:bg-green-600 transition-colors shadow-lg font-semibold"
         >
           <ShoppingBag className="w-5 h-5" />
           <span>Start Shopping</span>
@@ -34,7 +34,7 @@ export default function EmptyPurchases() {
         
         <Link
           href="/how-it-works"
-          className="inline-flex items-center justify-center space-x-2 border-2 border-eco-500 text-eco-600 px-8 py-4 rounded-xl hover:bg-eco-50 transition-colors font-semibold"
+          className="inline-flex items-center justify-center space-x-2 border-2 border-green-500 text-gree-600 px-8 py-4 rounded-xl hover:bg-green-50 transition-colors font-semibold"
         >
           <span>Learn How It Works</span>
         </Link>

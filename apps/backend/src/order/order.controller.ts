@@ -19,8 +19,8 @@ export class OrderController {
   }
 
   @Get('purchases')
-  purchases(@Req() req) {
-    return this.orderService.getAllByBuyerId(req.user.id);
+  purchases(@Req() req, @Query() query) {
+    return this.orderService.getAllByBuyerId(req.user.id, query);
   }
   
   @Get(':id')
