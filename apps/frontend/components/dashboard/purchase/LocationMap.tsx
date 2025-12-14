@@ -58,10 +58,10 @@ export default function LocationMap({
               className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             >
               {/* Header */}
-              <div className="sticky top-0 bg-white border-b border-green-200 px-6 py-4 flex items-center justify-between">
+              <div className="sticky top-0 bg-white border-b border-eco-200 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-50 rounded-lg">
-                    <MapPin className="w-6 h-6 text-green-600" />
+                  <div className="p-2 bg-eco-50 rounded-lg">
+                    <MapPin className="w-6 h-6 text-eco-600" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">
@@ -74,7 +74,7 @@ export default function LocationMap({
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-green-50 rounded-lg transition-colors"
+                  className="p-2 hover:bg-eco-50 rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
@@ -84,14 +84,14 @@ export default function LocationMap({
               <div className="p-6">
                 {/* Address */}
                 {address && (
-                  <div className="mb-6 p-4 bg-green-50 rounded-lg">
+                  <div className="mb-6 p-4 bg-eco-50 rounded-lg">
                     <p className="text-sm text-gray-700 mb-1">Address</p>
                     <p className="font-medium text-gray-900">{address}</p>
                   </div>
                 )}
 
                 {/* Map */}
-                <div className="mb-6 rounded-lg overflow-hidden border border-green-200">
+                <div className="mb-6 rounded-lg overflow-hidden border border-eco-200">
                   {mapUrl ? (
                     <img
                       src={mapUrl}
@@ -99,21 +99,21 @@ export default function LocationMap({
                       className="w-full h-64 object-cover"
                     />
                   ) : (
-                    <div className="w-full h-64 bg-gradient-to-br from-green-50 to-[#3B82F6] flex items-center justify-center">
+                    <div className="w-full h-64 bg-gradient-to-br from-eco-50 to-eco-blue-50 flex items-center justify-center">
                       <div className="text-center">
-                        <MapPin className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                        <MapPin className="w-12 h-12 text-eco-400 mx-auto mb-3" />
                         <p className="text-gray-600">Loading map...</p>
                       </div>
                     </div>
                   )}
-                  <div className="p-3 bg-white border-t border-green-100">
+                  <div className="p-3 bg-white border-t border-eco-100">
                     <div className="flex items-center justify-between text-sm text-gray-600">
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-[#EF4444] rounded-full"></div>
+                        <div className="w-3 h-3 bg-eco-coral rounded-full"></div>
                         <span>Meetup Point</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                        <div className="w-3 h-3 bg-eco-600 rounded-full"></div>
                         <span>Your Location</span>
                       </div>
                     </div>
@@ -142,7 +142,7 @@ export default function LocationMap({
                     href={googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 bg-gradient-to-r from-green-500 to-[#3B82F6] text-white font-medium py-3 px-4 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                    className="flex-1 bg-gradient-to-r from-eco-500 to-eco-blue-500 text-white font-medium py-3 px-4 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                   >
                     <Navigation className="w-5 h-5" />
                     Open in Google Maps
@@ -154,28 +154,28 @@ export default function LocationMap({
                       );
                       // You could add a toast notification here
                     }}
-                    className="flex-1 border border-green-200 text-green-600 font-medium py-3 px-4 rounded-lg hover:bg-green-50 transition-colors"
+                    className="flex-1 border border-eco-200 text-eco-600 font-medium py-3 px-4 rounded-lg hover:bg-eco-50 transition-colors"
                   >
                     Copy Coordinates
                   </button>
                 </div>
 
                 {/* Additional Information */}
-                <div className="mt-6 pt-6 border-t border-green-100">
+                <div className="mt-6 pt-6 border-t border-eco-100">
                   <h4 className="text-sm font-medium text-gray-900 mb-3">
                     Meeting Instructions
                   </h4>
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5"></div>
+                      <div className="w-2 h-2 bg-eco-500 rounded-full mt-1.5"></div>
                       <span>Meet at the exact marked location</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5"></div>
+                      <div className="w-2 h-2 bg-eco-500 rounded-full mt-1.5"></div>
                       <span>Bring exact change if paying in cash</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5"></div>
+                      <div className="w-2 h-2 bg-eco-500 rounded-full mt-1.5"></div>
                       <span>Verify the item before completing the purchase</span>
                     </li>
                   </ul>
