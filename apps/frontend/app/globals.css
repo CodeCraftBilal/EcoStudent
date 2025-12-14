@@ -1,9 +1,42 @@
-@import "tailwindcss";
+@import "tailwindcss"; 
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
+
+@theme {
+  /* Eco Green Scale */
+  --color-eco-50: #ECFDF5;
+  --color-eco-100: #D1FAE5;
+  --color-eco-200: #A7F3D0;
+  --color-eco-300: #6EE7B7;
+  --color-eco-400: #34D399;
+  --color-eco-500: #10B981;
+  --color-eco-600: #059669;
+  --color-eco-700: #047857;
+  --color-eco-800: #065F46;
+  --color-eco-900: #064E3B;
+
+  /* Eco Blue Scale */
+  --color-eco-blue-50: #EFF6FF;
+  --color-eco-blue-100: #DBEAFE;
+  --color-eco-blue-200: #BFDBFE;
+  --color-eco-blue-300: #93C5FD;
+  --color-eco-blue-400: #60A5FA;
+  --color-eco-blue-500: #3B82F6;
+  --color-eco-blue-600: #2563EB;
+  --color-eco-blue-700: #1D4ED8;
+  --color-eco-blue-800: #1E40AF;
+  --color-eco-blue-900: #1E3A8A;
+
+  /* Accent Colors */
+  --color-eco-teal: #06D6A0;
+  --color-eco-sun: #F59E0B;
+  --color-eco-coral: #EF4444;
+  --color-eco-purple: #8B5CF6;
+}
+
 
 @theme inline {
   --color-background: var(--background);
