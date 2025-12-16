@@ -13,7 +13,10 @@ import { BACKEND_URL } from "@/lib/types/constants";
 import { getUserLocation } from "@/lib/location";
 import { ContentLoader } from "@/components/Loading";
 import { addToFavorite, removeFromFavorite } from "@/lib/utils/favorite";
-import { SnackbarProvider, useSnackbar } from "@/components/ui/dialogBoxes/SnackBarManager";
+import {
+  SnackbarProvider,
+  useSnackbar,
+} from "@/components/ui/dialogBoxes/SnackBarManager";
 
 const ShopPage = () => {
   // ----------------------------------
@@ -43,11 +46,11 @@ const ShopPage = () => {
 
   useEffect(() => {
     const loadFavs = async () => {
-      console.log("fetcing fav ids");
+      
       const res = await authFetch(`${BACKEND_URL}/favorite/ids`);
-      if(!res.ok) return;
+      if (!res.ok) return;
       const ids = await res.json(); // must return array of favorite item IDs
-      console.log("ids ", ids);
+      
       const strIds = ids.map((id: any) => String(id));
       setFavorites(new Set(strIds));
     };
@@ -105,8 +108,6 @@ const ShopPage = () => {
         if (lastPage.length < 12) return undefined;
         return allPages.length * 12;
       },
-      refetchOnReconnect: false,
-      refetchOnWindowFocus: false,
     });
 
   // ----------------------------------
@@ -123,7 +124,7 @@ const ShopPage = () => {
     if (!lastItemRef.current || !hasNextPage) return;
 
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
+      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
         fetchNextPage();
       }
     });
@@ -131,7 +132,7 @@ const ShopPage = () => {
     observer.observe(lastItemRef.current);
 
     return () => observer.disconnect();
-  }, [hasNextPage, fetchNextPage]);
+  }, [hasNextPage, fetchNextPage, items]);
 
   // ----------------------------------
   // Memoized Callbacks
@@ -149,7 +150,7 @@ const ShopPage = () => {
     refetch();
   }, [refetch]);
 
-  const {showSuccess, showError} = useSnackbar()
+  const { showSuccess, showError } = useSnackbar();
   const toggleFavorite = useCallback(async (productId: string) => {
     let wasFavorite = false;
 
@@ -166,17 +167,16 @@ const ShopPage = () => {
     try {
       let res;
       if (wasFavorite) {
-        console.log('removing')
+        
         res = await removeFromFavorite(productId);
       } else {
-        console.log('adding')
+        
         res = await addToFavorite(productId);
       }
-      if(!res.error) {
-        showSuccess(`${res.message}`, 4000, 'bottom-center')
-        
+      if (!res.error) {
+        showSuccess(`${res.message}`, 4000, "bottom-center");
       } else {
-        showError(`${res.message}`, 4000, 'bottom-center')
+        showError(`${res.message}`, 4000, "bottom-center");
       }
     } catch (err) {
       console.error("Favorite update failed", err);
@@ -244,10 +244,10 @@ const ShopPage = () => {
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
           >
             {items.map((item, idx) => {
-              const isLast = idx === items.length - 1;
+              const isLast = idx === items.length - 1; 
 
               return (
-                <div key={idx} ref={isLast ? lastItemRef : null}>
+                <div key={item.id} ref={isLast ? lastItemRef : null}>
                   <ItemCard
                     item={item}
                     index={Number(item.id)}
@@ -261,21 +261,21 @@ const ShopPage = () => {
         )}
 
         {isFetchingNextPage && (
-          <div className="w-full h-20 flex items-center justify-center">
+          <div className="w-full">
             <ContentLoader columns={4} count={8} type="grid" />
           </div>
         )}
       </div>
     </div>
   );
-}
+};
 
 const App: React.FC = () => {
-  return(
+  return (
     <SnackbarProvider>
       <ShopPage />
     </SnackbarProvider>
-  )
-}
+  );
+};
 
 export default App;
