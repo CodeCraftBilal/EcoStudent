@@ -35,12 +35,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SessionProvider>
-          <InfiniteScrollProvider>
-
-          <TopLoader />
-          <Navbar />
-          {children}
-          </InfiniteScrollProvider>
+          <SessionProvider>
+            <InfiniteScrollProvider>
+              <TopLoader />
+              <Navbar />
+              {children}
+            </InfiniteScrollProvider>
+          </SessionProvider>
         </SessionProvider>
       </body>
     </html>

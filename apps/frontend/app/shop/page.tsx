@@ -46,11 +46,10 @@ const ShopPage = () => {
 
   useEffect(() => {
     const loadFavs = async () => {
-      
       const res = await authFetch(`${BACKEND_URL}/favorite/ids`);
       if (!res.ok) return;
       const ids = await res.json(); // must return array of favorite item IDs
-      
+
       const strIds = ids.map((id: any) => String(id));
       setFavorites(new Set(strIds));
     };
@@ -99,7 +98,7 @@ const ShopPage = () => {
   // ----------------------------------
   // Infinite Query
   // ----------------------------------
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch, isLoading: isProductsLoading } =
     useInfiniteQuery({
       queryKey: ["products", stableFilters, searchQuery],
       queryFn: fetchProducts,
@@ -167,10 +166,8 @@ const ShopPage = () => {
     try {
       let res;
       if (wasFavorite) {
-        
         res = await removeFromFavorite(productId);
       } else {
-        
         res = await addToFavorite(productId);
       }
       if (!res.error) {
@@ -222,7 +219,7 @@ const ShopPage = () => {
           </p>
         </div>
 
-        {items.length === 0 ? (
+        {!isProductsLoading && items.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -244,7 +241,7 @@ const ShopPage = () => {
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
           >
             {items.map((item, idx) => {
-              const isLast = idx === items.length - 1; 
+              const isLast = idx === items.length - 1;
 
               return (
                 <div key={item.id} ref={isLast ? lastItemRef : null}>
