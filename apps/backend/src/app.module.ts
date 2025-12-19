@@ -10,12 +10,13 @@ import { UploadModule } from './upload/upload.module';
 import { ReviewModule } from './review/review.module';
 import { FavoriteModule } from './favorite/favorite.module';
 import { OrderModule } from './order/order.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     UsersModule, 
-    AuthModule, ProductModule, UploadModule, ReviewModule, FavoriteModule, OrderModule,
+    AuthModule, ProductModule, UploadModule, ReviewModule, FavoriteModule, OrderModule, ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
