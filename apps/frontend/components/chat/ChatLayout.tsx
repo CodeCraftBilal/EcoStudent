@@ -9,6 +9,7 @@ import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 import ChatEmptyState from "./ChatEmptyState";
 import { Conversation, Message, User } from "@/lib/types/messages/types";
+import { mockMessages } from "@/data/dashboard/messages";
 
 interface ChatLayoutProps {
   conversations: Conversation[];
@@ -17,7 +18,7 @@ interface ChatLayoutProps {
 
 export default function ChatLayout({ conversations, currentUser }: ChatLayoutProps) {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(mockMessages);
 
   const isMobile = useMediaQuery({ maxWidth: 768 });
 

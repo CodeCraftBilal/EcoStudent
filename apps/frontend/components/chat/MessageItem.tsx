@@ -33,11 +33,11 @@ export default function MessageItem({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'sent':
-        return <Check className="w-4 h-4 text-gray-400" />;
+        return <Check className="w-4 h-4 text-gray-300" />;
       case 'delivered':
-        return <CheckCheck className="w-4 h-4 text-gray-400" />;
+        return <CheckCheck className="w-4 h-4 text-gray-300" />;
       case 'read':
-        return <CheckCheck className="w-4 h-4 text-green-600" />;
+        return <CheckCheck className="w-4 h-4 text-blue-600" />;
       default:
         return null;
     }
