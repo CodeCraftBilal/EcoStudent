@@ -6,7 +6,7 @@ import MessageItem from "./MessageItem";
 
 interface MessageListProps {
   messages: Message[];
-  currentUserId: string;
+  currentUserId: string | null;
   onEditMessage: (messageId: string, newContent: string) => void;
   onDeleteMessage: (messageId: string) => void;
   onReplyToMessage: (messageId: string) => void;

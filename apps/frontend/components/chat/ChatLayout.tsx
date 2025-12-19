@@ -14,9 +14,15 @@ import { mockMessages } from "@/data/dashboard/messages";
 interface ChatLayoutProps {
   conversations: Conversation[];
   currentUser: User;
+  hasNextConversations: boolean; 
+  fetchNextConversationsPage: () => void;
+  isFetchingNextConversationPage: boolean;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  isConversationLoading: boolean;
 }
 
-export default function ChatLayout({ conversations, currentUser }: ChatLayoutProps) {
+export default function ChatLayout({ conversations, currentUser, hasNextConversations, fetchNextConversationsPage, isFetchingNextConversationPage, searchQuery, setSearchQuery, isConversationLoading }: ChatLayoutProps) {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>(mockMessages);
 
@@ -91,6 +97,12 @@ export default function ChatLayout({ conversations, currentUser }: ChatLayoutPro
           selectedConversationId={selectedConversationId}
           onConversationSelect={setSelectedConversationId}
           showReturnToWebsite={true}
+          fetchNextConversationsPage={fetchNextConversationsPage}
+          hasNextConversations={hasNextConversations}
+          isFetchingNextConversationPage={isFetchingNextConversationPage}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          isConversationLoading={isConversationLoading}
         />
       </div>
 

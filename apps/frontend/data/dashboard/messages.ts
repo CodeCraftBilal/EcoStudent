@@ -1,7 +1,7 @@
 import { Conversation, Message, User } from "@/lib/types/messages/types";
 
 // Mock data
-export const currentUser: User = {
+export const mockCurrentUser: User = {
   id: "user1",
   name: "You",
   avatar: "/api/placeholder/100/100",
