@@ -50,7 +50,7 @@ model Message {
   voiceNoteUrl String?       @map("voicenoteurl") @db.VarChar(255)
   isRead       Boolean?      @map("isread")
   createdAt    DateTime?     @map("created_at") @db.Timestamp(6)
-  chat         chat?         @relation(fields: [chatId], references: [chatid], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_chat")
+  chat         chat?         @relation(fields: [chatId], references: [chatId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_chat")
   receiver     Users?        @relation("Message_receiveridTousers", fields: [receiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_receiver")
   sender       Users?        @relation("Message_senderidTousers", fields: [senderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_sender")
 
@@ -74,17 +74,17 @@ model category {
 }
 
 model chat {
-  chatid                       Int       @id @default(autoincrement())
-  senderid                     Int?
-  receiverid                   Int?
-  productid                    Int?
-  lastmessage                  String?   @db.VarChar(255)
-  lastmessage_at               DateTime? @db.Timestamp(6)
-  created_at                   DateTime? @db.Timestamp(6)
+  chatId                       Int       @id @default(autoincrement()) @map("chatid")
+  senderId                     Int       @map("senderid")
+  receiverId                   Int       @map("receiverid")
+  productId                    Int       @map("productid")
+  lastMessage                  String?   @map("lastmessage") @db.VarChar(255)
+  lastMessageAt                DateTime? @map("lastmessage_at") @db.Timestamp(6)
+  createdAt                    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   messages                     Message[]
-  product                      product?  @relation(fields: [productid], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_product")
-  users_chat_receiveridTousers Users?    @relation("chat_receiveridTousers", fields: [receiverid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_receiver")
-  users_chat_senderidTousers   Users?    @relation("chat_senderidTousers", fields: [senderid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_sender")
+  product                      product?  @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_product")
+  users_chat_receiveridTousers Users?    @relation("chat_receiveridTousers", fields: [receiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_receiver")
+  users_chat_senderidTousers   Users?    @relation("chat_senderidTousers", fields: [senderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_sender")
 }
 
 model exchanges {
@@ -133,7 +133,7 @@ model product {
   originalPrice    Int?              @map("originalprice")
   productCondition product_condition @map("productcondition")
   productType      product_type      @map("producttype")
-  exchangeType     exchange_type    @default(sale) @map("exchangetype")
+  exchangeType     exchange_type     @default(sale) @map("exchangetype")
   status           PRODUCT_STATUS    @default(active)
   chat             chat[]
   exchanges        exchanges[]
