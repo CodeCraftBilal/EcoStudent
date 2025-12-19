@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -47,7 +47,16 @@ export class ChatService {
     }))
   }
 
-  create(createChatDto: CreateChatDto, senderId: number) {
+  async create(createChatDto: CreateChatDto, senderId: number) {
+    const isChatExist = await this.prisma.chat.findUnique({
+      where: {
+        senderid_receiverid_unique: {
+          senderId: senderId,
+          receiverId: createChatDto.receiverId,
+        }
+      }
+    });
+    if (isChatExist) throw new ConflictException('Chat already exists between these users.');
     return this.prisma.chat.create({
       data: {
         ...createChatDto,
