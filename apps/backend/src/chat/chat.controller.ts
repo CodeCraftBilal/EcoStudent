@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Req,
+  Query,
+} from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
@@ -13,8 +23,8 @@ export class ChatController {
   }
 
   @Get('conversations')
-  getConversations(@Req() req) {
-    return this.chatService.getConversations(req.user.id);
+  getConversations(@Query() query, @Req() req) {
+    return this.chatService.getConversations(query, req.user.id);
   }
 
   @Get()
@@ -36,5 +46,4 @@ export class ChatController {
   remove(@Param('id') id: string) {
     return this.chatService.remove(+id);
   }
-
 }
