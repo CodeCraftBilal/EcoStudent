@@ -16,6 +16,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { ContentLoader } from "@/components/Loading";
+import React from "react";
 
 const PAGE_SIZE = 12;
 
@@ -67,20 +68,26 @@ export default function PurchasesPage() {
   );
 
   // Infinte Scroll
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
-    useInfiniteQuery({
-      queryKey: [
-        "purchase",
-        debouncedSearch,
-        statusFilter,
-        categoryFilter,
-        sortBy,
-      ],
-      queryFn: fetchPurchases,
-      initialPageParam: 1,
-      getNextPageParam: (lastPage, allPages) =>
-        lastPage.data.length < PAGE_SIZE ? undefined : allPages.length + 1,
-    });
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+    isLoading: isPurchasesLoading,
+  } = useInfiniteQuery({
+    queryKey: [
+      "purchase",
+      debouncedSearch,
+      statusFilter,
+      categoryFilter,
+      sortBy,
+    ],
+    queryFn: fetchPurchases,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.data.length < PAGE_SIZE ? undefined : allPages.length + 1,
+  });
 
   const purchases = useMemo(
     () => data?.pages.flatMap((p) => p.data) ?? [],
@@ -119,7 +126,7 @@ export default function PurchasesPage() {
 
       if (!res.ok) throw new Error("Failed to submit review");
 
-      console.log('review update, ', await res.json())
+      console.log("review update, ", await res.json());
       // Invalidate and refetch to update the UI
       await refetch();
     } catch (error) {
@@ -173,6 +180,12 @@ export default function PurchasesPage() {
           sortBy={sortBy}
           onSortChange={setSortBy}
         />
+
+        {isPurchasesLoading && (
+          <div className="flex justify-center mt-14">
+            <ContentLoader type="grid" columns={3} count={8} />
+          </div>
+        )}
 
         {/* Purchases List or Empty State */}
         {purchases.length === 0 ? (

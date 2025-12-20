@@ -9,14 +9,17 @@ import {
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { useSession } from "@/context/useSession";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { getUserLocation } from "@/lib/location";
 import { ContentLoader } from "@/components/Loading";
 import { Item } from "@/lib/types/types";
 import ItemCard from "@/components/shop/itemcard";
 import { addToFavorite, removeFromFavorite } from "@/lib/utils/favorite";
-import { SnackbarProvider, useSnackbar } from "@/components/ui/dialogBoxes/SnackBarManager";
+import {
+  SnackbarProvider,
+  useSnackbar,
+} from "@/components/ui/dialogBoxes/SnackBarManager";
 
 const PAGE_SIZE = 10;
 
@@ -39,7 +42,7 @@ const FavoritesPage = () => {
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
   const [sortBy, setSortBy] = useState<string | undefined>();
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
-  
+
   /* ---------------- AUTH GUARD ---------------- */
 
   useEffect(() => {
@@ -89,7 +92,7 @@ const FavoritesPage = () => {
 
   /* ---------------- QUERY ---------------- */
 
-  const { data, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } =
+  const { data, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage, isLoading: isFavoritesLoading } =
     useInfiniteQuery({
       queryKey: [
         "favorites",
@@ -133,7 +136,7 @@ const FavoritesPage = () => {
 
   /* ---------------- REMOVE FAVORITE ---------------- */
 
-  const { showSuccess, showError, showSnackbar } = useSnackbar()
+  const { showSuccess, showError, showSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
 
   const handleRemoveFavorite = useCallback(
@@ -143,10 +146,10 @@ const FavoritesPage = () => {
       try {
         const favoriteRes = await removeFromFavorite(favoriteId);
 
-        if(!favoriteRes.error) {
-          showSuccess(`${favoriteRes.message}`, 3000, 'bottom-center')
+        if (!favoriteRes.error) {
+          showSuccess(`${favoriteRes.message}`, 3000, "bottom-center");
         } else {
-          showError(`${favoriteRes.message}`)
+          showError(`${favoriteRes.message}`);
         }
         // Optimistic UI update — instantly removes from list
         queryClient.setQueryData(
@@ -229,12 +232,16 @@ const FavoritesPage = () => {
           onPriceRangeChange={setPriceRange}
         />
 
-        {/* Content */}
-        {isFetching && !favorites.length ? (
-          <div className="text-center text-gray-500 mt-12 w-full">
+        {
+          isFavoritesLoading && (
+            <div className="text-center text-gray-500 mt-12 w-full">
             <ContentLoader columns={4} type="grid" count={4} />
           </div>
-        ) : favorites.length === 0 ? (
+          )
+        }
+
+        {/* Content */}
+        {!isFavoritesLoading && favorites.length === 0 ? (
           <EmptyFavorites />
         ) : (
           <>

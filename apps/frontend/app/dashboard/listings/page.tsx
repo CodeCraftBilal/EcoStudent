@@ -217,7 +217,7 @@ const MyListingsPage = () => {
         />
 
         {/* GRID */}
-        {listingsLoading && listings.length === 0 ? (
+        {listingsLoading ? (
           <div className="flex justify-center mt-14">
             <ContentLoader type="grid" columns={4} count={8} />
           </div>
