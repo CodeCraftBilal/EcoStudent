@@ -48,7 +48,7 @@ export default function MessageInput({
     <div className="bg-white border-t border-gray-200 p-4">
       <div className="flex items-end space-x-2">
         {/* Attachment Buttons */}
-        <div className="flex space-x-1">
+        <div className="flex space-x-1 mb-3">
           <button className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
             <Paperclip className="w-5 h-5" />
           </button>
@@ -80,12 +80,12 @@ export default function MessageInput({
           <button
             onClick={handleSend}
             disabled={disabled}
-            className="bg-green-500 text-white p-3 rounded-full hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+            className="bg-green-500 mb-3 text-white p-3 rounded-full hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex-shrink-0"
           >
             <Send className="w-5 h-5" />
           </button>
         ) : (
-          <button className="bg-gray-500 text-white p-3 rounded-full hover:bg-gray-600 transition-colors flex-shrink-0">
+          <button className="bg-gray-500 mb-3 text-white p-3 rounded-full hover:bg-gray-600 transition-colors flex-shrink-0">
             <Mic className="w-5 h-5" />
           </button>
         )}
