@@ -7,7 +7,6 @@ import { Conversation, User } from "@/lib/types/messages/types";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { mockConversations } from "@/data/dashboard/messages";
-import { param } from "framer-motion/client";
 
 type ApiResponse = {
   conversations: Conversation[];
