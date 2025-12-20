@@ -3,6 +3,7 @@ import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
+import { FindMessagesDto } from './dto/find-messages.dto';
 
 const PageSize = 30;
 @Injectable()
@@ -12,11 +13,46 @@ export class ChatService {
     private readonly usersService: UsersService,
   ) {}
 
-  async getConversations(query: any, senderId: number) {
+  async create(createChatDto: CreateChatDto, senderId: number) {
+    const isChatExist = await this.prisma.chat.findUnique({
+      where: {
+        senderid_receiverid_unique: {
+          senderId: senderId,
+          receiverId: createChatDto.receiverId,
+        },
+      },
+    });
+    if (isChatExist)
+      throw new ConflictException('Chat already exists between these users.');
+    return this.prisma.chat.create({
+      data: {
+        ...createChatDto,
+        senderId,
+      },
+    });
+  }
 
-    const limit = query.limit && query.limit < PageSize ? query.limit : PageSize;
+  findAll() {
+    return `This action returns all chat`;
+  }
+
+  findOne(id: number) {
+    return `This action returns a #${id} chat`;
+  }
+
+  update(id: number, updateChatDto: UpdateChatDto) {
+    return `This action updates a #${id} chat`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} chat`;
+  }
+
+  async getConversations(query: any, senderId: number) {
+    const limit =
+      query.limit && query.limit < PageSize ? query.limit : PageSize;
     const page = query.page ?? 1;
-    const skip = ( page - 1 ) * limit;
+    const skip = (page - 1) * limit;
 
     const where: any = {
       senderId,
@@ -30,12 +66,26 @@ export class ChatService {
         },
       }),
     };
-    console.log('Querying with params:', { limit, page, skip, where });
+
     const [rawConversations, currentUser] = await Promise.all([
       this.prisma.chat.findMany({
         skip,
         take: limit,
-        where,
+        orderBy: {
+          lastMessageAt: 'desc',
+        },
+        where: {
+          OR: [
+            {senderId},
+            {receiverId: senderId}
+          ],
+          users_chat_receiveridTousers: {
+            userName: {
+              contains: query.searchQuery,
+              mode: 'insensitive',
+            },
+          },
+        },
         select: {
           chatId: true,
           lastMessage: true,
@@ -97,38 +147,31 @@ export class ChatService {
     };
   }
 
-  async create(createChatDto: CreateChatDto, senderId: number) {
-    const isChatExist = await this.prisma.chat.findUnique({
+  async getMessages(senderId: number, chatId: number, params: any) {
+    const rawMessages = await this.prisma.message.findMany({
       where: {
-        senderid_receiverid_unique: {
-          senderId: senderId,
-          receiverId: createChatDto.receiverId,
-        },
+        chatId,
+      },
+      select: {
+        messageId: true,
+        senderId: true,
+        receiverId: true,
+        content: true,
+        messageType: true,
+        isRead: true,
+        createdAt: true,
       },
     });
-    if (isChatExist)
-      throw new ConflictException('Chat already exists between these users.');
-    return this.prisma.chat.create({
-      data: {
-        ...createChatDto,
-        senderId,
-      },
-    });
-  }
-
-  findAll() {
-    return `This action returns all chat`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} chat`;
-  }
-
-  update(id: number, updateChatDto: UpdateChatDto) {
-    return `This action updates a #${id} chat`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} chat`;
+    return rawMessages.map((msg) => ({
+      id: msg.messageId,
+      senderId: msg.senderId,
+      receiverId: msg.receiverId,
+      content: msg.content,
+      timestamp: msg.createdAt,
+      type: msg.messageType,
+      status: msg.isRead,
+      isEdited: false,
+      replyTo: null,
+    }));
   }
 }

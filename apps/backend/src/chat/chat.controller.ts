@@ -12,6 +12,7 @@ import {
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
+import { FindMessagesDto } from './dto/find-messages.dto';
 
 @Controller('chat')
 export class ChatController {
@@ -25,6 +26,12 @@ export class ChatController {
   @Get('conversations')
   getConversations(@Query() query, @Req() req) {
     return this.chatService.getConversations(query, req.user.id);
+  }
+
+  @Get('messages/:id') 
+  getMessages(@Param() params, @Req() req, @Body() body: FindMessagesDto) {
+    console.log('params: ', params)
+    return this.chatService.getMessages(req.user.id, +params.id, params)
   }
 
   @Get()
