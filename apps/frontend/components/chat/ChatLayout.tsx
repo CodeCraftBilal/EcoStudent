@@ -54,13 +54,13 @@ export default function ChatLayout({
   // fetchMessage from backend
   const fetchMessages = useCallback(
     async ({ pageParam = 1 }): Promise<Message[]> => {
-      console.log("selected user: ", selectedConversation);
       const params = new URLSearchParams({
         page: pageParam.toString(),
         limit: Message_PAGE_SIZE.toString(),
       });
 
       try {
+      if(!selectedConversation?.id) throw new Error('No conversation selected');
         const res = await authFetch(
           `${BACKEND_URL}/chat/messages/${selectedConversation?.id}?${params.toString()}`,
           {
@@ -197,12 +197,15 @@ export default function ChatLayout({
             {isMessagesLoading ? (
               <div className=" flex items-center justify-center h-full">
                 <div className="flex flex-col items-center justify-center">
-                <LoadingSpinner size="small" />
-                <p className="text-gray-400 text-xl">Loading Messages</p>
+                  <LoadingSpinner size="small" />
+                  <p className="text-gray-400 text-xl">Loading Messages</p>
                 </div>
               </div>
             ) : messages.length === 0 ? (
-              <ChatEmptyState title="No Messages Yet" description="Send first message to start conversation" />
+              <ChatEmptyState
+                title="No Messages Yet"
+                description="Send first message to start conversation"
+              />
             ) : (
               <MessageList
                 messages={messages}
@@ -210,6 +213,9 @@ export default function ChatLayout({
                 onEditMessage={handleEditMessage}
                 onDeleteMessage={handleDeleteMessage}
                 onReplyToMessage={handleReplyToMessage}
+                hasNextMsgPage={hasNextPage}
+                fetchNextMsgPage={fetchNextPage}
+                isFetchingNextMsgPage={isFetchingNextPage}
               />
             )}
 
