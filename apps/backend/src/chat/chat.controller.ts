@@ -29,9 +29,9 @@ export class ChatController {
   }
 
   @Get('messages/:id') 
-  getMessages(@Param() params, @Req() req, @Body() body: FindMessagesDto) {
-    console.log('params: ', params)
-    return this.chatService.getMessages(req.user.id, +params.id, params)
+  getMessages(@Param('id') chatId: string, @Req() req, @Query() query) {
+    console.log('params: ', chatId)
+    return this.chatService.getMessages(req.user.id, +chatId, query)
   }
 
   @Get()

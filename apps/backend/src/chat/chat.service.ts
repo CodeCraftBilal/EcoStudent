@@ -147,14 +147,22 @@ export class ChatService {
     };
   }
 
-  async getMessages(senderId: number, chatId: number, params: any) {
+  async getMessages(senderId: number, chatId: number, query: any) {
+    
+    // const PageSize = 50;
+    const limit = 50;
+    const page = query.page ?? 1;
+    const skip = (page - 1) * limit;
+
     const rawMessages = await this.prisma.message.findMany({
       where: {
         chatId,
       },
       orderBy: {
-        createdAt: 'asc'
+        createdAt: 'desc'
       },
+      take: limit,
+      skip,
       select: {
         messageId: true,
         senderId: true,
