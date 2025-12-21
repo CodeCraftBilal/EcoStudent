@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import TopLoader from "@/components/topLoader";
 import SessionProvider from "@/context/useSession";
 import InfiniteScrollProvider from "@/providers/InfiniteScrollProvider";
+import { SocketProvider, useSocket } from "@/context/useSocket";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,13 +36,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SessionProvider>
-          <SessionProvider>
+          <SocketProvider>
             <InfiniteScrollProvider>
               <TopLoader />
               <Navbar />
               {children}
             </InfiniteScrollProvider>
-          </SessionProvider>
+          </SocketProvider>
         </SessionProvider>
       </body>
     </html>
