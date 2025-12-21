@@ -13,7 +13,7 @@ import { mockMessages } from "@/data/dashboard/messages";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
-import { ContentLoader, LoadingSpinner } from "../Loading";
+import { LoadingSpinner } from "../Loading";
 
 interface ChatLayoutProps {
   conversations: Conversation[];
@@ -21,9 +21,9 @@ interface ChatLayoutProps {
   hasNextConversations: boolean;
   fetchNextConversationsPage: () => void;
   isFetchingNextConversationPage: boolean;
+  isConversationLoading: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  isConversationLoading: boolean;
 }
 
 const Message_PAGE_SIZE = 50;
@@ -60,7 +60,8 @@ export default function ChatLayout({
       });
 
       try {
-      if(!selectedConversation?.id) throw new Error('No conversation selected');
+        if (!selectedConversation?.id)
+          throw new Error("No conversation selected");
         const res = await authFetch(
           `${BACKEND_URL}/chat/messages/${selectedConversation?.id}?${params.toString()}`,
           {
@@ -101,7 +102,7 @@ export default function ChatLayout({
     refetchOnReconnect: false,
   });
 
-const msgs = useMemo(() => data?.pages.flat() ?? [], [data]); // Remove .reverse()
+  const msgs = useMemo(() => data?.pages.flat() ?? [], [data]); // Remove .reverse()
 
   useEffect(() => {
     setMessages(msgs);
@@ -113,6 +114,19 @@ const msgs = useMemo(() => data?.pages.flat() ?? [], [data]); // Remove .reverse
       <MobileChatLayout
         conversations={conversations}
         currentUser={currentUser}
+        // conversation props
+        fetchNextConversationsPage={fetchNextConversationsPage}
+        hasNextConversations={hasNextConversations}
+        isFetchingNextConversationPage={isFetchingNextConversationPage}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        isConversationLoading={isConversationLoading}
+        // messages props
+        msgs={msgs}
+        fetchNextMsgPage={fetchNextPage}
+        hasNextMsgPage={hasNextPage}
+        isFetchingNextMsgPage={isFetchingNextPage}
+        isLoadingMessages={isMessagesLoading}
       />
     );
   }

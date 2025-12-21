@@ -26,6 +26,7 @@ export default function MessageList({
   fetchNextMsgPage,
   isFetchingNextMsgPage,
 }: MessageListProps) {
+  console.log('message: ', messages)
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
 

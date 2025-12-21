@@ -8,21 +8,52 @@ import MessageInput from "./MessageInput";
 import ChatEmptyState from "./ChatEmptyState";
 import { Conversation, Message, User } from "@/lib/types/messages/types";
 import { ChevronLeft } from "lucide-react";
+import LoadingSpinner from "../Loading/LoadingSpinner";
 
 interface MobileChatLayoutProps {
   conversations: Conversation[];
   currentUser: User;
+  // conversation props
+  hasNextConversations: boolean;
+  fetchNextConversationsPage: () => void;
+  isFetchingNextConversationPage: boolean;
+  isConversationLoading: boolean;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  // message props
+  msgs: Message[];
+  hasNextMsgPage: boolean;
+  fetchNextMsgPage: () => void;
+  isFetchingNextMsgPage: boolean;
+  isLoadingMessages: boolean;
 }
 
 type View = "conversations" | "chat";
 
-export default function MobileChatLayout({ conversations, currentUser }: MobileChatLayoutProps) {
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+export default function MobileChatLayout({
+  conversations,
+  currentUser,
+  hasNextConversations,
+  fetchNextConversationsPage,
+  isFetchingNextConversationPage,
+  isConversationLoading,
+  searchQuery,
+  setSearchQuery,
+  msgs,
+  hasNextMsgPage,
+  fetchNextMsgPage,
+  isFetchingNextMsgPage,
+  isLoadingMessages,
+}: MobileChatLayoutProps) {
+  console.log('msgs ', msgs)
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(null);
   const [currentView, setCurrentView] = useState<View>("conversations");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(msgs);
 
   const selectedConversation = conversations.find(
-    conv => conv.id === selectedConversationId
+    (conv) => conv.id === selectedConversationId
   );
 
   // Auto-switch to chat view when conversation is selected
@@ -50,15 +81,15 @@ export default function MobileChatLayout({ conversations, currentUser }: MobileC
       receiverId: selectedConversation.participant.id,
       content,
       timestamp: new Date().toISOString(),
-      type: 'text',
-      status: 'sent'
+      type: "text",
+      status: "sent",
     };
-    setMessages(prev => [...prev, newMessage]);
+    setMessages((prev) => [...prev, newMessage]);
   };
 
   const handleEditMessage = (messageId: string, newContent: string) => {
-    setMessages(prev =>
-      prev.map(msg =>
+    setMessages((prev) =>
+      prev.map((msg) =>
         msg.id === messageId
           ? { ...msg, content: newContent, isEdited: true }
           : msg
@@ -67,7 +98,7 @@ export default function MobileChatLayout({ conversations, currentUser }: MobileC
   };
 
   const handleDeleteMessage = (messageId: string) => {
-    setMessages(prev => prev.filter(msg => msg.id !== messageId));
+    setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
   };
 
   const handleReplyToMessage = (messageId: string) => {
@@ -87,7 +118,7 @@ export default function MobileChatLayout({ conversations, currentUser }: MobileC
   };
 
   return (
-    <div className="h-screen bg-white flex flex-col">
+    <div className="h-[calc(100vh-64px)] bg-white flex flex-col">
       {/* Conversations View */}
       {currentView === "conversations" && (
         <div className="flex-1 flex flex-col">
@@ -96,6 +127,11 @@ export default function MobileChatLayout({ conversations, currentUser }: MobileC
             selectedConversationId={selectedConversationId}
             onConversationSelect={handleConversationSelect}
             showReturnToWebsite={true}
+            fetchNextConversationsPage={fetchNextConversationsPage}
+            hasNextConversations={hasNextConversations}
+            isConversationLoading={isConversationLoading}
+            isFetchingNextConversationPage={isFetchingNextConversationPage}
+            setSearchQuery={setSearchQuery}
           />
         </div>
       )}
@@ -112,15 +148,32 @@ export default function MobileChatLayout({ conversations, currentUser }: MobileC
             showBackButton={true}
             showReturnToWebsite={false}
           />
-          
-          <MessageList
-            messages={messages}
-            currentUserId={currentUser.id}
-            onEditMessage={handleEditMessage}
-            onDeleteMessage={handleDeleteMessage}
-            onReplyToMessage={handleReplyToMessage}
-          />
-          
+
+          {isLoadingMessages ? (
+            <div className=" flex items-center justify-center h-full">
+              <div className="flex flex-col items-center justify-center">
+                <LoadingSpinner size="small" />
+                <p className="text-gray-400 text-xl">Loading Messages</p>
+              </div>
+            </div>
+          ) : messages.length === 0 ? (
+            <ChatEmptyState
+              title="No Messages Yet"
+              description="Send first message to start conversation"
+            />
+          ) : (
+            <MessageList
+              messages={messages}
+              currentUserId={currentUser.id}
+              onEditMessage={handleEditMessage}
+              onDeleteMessage={handleDeleteMessage}
+              onReplyToMessage={handleReplyToMessage}
+              hasNextMsgPage={hasNextMsgPage}
+              fetchNextMsgPage={fetchNextMsgPage}
+              isFetchingNextMsgPage={isFetchingNextMsgPage}
+            />
+          )}
+
           <MessageInput
             onSendMessage={handleSendMessage}
             placeholder={`Message ${selectedConversation.participant.name}...`}
@@ -140,7 +193,7 @@ export default function MobileChatLayout({ conversations, currentUser }: MobileC
             </button>
             <span className="text-gray-500">Select a conversation</span>
           </div>
-          <ChatEmptyState 
+          <ChatEmptyState
             title="No conversation selected"
             description="Please select a conversation to start chatting"
           />
