@@ -152,6 +152,9 @@ export class ChatService {
       where: {
         chatId,
       },
+      orderBy: {
+        createdAt: 'asc'
+      },
       select: {
         messageId: true,
         senderId: true,
