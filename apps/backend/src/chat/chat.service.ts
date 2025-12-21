@@ -147,42 +147,43 @@ export class ChatService {
     };
   }
 
-  async getMessages(senderId: number, chatId: number, query: any) {
-    
-    // const PageSize = 50;
-    const limit = 50;
-    const page = query.page ?? 1;
-    const skip = (page - 1) * limit;
+  // In ChatService.getMessages method
+async getMessages(senderId: number, chatId: number, query: any) {
+  const limit = 50;
+  const page = query.page ?? 1;
+  const skip = (page - 1) * limit;
 
-    const rawMessages = await this.prisma.message.findMany({
-      where: {
-        chatId,
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      take: limit,
-      skip,
-      select: {
-        messageId: true,
-        senderId: true,
-        receiverId: true,
-        content: true,
-        messageType: true,
-        isRead: true,
-        createdAt: true,
-      },
-    });
-    return rawMessages.map((msg) => ({
-      id: msg.messageId,
-      senderId: msg.senderId,
-      receiverId: msg.receiverId,
-      content: msg.content,
-      timestamp: msg.createdAt,
-      type: msg.messageType,
-      status: msg.isRead,
-      isEdited: false,
-      replyTo: null,
-    }));
-  }
+  const rawMessages = await this.prisma.message.findMany({
+    where: {
+      chatId,
+    },
+    orderBy: {
+      createdAt: 'desc' // This is correct - newest first
+    },
+    take: limit,
+    skip,
+    select: {
+      messageId: true,
+      senderId: true,
+      receiverId: true,
+      content: true,
+      messageType: true,
+      isRead: true,
+      createdAt: true,
+    },
+  });
+  
+  // Return as-is, don't reverse
+  return rawMessages.map((msg) => ({
+    id: msg.messageId,
+    senderId: msg.senderId,
+    receiverId: msg.receiverId,
+    content: msg.content,
+    timestamp: msg.createdAt,
+    type: msg.messageType,
+    status: msg.isRead ? 'read' : 'delivered',
+    isEdited: false,
+    replyTo: null,
+  }));
+}
 }

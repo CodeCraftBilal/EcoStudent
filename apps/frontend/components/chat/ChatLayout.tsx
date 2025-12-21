@@ -96,12 +96,12 @@ export default function ChatLayout({
     queryFn: fetchMessages,
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) =>
-      lastPage.length < 30 ? undefined : allPages.length + 1,
+      lastPage.length < 50 ? undefined : allPages.length + 1,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 
-  const msgs = useMemo(() => data?.pages[0].flat() ?? [], [data]);
+const msgs = useMemo(() => data?.pages.flat() ?? [], [data]); // Remove .reverse()
 
   useEffect(() => {
     setMessages(msgs);
