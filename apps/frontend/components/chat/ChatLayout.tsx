@@ -41,13 +41,12 @@ export default function ChatLayout({
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
   >(null);
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
-
-  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const selectedConversation = conversations.find(
     (conv) => conv.id === selectedConversationId
   );
+
 
   //------------ Fetching Messages ------------------
 
@@ -108,12 +107,15 @@ export default function ChatLayout({
     setMessages(msgs);
   }, [msgs]);
 
+    const isMobile = useMediaQuery({ maxWidth: 768 });
+
   // Use MobileChatLayout for mobile devices
   if (isMobile) {
     return (
       <MobileChatLayout
         conversations={conversations}
         currentUser={currentUser}
+        onConversationSelect={setSelectedConversationId}
         // conversation props
         fetchNextConversationsPage={fetchNextConversationsPage}
         hasNextConversations={hasNextConversations}
@@ -122,7 +124,7 @@ export default function ChatLayout({
         setSearchQuery={setSearchQuery}
         isConversationLoading={isConversationLoading}
         // messages props
-        msgs={msgs}
+        msgs={messages}
         fetchNextMsgPage={fetchNextPage}
         hasNextMsgPage={hasNextPage}
         isFetchingNextMsgPage={isFetchingNextPage}

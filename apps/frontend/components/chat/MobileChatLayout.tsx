@@ -13,6 +13,7 @@ import LoadingSpinner from "../Loading/LoadingSpinner";
 interface MobileChatLayoutProps {
   conversations: Conversation[];
   currentUser: User;
+  onConversationSelect: (conversationId: string) => void;
   // conversation props
   hasNextConversations: boolean;
   fetchNextConversationsPage: () => void;
@@ -44,6 +45,7 @@ export default function MobileChatLayout({
   fetchNextMsgPage,
   isFetchingNextMsgPage,
   isLoadingMessages,
+  onConversationSelect,
 }: MobileChatLayoutProps) {
   console.log('msgs ', msgs)
   const [selectedConversationId, setSelectedConversationId] = useState<
@@ -69,6 +71,7 @@ export default function MobileChatLayout({
   };
 
   const handleConversationSelect = (conversationId: string) => {
+    onConversationSelect(conversationId);
     setSelectedConversationId(conversationId);
   };
 
