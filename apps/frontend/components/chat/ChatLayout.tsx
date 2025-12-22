@@ -14,6 +14,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { LoadingSpinner } from "../Loading";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 
 interface ChatLayoutProps {
   conversations: Conversation[];
@@ -38,9 +39,17 @@ export default function ChatLayout({
   setSearchQuery,
   isConversationLoading,
 }: ChatLayoutProps) {
+
+  const params = useSearchParams();
+  const conversationIdFromUrl = params.get('conversationId') ?? null;
+  console.log('Cid ', conversationIdFromUrl)
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
   >(null);
+  useEffect(() => {
+    setSelectedConversationId(conversationIdFromUrl);
+  }, [conversationIdFromUrl])
+  
   const [messages, setMessages] = useState<Message[]>([]);
 
   const selectedConversation = conversations.find(

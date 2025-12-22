@@ -54,6 +54,11 @@ export default function MobileChatLayout({
   const [currentView, setCurrentView] = useState<View>("conversations");
   const [messages, setMessages] = useState<Message[]>(msgs);
 
+  useEffect(() => {
+    setMessages(msgs)  
+  }, [msgs])
+  
+
   const selectedConversation = conversations.find(
     (conv) => conv.id === selectedConversationId
   );

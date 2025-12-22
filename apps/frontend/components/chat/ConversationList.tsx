@@ -34,7 +34,7 @@ export default function ConversationList({
 }: ConversationListProps) {
   // intersection observer
   const lastItemRef = useRef<HTMLDivElement | null>(null);
-
+console.log('selected con: ', selectedConversationId)
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
