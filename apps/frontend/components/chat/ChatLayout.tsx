@@ -14,7 +14,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { LoadingSpinner } from "../Loading";
-import { useParams, usePathname, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface ChatLayoutProps {
   conversations: Conversation[];
@@ -40,22 +40,54 @@ export default function ChatLayout({
   isConversationLoading,
 }: ChatLayoutProps) {
 
-  const params = useSearchParams();
-  const conversationIdFromUrl = params.get('conversationId') ?? null;
-  console.log('Cid ', conversationIdFromUrl)
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
+  const conversationIdFromUrl = searchParams.get('conversationId');
+  console.log('Conversation ID from URL:', conversationIdFromUrl);
+  
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
   >(null);
+  // Handle URL parameter to select conversation
   useEffect(() => {
-    setSelectedConversationId(conversationIdFromUrl);
-  }, [conversationIdFromUrl])
-  
-  const [messages, setMessages] = useState<Message[]>([]);
+    if (conversationIdFromUrl && conversations.length > 0) {
+      console.log('Looking for conversation with ID:', conversationIdFromUrl);
+      console.log('Available conversations:', conversations.map(c => c.id));
+      
+      const foundConversation = conversations.find(conv => {
+        // Try multiple ways to match
+        return (
+          conv.id.toString() === conversationIdFromUrl || 
+          Number(conv.id) === Number(conversationIdFromUrl) ||
+          String(conv.id) === String(conversationIdFromUrl)
+        );
+      });
+      
+      if (foundConversation) {
+        console.log('Found! Setting conversation ID:', foundConversation.id);
+        setSelectedConversationId(foundConversation.id.toString());
+      } else {
+        console.warn('Conversation not found');
+        setSelectedConversationId(null);
+      }
+    }
+  }, [conversationIdFromUrl, conversations]);
+// Handle manual conversation selection (update URL)
+  const handleConversationSelect = (conversationId: string) => {
+    setSelectedConversationId(conversationId);
+    
+    // Update URL
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('conversationId', conversationId);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const selectedConversation = conversations.find(
-    (conv) => conv.id === selectedConversationId
+    (conv) => conv.id.toString() === selectedConversationId
   );
-
+  const [messages, setMessages] = useState<Message[]>([]);
 
   //------------ Fetching Messages ------------------
 
@@ -195,7 +227,7 @@ export default function ChatLayout({
         <ConversationList
           conversations={conversations}
           selectedConversationId={selectedConversationId}
-          onConversationSelect={setSelectedConversationId}
+          onConversationSelect={handleConversationSelect}  /* Changed here */
           showReturnToWebsite={true}
           fetchNextConversationsPage={fetchNextConversationsPage}
           hasNextConversations={hasNextConversations}

@@ -17,6 +17,7 @@ export default function ConversationItem({
   onClick,
   showItemInfo = true
 }: ConversationItemProps) {
+  console.log('isselected ', isSelected)
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
