@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import TopLoader from "@/components/topLoader";
 import SessionProvider from "@/context/useSession";
 import InfiniteScrollProvider from "@/providers/InfiniteScrollProvider";
-import { SocketProvider, useSocket } from "@/context/useSocket";
+import { SocketProvider } from "@/context/useSocket";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
