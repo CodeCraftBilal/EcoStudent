@@ -85,7 +85,7 @@ model chat {
   product                      product?  @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_product")
   users_chat_receiveridTousers Users?    @relation("chat_receiveridTousers", fields: [receiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_receiver")
   users_chat_senderidTousers   Users?    @relation("chat_senderidTousers", fields: [senderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_sender")
-  @@unique([senderId, receiverId], name: "senderid_receiverid_unique", map: "chat_senderid_receiverid_unique")
+  @@unique([senderId, receiverId, productId], name: "senderid_receiverid_productid_unique", map: "chat_senderid_receiverid_unique")
 }
 
 model exchanges {

@@ -1,12 +1,12 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
-import { FindMessagesDto } from './dto/find-messages.dto';
 import { not } from 'rxjs/internal/util/not';
 
 const PageSize = 30;
+
 @Injectable()
 export class ChatService {
   constructor(
@@ -16,33 +16,131 @@ export class ChatService {
 
   async create(createChatDto: CreateChatDto, senderId: number) {
     console.log('creating chat...')
-    const isChatExist = await this.prisma.chat.findUnique({
+    
+    // Check if chat already exists between these users for this product
+    const existingChat = await this.prisma.chat.findFirst({
       where: {
-        senderid_receiverid_unique: {
-          senderId: senderId,
-          receiverId: createChatDto.receiverId,
+        OR: [
+          {
+            senderId: senderId,
+            receiverId: createChatDto.receiverId,
+            productId: createChatDto.productId,
+          },
+          {
+            senderId: createChatDto.receiverId,
+            receiverId: senderId,
+            productId: createChatDto.productId,
+          },
+        ],
+      },
+      include: {
+        users_chat_senderidTousers: true,
+        users_chat_receiveridTousers: true,
+        product: {
+          select: {
+            productId: true,
+            title: true,
+            price: true,
+            images: true,
+            exchangeType: true,
+            productCondition: true,
+            categoryId: true,
+          },
         },
       },
     });
     
-    if (isChatExist) return isChatExist;
+    if (existingChat) {
+      return this.formatChatResponse(existingChat, senderId);
+    }
 
-    return this.prisma.chat.create({
+    // Create new chat
+    const chat = await this.prisma.chat.create({
       data: {
-        ...createChatDto,
-        senderId,
+        senderId: senderId,
+        receiverId: createChatDto.receiverId,
+        productId: createChatDto.productId,
+      },
+      include: {
+        users_chat_senderidTousers: true,
+        users_chat_receiveridTousers: true,
+        product: {
+          select: {
+            productId: true,
+            title: true,
+            price: true,
+            images: true,
+            exchangeType: true,
+            productCondition: true,
+            categoryId: true,
+          },
+        },
       },
     });
+
+    return this.formatChatResponse(chat, senderId);
   }
 
   findAll() {
     return `This action returns all chat`;
   }
 
-  findOne(id: number) {
-    return this.prisma.chat.findUnique({
-      where: {chatId: id},
+  async findOne(id: number, userId: number) {
+    const chat = await this.prisma.chat.findFirst({
+      where: {
+        chatId: id,
+        OR: [
+          { senderId: userId },
+          { receiverId: userId }
+        ]
+      },
+      include: {
+        users_chat_senderidTousers: {
+          select: {
+            userId: true,
+            userName: true,
+            profilePicture: true,
+            isVerified: true,
+            rating: true,
+          },
+        },
+        users_chat_receiveridTousers: {
+          select: {
+            userId: true,
+            userName: true,
+            profilePicture: true,
+            isVerified: true,
+            rating: true,
+          },
+        },
+        product: {
+          select: {
+            productId: true,
+            title: true,
+            price: true,
+            images: true,
+            exchangeType: true,
+            productCondition: true,
+            categoryId: true,
+          },
+        },
+        messages: {
+          take: 1,
+          orderBy: { createdAt: 'desc' },
+          select: {
+            messageId: true,
+            content: true,
+            createdAt: true,
+          },
+        },
+      },
     });
+
+    if (!chat) {
+      throw new NotFoundException(`Chat with id ${id} not found`);
+    }
+
+    return this.formatChatResponse(chat, userId);
   }
 
   update(id: number, updateChatDto: UpdateChatDto) {
@@ -53,145 +151,198 @@ export class ChatService {
     return `This action removes a #${id} chat`;
   }
 
-  async getConversations(query: any, senderId: number) {
-    const limit =
-      query.limit && query.limit < PageSize ? query.limit : PageSize;
+  async getConversations(query: any, userId: number) {
+    const limit = query.limit && query.limit < PageSize ? query.limit : PageSize;
     const page = query.page ?? 1;
     const skip = (page - 1) * limit;
 
-    const where: any = {
-      senderId,
-      ...(query.searchQuery && {
-        senderId: senderId,
-        users_chat_receiveridTousers: {
-          userName: {
-            contains: query.searchQuery,
-            mode: 'insensitive',
-          },
-        },
-      }),
-    };
-
-    const [rawConversations, currentUser] = await Promise.all([
-      this.prisma.chat.findMany({
-        skip,
-        take: limit,
-        orderBy: {
-          lastMessageAt: 'desc',
-        },
-        where: {
+    const [rawConversations, currentUser] = await Promise.all([this.prisma.chat.findMany({
+      skip,
+      take: limit,
+      orderBy: {
+        lastMessageAt: 'desc',
+      },
+      where: {
+        OR: [
+          { senderId: userId },
+          { receiverId: userId }
+        ],
+        ...(query.searchQuery && {
           OR: [
-            {senderId},
-            {receiverId: senderId}
+            {
+              users_chat_senderidTousers: {
+                userName: {
+                  contains: query.searchQuery,
+                  mode: 'insensitive',
+                },
+              },
+            },
+            {
+              users_chat_receiveridTousers: {
+                userName: {
+                  contains: query.searchQuery,
+                  mode: 'insensitive',
+                },
+              },
+            },
           ],
-          users_chat_receiveridTousers: {
-            userName: {
-              contains: query.searchQuery,
-              mode: 'insensitive',
-            },
-          },
-          lastMessage: {
-            not: null,
-          }
-        },
-        select: {
-          chatId: true,
-          lastMessage: true,
-          lastMessageAt: true,
-          users_chat_receiveridTousers: {
-            select: {
-              userId: true,
-              userName: true,
-              profilePicture: true,
-              isVerified: true,
-              rating: true,
-            },
-          },
-          product: {
-            select: {
-              productId: true,
-              title: true,
-              price: true,
-              images: true,
-            },
+        }),
+        lastMessage: {
+          not: null,
+        }
+      },
+      include: {
+        users_chat_senderidTousers: {
+          select: {
+            userId: true,
+            userName: true,
+            profilePicture: true,
+            isVerified: true,
+            rating: true,
           },
         },
-      }),
-
-      this.usersService.findOne(senderId),
-    ]);
-
-    const mappedConversations = rawConversations.map((chat) => ({
-      id: chat.chatId,
-      participant: {
-        id: chat.users_chat_receiveridTousers?.userId,
-        name: chat.users_chat_receiveridTousers?.userName,
-        avatar: chat.users_chat_receiveridTousers?.profilePicture,
-        verified: chat.users_chat_receiveridTousers?.isVerified,
-        isOnline: true, // Placeholder, implement online status logic as needed
-        rating: chat.users_chat_receiveridTousers?.rating,
+        users_chat_receiveridTousers: {
+          select: {
+            userId: true,
+            userName: true,
+            profilePicture: true,
+            isVerified: true,
+            rating: true,
+          },
+        },
+        product: {
+          select: {
+            productId: true,
+            title: true,
+            price: true,
+            images: true,
+            exchangeType: true,
+            productCondition: true,
+            categoryId: true,
+          },
+        },
       },
-      lastMessage: chat.lastMessage,
-      lastMessageTime: chat.lastMessageAt,
-      unreadCount: 0, // Placeholder, implement unread count logic as needed
-      item: {
-        id: chat.product?.productId,
-        title: chat.product?.title,
-        price: chat.product?.price,
-        image: chat.product?.images ? chat.product?.images[0] : null,
-      },
-    }));
+    }),
+    this.usersService.findOne(userId)]);
+
+    const mappedConversations = rawConversations.map((chat) => 
+      this.formatChatResponse(chat, userId)
+    );
+
+    const formattedCurrentUser = this.formatCurrentUser(currentUser);
 
     return {
       conversations: mappedConversations,
-      currentUser: {
-        id: currentUser?.userId,
-        name: currentUser?.userName,
-        avatar: currentUser?.profilePicture,
-        verified: currentUser?.isVerified,
-        rating: currentUser?.rating,
-        isOnline: true, // Placeholder, implement online status logic as needed
-      },
+      currentUser: formattedCurrentUser,
     };
   }
 
-  // In ChatService.getMessages method
-async getMessages(senderId: number, chatId: number, query: any) {
-  const limit = 50;
-  const page = query.page ?? 1;
-  const skip = (page - 1) * limit;
+  // Helper function to format chat response
+  private formatChatResponse(chat: any, currentUserId: number) {
+    const isSender = chat.senderId === currentUserId;
+    const participant = isSender 
+      ? chat.users_chat_receiveridTousers 
+      : chat.users_chat_senderidTousers;
+    
+    const otherUser = isSender 
+      ? chat.users_chat_senderidTousers 
+      : chat.users_chat_receiveridTousers;
 
-  const rawMessages = await this.prisma.message.findMany({
-    where: {
-      chatId,
-    },
-    orderBy: {
-      createdAt: 'desc' // This is correct - newest first
-    },
-    take: limit,
-    skip,
-    select: {
-      messageId: true,
-      senderId: true,
-      receiverId: true,
-      content: true,
-      messageType: true,
-      isRead: true,
-      createdAt: true,
-    },
-  });
-  
-  // Return as-is, don't reverse
-  return rawMessages.map((msg) => ({
-    id: msg.messageId,
-    senderId: msg.senderId,
-    receiverId: msg.receiverId,
-    content: msg.content,
-    timestamp: msg.createdAt,
-    type: msg.messageType,
-    status: msg.isRead ? 'read' : 'delivered',
-    isEdited: false,
-    replyTo: null,
-  }));
-}
+    // Get last message from chat or from included messages
+    let lastMessage = chat.lastMessage;
+    let lastMessageAt = chat.lastMessageAt;
+    
+    if (chat.messages && chat.messages.length > 0) {
+      lastMessage = chat.messages[0]?.content;
+      lastMessageAt = chat.messages[0]?.createdAt || chat.lastMessageAt;
+    }
+
+    return {
+      id: chat.chatId.toString(),
+      participant: {
+        id: participant?.userId,
+        name: participant?.userName,
+        profilePicture: participant?.profilePicture,
+        verified: participant?.isVerified,
+        rating: participant?.rating,
+        isOnline: true,
+      },
+      lastMessage: lastMessage,
+      lastMessageAt: lastMessageAt?.toISOString(),
+      unreadCount: 0,
+      item: chat.product ? {
+        id: chat.product.productId.toString(),
+        title: chat.product.title,
+        price: chat.product.price,
+        image: chat.product.images ? (Array.isArray(chat.product.images) ? chat.product.images[0] : chat.product.images) : null,
+        exchangeType: chat.product.exchangeType,
+        condition: chat.product.productCondition,
+        category: chat.product.categoryId?.toString(),
+      } : null,
+    };
+  }
+
+  private formatCurrentUser(currentUser: any) {
+    return {
+      id: currentUser.userId,
+      name: currentUser.userName,
+      avatar: currentUser.profilePicture,
+      verified: currentUser.isVerified,
+      isOnline: true,
+      rating: currentUser.rating,
+    }
+  }
+
+  async getMessages(senderId: number, chatId: number, query: any) {
+    const limit = 50;
+    const page = query.page ?? 1;
+    const skip = (page - 1) * limit;
+
+    // Verify the user has access to this chat
+    const chat = await this.prisma.chat.findFirst({
+      where: {
+        chatId,
+        OR: [
+          { senderId: senderId },
+          { receiverId: senderId }
+        ]
+      }
+    });
+
+    if (!chat) {
+      throw new NotFoundException('Chat not found or access denied');
+    }
+
+    const rawMessages = await this.prisma.message.findMany({
+      where: {
+        chatId,
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: limit,
+      skip,
+      select: {
+        messageId: true,
+        senderId: true,
+        receiverId: true,
+        content: true,
+        messageType: true,
+        isRead: true,
+        createdAt: true,
+      },
+    });
+    
+    return rawMessages.map((msg) => ({
+      id: msg.messageId.toString(),
+      senderId: msg.senderId,
+      receiverId: msg.receiverId,
+      content: msg.content,
+      timestamp: msg.createdAt ? msg.createdAt.toISOString() : null,
+      type: msg.messageType,
+      status: msg.isRead ? 'read' : 'delivered',
+      isEdited: false,
+      replyTo: null,
+    }));
+  }
 }
