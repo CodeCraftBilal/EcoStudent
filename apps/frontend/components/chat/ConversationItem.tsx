@@ -17,7 +17,6 @@ export default function ConversationItem({
   onClick,
   showItemInfo = true
 }: ConversationItemProps) {
-  console.log('isselected ', isSelected)
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -32,13 +31,12 @@ export default function ConversationItem({
 
   return (
     <motion.div
-      whileHover={{ backgroundColor: "rgba(16, 185, 129, 0.05)" }}
       onClick={onClick}
-      className={`p-4 border-b border-gray-100 cursor-pointer transition-all ${
-        isSelected 
-          ? "bg-eco-50 border-r-4 border-r-eco-500 shadow-sm" 
-          : "hover:bg-gray-50"
-      }`}
+      className={`p-4 border-b border-gray-100 cursor-pointer transition-colors
+    ${isSelected 
+      ? "bg-eco-50 border-r-4 border-r-eco-500 shadow-sm" 
+      : "hover:bg-eco-50/50"
+    }`}
     >
       <div className="flex space-x-3">
         {/* Avatar */}

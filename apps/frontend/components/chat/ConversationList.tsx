@@ -116,7 +116,7 @@ console.log('selected con: ', selectedConversationId)
               <div key={conversation.id} ref={isLast ? lastItemRef : null}>
                 <ConversationItem
                   conversation={conversation}
-                  isSelected={selectedConversationId === conversation.id}
+                  isSelected={selectedConversationId === conversation.id.toString()}
                   onClick={() => onConversationSelect(conversation.id)}
                   showItemInfo={true}
                 />

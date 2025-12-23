@@ -4,6 +4,7 @@ import { UpdateChatDto } from './dto/update-chat.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { FindMessagesDto } from './dto/find-messages.dto';
+import { not } from 'rxjs/internal/util/not';
 
 const PageSize = 30;
 @Injectable()
@@ -14,6 +15,7 @@ export class ChatService {
   ) {}
 
   async create(createChatDto: CreateChatDto, senderId: number) {
+    console.log('creating chat...')
     const isChatExist = await this.prisma.chat.findUnique({
       where: {
         senderid_receiverid_unique: {
@@ -22,8 +24,9 @@ export class ChatService {
         },
       },
     });
-    if (isChatExist)
-      throw new ConflictException('Chat already exists between these users.');
+    
+    if (isChatExist) return isChatExist;
+
     return this.prisma.chat.create({
       data: {
         ...createChatDto,
@@ -37,7 +40,9 @@ export class ChatService {
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} chat`;
+    return this.prisma.chat.findUnique({
+      where: {chatId: id},
+    });
   }
 
   update(id: number, updateChatDto: UpdateChatDto) {
@@ -85,6 +90,9 @@ export class ChatService {
               mode: 'insensitive',
             },
           },
+          lastMessage: {
+            not: null,
+          }
         },
         select: {
           chatId: true,

@@ -47,6 +47,7 @@ export default function ChatLayout({
   const conversationIdFromUrl = searchParams.get('conversationId');
   console.log('Conversation ID from URL:', conversationIdFromUrl);
   
+  const [sortedConversations, setSortedConversations] = useState(conversations);
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
   >(null);
@@ -74,6 +75,8 @@ export default function ChatLayout({
       }
     }
   }, [conversationIdFromUrl, conversations]);
+
+  // 
 // Handle manual conversation selection (update URL)
   const handleConversationSelect = (conversationId: string) => {
     setSelectedConversationId(conversationId);
