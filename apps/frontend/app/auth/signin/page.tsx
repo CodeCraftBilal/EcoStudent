@@ -100,7 +100,7 @@ export default function LoginPage() {
           type: 'success',
           text: data.message || 'Login successful!'
         });
-        await refreshSession()
+        await refreshSession();
 
         // Redirect to dashboard after a brief delay to show success message
         setTimeout(() => {

@@ -126,6 +126,8 @@ export default function SignupPage() {
     }
   };
 
+  const { refreshSession } = useSession();
+
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setServerMessage(null);
     // Clear all previous field errors
@@ -229,6 +231,7 @@ export default function SignupPage() {
         });
         console.log('singup successfuly')
         // You might want to redirect to login or dashboard here
+        await refreshSession();
         setTimeout(() => {
           router.push("/dashboard");
         }, 1500);

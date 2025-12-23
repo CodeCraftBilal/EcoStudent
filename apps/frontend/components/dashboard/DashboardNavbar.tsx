@@ -70,7 +70,7 @@ export default function DashboardNavbar() {
 
   useEffect(() => {
     refreshSession();
-  }, [pathname]);
+  }, []);
 
   const dashboardLinks = [
     {
