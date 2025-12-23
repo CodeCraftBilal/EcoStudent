@@ -251,7 +251,9 @@ export default function DashboardNavbar() {
                       alt={session?.userName}
                     />
                   ) : (
-                    <span>E</span>
+                    <div className="flex items-center justify-center w-full h-full">
+                      <p>{session?.userName?.[0]?.toUpperCase()}</p>
+                    </div>
                   )}
                 </div>
                 <div className="hidden md:block text-left">

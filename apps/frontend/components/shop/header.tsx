@@ -201,7 +201,7 @@ export function ShopNavBar({
                     <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm relative">
                       { session.profile ?
                         <Image fill className="rounded-full object-center object-cover" src={session.profile} alt={session.userName} />
-                        : <div className="rounded-full w-8 h-8">{session.userName[0]}</div>
+                        : <div className="flex items-center justify-center rounded-full w-8 h-8"><p>{session.userName[0].toUpperCase()}</p></div>
                       }
                     </div>
                     <div className="hidden md:block text-left">

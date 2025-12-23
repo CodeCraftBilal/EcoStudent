@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { Eye, Edit, Trash2, Tag, CheckCircle, Clock, Package } from 'lucide-react';
 import { Listing } from '@/lib/types/dashboard/listings/listings';
+import { usePathname } from 'next/navigation';
 
 interface ListingCardProps {
   listing: Listing;
@@ -9,7 +9,6 @@ interface ListingCardProps {
 }
 
 export default function ListingCard({ listing, onDelete }: ListingCardProps) {
-
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -74,6 +73,8 @@ const formatDate = (dateString: string) => {
     year: 'numeric'
   });
 };
+
+const pathName = usePathname();
 
   return (
     // <motion.div
@@ -153,7 +154,7 @@ const formatDate = (dateString: string) => {
         <div className=" flex items-center justify-between pt-3 border-t border-gray-100">
           <div className="flex items-center space-x-2">
             <Link
-              href={`/item/${listing.id}`}
+              href={`/shop/product/${listing.id}?from=${pathName || 'dashboard/listings'}`}
               className="flex items-center space-x-1 text-gray-600 hover:text-green-600 transition-colors text-sm"
             >
               <Eye className="w-4 h-4" />

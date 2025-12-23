@@ -37,7 +37,7 @@ export default function QuickActions({ onUploadItem }: QuickActionsProps) {
       description: "Chat with buyers & sellers",
       icon: MessageCircle,
       color: "bg-purple-500 hover:bg-purple-600",
-      href: "/chat"
+      href: "/dashboard/chat"
     },
     {
       title: "My Purchases",

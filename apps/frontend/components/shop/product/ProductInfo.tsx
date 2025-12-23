@@ -1,3 +1,4 @@
+import { desc } from "framer-motion/client";
 import { Star, Clock, Share2, Flag } from "lucide-react";
 import { useState } from "react";
 
@@ -28,25 +29,33 @@ export default function ProductInfo({
   postedDate,
   views,
   onShare,
-  onReport
+  onReport,
 }: ProductInfoProps) {
   const [showFullDescription, setShowFullDescription] = useState(false);
-
+  console.log("description ", description);
   const getConditionColor = (condition: string) => {
     switch (condition) {
-      case "excellent": return "bg-green-100 text-green-800";
-      case "good": return "bg-blue-100 text-blue-800";
-      case "fair": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "excellent":
+        return "bg-green-100 text-green-800";
+      case "good":
+        return "bg-blue-100 text-blue-800";
+      case "fair":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getExchangeTypeColor = (type: string) => {
     switch (type) {
-      case "sale": return "bg-green-100 text-green-800";
-      case "exchange": return "bg-blue-100 text-blue-800";
-      case "donation": return "bg-purple-100 text-purple-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "sale":
+        return "bg-green-100 text-green-800";
+      case "exchange":
+        return "bg-blue-100 text-blue-800";
+      case "donation":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -57,20 +66,25 @@ export default function ProductInfo({
         <div className="flex-1">
           {/* Badges */}
           <div className="flex items-center space-x-2 mb-2">
-            <span className={`text-sm px-3 py-1 rounded-full ${getExchangeTypeColor(exchangeType)}`}>
-              {exchangeType === "sale" ? "For Sale" :
-               exchangeType === "exchange" ? "For Exchange" : "Free Donation"}
+            <span
+              className={`text-sm px-3 py-1 rounded-full ${getExchangeTypeColor(exchangeType)}`}
+            >
+              {exchangeType === "sale"
+                ? "For Sale"
+                : exchangeType === "exchange"
+                  ? "For Exchange"
+                  : "Free Donation"}
             </span>
-            <span className={`text-sm px-3 py-1 rounded-full ${getConditionColor(condition)}`}>
+            <span
+              className={`text-sm px-3 py-1 rounded-full ${getConditionColor(condition)}`}
+            >
               {condition.charAt(0).toUpperCase() + condition.slice(1)} Condition
             </span>
           </div>
-          
+
           {/* Title */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {title}
-          </h1>
-          
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{title}</h1>
+
           {/* Meta Info */}
           <div className="flex items-center space-x-4 text-gray-600">
             <div className="flex items-center space-x-1">
@@ -81,7 +95,9 @@ export default function ProductInfo({
             <span>•</span>
             <div className="flex items-center space-x-1">
               <Clock className="w-4 h-4" />
-              <span>Posted {new Date(postedDate).toISOString().split('T')[0]}</span>
+              <span>
+                Posted {new Date(postedDate).toISOString().split("T")[0]}
+              </span>
             </div>
             {/* <span>•</span>
             <span>{views} views</span> */}
@@ -124,18 +140,21 @@ export default function ProductInfo({
 
       {/* Description */}
       <div className="bg-white rounded-2xl p-6 shadow-sm">
-        <p className="text-gray-700 leading-relaxed">
-          {showFullDescription 
-            ? description 
-            : `${description.slice(0, 200)}...`
-          }
-          <button
-            onClick={() => setShowFullDescription(!showFullDescription)}
-            className="ml-2 text-green-600 hover:text-green-700 font-medium"
-          >
-            {showFullDescription ? "Show less" : "Read more"}
-          </button>
-        </p>
+        {description ? (
+          <p className="text-gray-700 leading-relaxed">
+            {description && showFullDescription
+              ? description
+              : `${description.slice(0, 200)}...`}
+            <button
+              onClick={() => setShowFullDescription(!showFullDescription)}
+              className="ml-2 text-green-600 hover:text-green-700 font-medium"
+            >
+              {showFullDescription ? "Show less" : "Read more"}
+            </button>
+          </p>
+        ) : (
+          <p>No description available for this product.</p>
+        )}
       </div>
     </div>
   );

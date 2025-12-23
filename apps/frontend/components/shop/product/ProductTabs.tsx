@@ -66,7 +66,7 @@ export default function ProductTabs({
             >
               <h3 className="text-lg font-semibold mb-4">Product Description</h3>
               <p className="text-gray-700 leading-relaxed">
-                {description}
+                {description ? description : "No description available for this product."}
               </p>
             </motion.div>
           )}

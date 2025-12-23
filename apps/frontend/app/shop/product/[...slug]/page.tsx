@@ -20,6 +20,8 @@ import { ProductNotFound } from "@/components/shop/product/NotFound";
 import { BACKEND_URL, FRONTEND_URL } from "@/lib/types/constants";
 import { authFetch } from "@/lib/authFetch";
 import { getUserLocation } from "@/lib/location";
+import { addToFavorite, removeFromFavorite } from "@/lib/utils/favorite";
+import { useSnackbar } from "@/components/ui/dialogBoxes/SnackBarManager";
 
 type Product = {
   id: string;
@@ -141,12 +143,44 @@ export default function ProductDetailPage({
   /** -----------------------------------------------------
    *  FAVORITES & CART TOGGLE (memoized functions)
    * ------------------------------------------------------ */
-  const toggleFavorite = useCallback((id: string) => {
+  const { showSuccess, showError } = useSnackbar();
+  const toggleFavorite = useCallback(async (productId: string) => {
+    let wasFavorite = false;
+
     setFavorites((prev) => {
-      const updated = new Set(prev);
-      updated.has(id) ? updated.delete(id) : updated.add(id);
-      return updated;
+      const newSet = new Set(prev);
+      console.log("Toggling favorite for productId:", productId, newSet);
+      wasFavorite = newSet.has(productId); // <- read BEFORE modifying
+      console.log("Was favorite:", wasFavorite);
+      if (wasFavorite) newSet.delete(productId);
+      else newSet.add(productId);
+
+      return newSet;
     });
+
+    try {
+      let res;
+      if (wasFavorite) {
+        res = await removeFromFavorite(productId);
+      } else {
+        res = await addToFavorite(productId);
+      }
+      if (!res.error) {
+        showSuccess(`${res.message}`, 4000, "bottom-center");
+      } else {
+        showError(`${res.message}`, 4000, "bottom-center");
+      }
+    } catch (err) {
+      console.error("Favorite update failed", err);
+
+      // rollback UI
+      setFavorites((prev) => {
+        const newSet = new Set(prev);
+        if (wasFavorite) newSet.add(productId);
+        else newSet.delete(productId);
+        return newSet;
+      });
+    }
   }, []);
 
   const toggleCart = useCallback((id: string) => {
@@ -241,7 +275,10 @@ export default function ProductDetailPage({
       {/* Navigation */}
       <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center">
-          <Link href={`${FRONTEND_URL}/${searchParams.get('from') || 'shop'}`} className="flex items-center text-green-600">
+          <Link
+            href={`${FRONTEND_URL}/${searchParams.get("from") || "shop"}`}
+            className="flex items-center text-green-600"
+          >
             <ChevronLeft className="w-5 h-5" />
             <span>Back</span>
           </Link>
@@ -273,7 +310,11 @@ export default function ProductDetailPage({
               onReport={handleReport}
             />
 
-            <SellerInfo seller={product.seller} distance={product.distance} />
+            <SellerInfo
+              productId={product.id}
+              seller={product.seller}
+              distance={product.distance}
+            />
           </div>
         </div>
 
@@ -291,7 +332,7 @@ export default function ProductDetailPage({
         {/* RELATED ITEMS WITH INFINITE SCROLL */}
         <motion.div
           layout
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-5"
         >
           <AnimatePresence>
             {relatedItems.map((item, idx) => {
@@ -325,3 +366,4 @@ export default function ProductDetailPage({
     </div>
   );
 }
+
