@@ -25,7 +25,7 @@ export interface Conversation {
   id: string;
   participant: User;
   lastMessage: string;
-  lastMessageTime: string;
+  lastMessageAt: string;
   unreadCount: number;
   item?: {
     id: string;

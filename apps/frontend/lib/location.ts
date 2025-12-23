@@ -1,37 +1,46 @@
 type GeoLocation = {
-  accuracy: number,
-  latitude: number,
-  longitude: number,
-  altitude: number | null,
-  altitudeAccuracy: number | null,
-  heading: number | null,
-  speed: number | null
+  accuracy: number;
+  latitude: number;
+  longitude: number;
+  altitude: number | null;
+  altitudeAccuracy: number | null;
+  heading: number | null;
+  speed: number | null;
 };
 
-export const getUserLocation = async (): Promise<GeoLocation | null> => {
+export const getUserLocation = async (
+  forcePrompt: boolean = false
+): Promise<GeoLocation | null> => {
   try {
-    const permission = await navigator.permissions.query({ name: "geolocation" });
+    const permission = await navigator.permissions.query({
+      name: "geolocation",
+    });
 
-    // Helper to wrap getCurrentPosition into a Promise
     const getPosition = () =>
       new Promise<GeoLocation>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
           (pos) => resolve(pos.coords),
-          (err) => reject(err),
+          (err) => reject(err)
         );
       });
 
+    // Granted → directly get location
     if (permission.state === "granted") {
       return await getPosition();
     }
 
+    // Prompt → browser will ask user
     if (permission.state === "prompt") {
-      // Will trigger browser popup
       return await getPosition();
     }
 
+    // Denied → retry ONLY if explicitly forced
     if (permission.state === "denied") {
-      console.log("User denied location access");
+      if (forcePrompt) {
+        return await getPosition(); // may still fail
+      }
+
+      console.warn("Location access denied");
       return null;
     }
 

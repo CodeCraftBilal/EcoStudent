@@ -9,7 +9,6 @@ import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 import ChatEmptyState from "./ChatEmptyState";
 import { Conversation, Message, User } from "@/lib/types/messages/types";
-import { mockMessages } from "@/data/dashboard/messages";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
@@ -39,32 +38,85 @@ export default function ChatLayout({
   setSearchQuery,
   isConversationLoading,
 }: ChatLayoutProps) {
-
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
   const conversationIdFromUrl = searchParams.get('conversationId');
-  console.log('Conversation ID from URL:', conversationIdFromUrl);
+  const isNewChat = searchParams.get('newChat') === 'true';
   
-  const [sortedConversations, setSortedConversations] = useState(conversations);
-  const [selectedConversationId, setSelectedConversationId] = useState<
-    string | null
-  >(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newlyCreatedChat, setNewlyCreatedChat] = useState<Conversation | null>(null);
+  const [isFetchingNewChat, setIsFetchingNewChat] = useState(false);
+
+  // Fetch the newly created chat when redirected with newChat flag
+  useEffect(() => {
+    const fetchNewChat = async () => {
+      if (conversationIdFromUrl && isNewChat && !newlyCreatedChat) {
+        try {
+          setIsFetchingNewChat(true);
+          const response = await authFetch(`${BACKEND_URL}/chat/${conversationIdFromUrl}`);
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch new chat');
+          }
+          
+          const chatData = await response.json();
+          console.log('Fetched new chat:', chatData);
+          setNewlyCreatedChat(chatData);
+          
+          // Remove newChat flag from URL but keep conversationId
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete('newChat');
+          router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        } catch (error) {
+          console.error('Error fetching new chat:', error);
+        } finally {
+          setIsFetchingNewChat(false);
+        }
+      }
+    };
+
+    fetchNewChat();
+  }, [conversationIdFromUrl, isNewChat, searchParams, pathname, router]);
+
+  // Merge conversations with newly created chat and sort
+  const allConversations = useMemo(() => {
+    // Start with conversations from props
+    const merged = [...conversations];
+    
+    // Add newly created chat if it exists and isn't already in the list
+    if (newlyCreatedChat && !merged.some(conv => conv.id === newlyCreatedChat.id)) {
+      // Insert at the beginning since it's the newest
+      merged.unshift(newlyCreatedChat);
+    } else if (newlyCreatedChat) {
+      // If it's already in the list, move it to the top
+      const index = merged.findIndex(conv => conv.id === newlyCreatedChat.id);
+      if (index > -1) {
+        const [existingChat] = merged.splice(index, 1);
+        merged.unshift(existingChat);
+      }
+    }
+    
+    // Sort by lastMessageAt (newest first)
+    return merged.sort((a, b) => {
+      const dateA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+      const dateB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+      return dateB - dateA;
+    });
+  }, [conversations, newlyCreatedChat]);
+
   // Handle URL parameter to select conversation
   useEffect(() => {
-    if (conversationIdFromUrl && conversations.length > 0) {
+    if (conversationIdFromUrl && allConversations.length > 0) {
       console.log('Looking for conversation with ID:', conversationIdFromUrl);
-      console.log('Available conversations:', conversations.map(c => c.id));
+      console.log('Available conversations:', allConversations.map(c => c.id));
       
-      const foundConversation = conversations.find(conv => {
-        // Try multiple ways to match
-        return (
-          conv.id.toString() === conversationIdFromUrl || 
-          Number(conv.id) === Number(conversationIdFromUrl) ||
-          String(conv.id) === String(conversationIdFromUrl)
-        );
-      });
+      const foundConversation = allConversations.find(conv => 
+        conv.id.toString() === conversationIdFromUrl || 
+        Number(conv.id) === Number(conversationIdFromUrl)
+      );
       
       if (foundConversation) {
         console.log('Found! Setting conversation ID:', foundConversation.id);
@@ -74,10 +126,9 @@ export default function ChatLayout({
         setSelectedConversationId(null);
       }
     }
-  }, [conversationIdFromUrl, conversations]);
+  }, [conversationIdFromUrl, allConversations]);
 
-  // 
-// Handle manual conversation selection (update URL)
+  // Handle manual conversation selection (update URL)
   const handleConversationSelect = (conversationId: string) => {
     setSelectedConversationId(conversationId);
     
@@ -87,14 +138,11 @@ export default function ChatLayout({
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const selectedConversation = conversations.find(
+  const selectedConversation = allConversations.find(
     (conv) => conv.id.toString() === selectedConversationId
   );
-  const [messages, setMessages] = useState<Message[]>([]);
 
   //------------ Fetching Messages ------------------
-
-  // fetchMessage from backend
   const fetchMessages = useCallback(
     async ({ pageParam = 1 }): Promise<Message[]> => {
       const params = new URLSearchParams({
@@ -118,7 +166,7 @@ export default function ChatLayout({
         if (!res.ok) throw new Error("Failed to fetch messages");
 
         const result = await res.json();
-        console.log("Messages recieved: ", result);
+        console.log("Messages received: ", result);
         return result;
       } catch (err) {
         console.error(err);
@@ -128,7 +176,6 @@ export default function ChatLayout({
     [selectedConversation]
   );
 
-  // infinite query
   const {
     data,
     hasNextPage,
@@ -145,28 +192,28 @@ export default function ChatLayout({
     refetchOnReconnect: false,
   });
 
-  const msgs = useMemo(() => data?.pages.flat() ?? [], [data]); // Remove .reverse()
+  const msgs = useMemo(() => data?.pages.flat() ?? [], [data]);
 
   useEffect(() => {
     setMessages(msgs);
   }, [msgs]);
 
-    const isMobile = useMediaQuery({ maxWidth: 768 });
+  const isMobile = useMediaQuery({ maxWidth: 768 });
 
   // Use MobileChatLayout for mobile devices
   if (isMobile) {
     return (
       <MobileChatLayout
-        conversations={conversations}
+        conversations={allConversations}
         currentUser={currentUser}
-        onConversationSelect={setSelectedConversationId}
+        onConversationSelect={handleConversationSelect}
         // conversation props
         fetchNextConversationsPage={fetchNextConversationsPage}
         hasNextConversations={hasNextConversations}
-        isFetchingNextConversationPage={isFetchingNextConversationPage}
+        isFetchingNextConversationPage={isFetchingNextConversationPage || isFetchingNewChat}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        isConversationLoading={isConversationLoading}
+        isConversationLoading={isConversationLoading || isFetchingNewChat}
         // messages props
         msgs={messages}
         fetchNextMsgPage={fetchNextPage}
@@ -228,16 +275,16 @@ export default function ChatLayout({
       {/* Conversation List Sidebar */}
       <div className="w-80 lg:w-96 border-r border-gray-200">
         <ConversationList
-          conversations={conversations}
+          conversations={allConversations}
           selectedConversationId={selectedConversationId}
-          onConversationSelect={handleConversationSelect}  /* Changed here */
+          onConversationSelect={handleConversationSelect}
           showReturnToWebsite={true}
           fetchNextConversationsPage={fetchNextConversationsPage}
           hasNextConversations={hasNextConversations}
-          isFetchingNextConversationPage={isFetchingNextConversationPage}
+          isFetchingNextConversationPage={isFetchingNextConversationPage || isFetchingNewChat}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          isConversationLoading={isConversationLoading}
+          isConversationLoading={isConversationLoading || isFetchingNewChat}
         />
       </div>
 
@@ -255,7 +302,7 @@ export default function ChatLayout({
             />
 
             {isMessagesLoading ? (
-              <div className=" flex items-center justify-center h-full">
+              <div className="flex items-center justify-center h-full">
                 <div className="flex flex-col items-center justify-center">
                   <LoadingSpinner size="small" />
                   <p className="text-gray-400 text-xl">Loading Messages</p>

@@ -15,6 +15,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { useSnackbar } from "../ui/dialogBoxes/SnackBarManager";
+import { getUserLocation } from "@/lib/location";
 
 interface ItemCardProps {
   item: Item;
@@ -36,8 +37,10 @@ const ItemCard = React.memo(
   }: ItemCardProps) => {
     // from filter
     const pathName = usePathname();
-    const {showError} = useSnackbar();
+    const { showError } = useSnackbar();
     console.log(pathName);
+
+    const [isCreatingChat, setIsCreatingChat] = useState(false);
 
     const formatTimeAgo = (dateString: string) => {
       const date = new Date(dateString);
@@ -62,11 +65,13 @@ const ItemCard = React.memo(
     // const [loadingChat, setLoadingChat] = useState(null)
     const handleMessageSeller = async (sellerId: string, productId: string) => {
       console.log(`sellerId: ${sellerId}, productId: ${productId}`);
+      setIsCreatingChat(true);
+      await getUserLocation(true)
       try {
         const response = await authFetch(`${BACKEND_URL}/chat`, {
           method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             receiverId: Number(sellerId),
@@ -75,16 +80,20 @@ const ItemCard = React.memo(
         });
 
         if (!response.ok) {
-          console.log(response.statusText)
+          console.log(response.statusText);
           throw new Error(`Failed to create chat!`);
-}
-        const result = await response.json();
+        }
 
-        console.log('chatid ', result)
-        const link = `/dashboard/chat?conversationId=${result.chatId}&from${pathName}`;
+        const result = await response.json();
+        console.log("Created chat: ", result);
+
+        setIsCreatingChat(false);
+        // Pass the chat ID and newChat flag
+        const link = `/dashboard/chat?conversationId=${result.id}&newChat=true&from=${pathName}`;
         router.push(link);
       } catch (err) {
-        showError(`${err}`, 3000, 'bottom-center')
+        setIsCreatingChat(false);
+        showError(`${err}`, 3000, "bottom-center");
         console.error(err);
       }
     };
@@ -273,7 +282,7 @@ const ItemCard = React.memo(
                 onClick={() => handleMessageSeller(item.seller.id, item.id)}
                 className={`flex-1 text-center py-2 px-4 rounded-lg text-sm font-medium transition-colors bg-green-500 text-white hover:bg-green-600`}
               >
-                Message Seller
+                {isCreatingChat ? "Creating Chat..." : "Message Seller"}
               </button>
               <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <MessageCircle className="w-4 h-4 text-gray-600" />

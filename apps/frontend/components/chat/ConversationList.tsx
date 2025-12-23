@@ -34,10 +34,10 @@ export default function ConversationList({
 }: ConversationListProps) {
   // intersection observer
   const lastItemRef = useRef<HTMLDivElement | null>(null);
-console.log('selected con: ', selectedConversationId)
+
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
+      if (entries[0].isIntersecting && hasNextConversations && !isFetchingNextConversationPage) {
         fetchNextConversationsPage();
       }
     });
@@ -85,7 +85,7 @@ console.log('selected con: ', selectedConversationId)
         </div>
       </div>
 
-      {/* Loading Anim */}
+      {/* Loading Animation */}
       {isConversationLoading && (
         <div>
           <ContentLoader count={4} type="list" />
@@ -126,7 +126,7 @@ console.log('selected con: ', selectedConversationId)
         )}
         {isFetchingNextConversationPage && (
           <div className="p-4 text-center text-gray-500">
-            <ContentLoader count={4} type="list" />
+            <ContentLoader count={2} type="list" />
           </div>
         )}
       </div>
