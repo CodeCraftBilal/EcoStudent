@@ -11,12 +11,15 @@ import { ReviewModule } from './review/review.module';
 import { FavoriteModule } from './favorite/favorite.module';
 import { OrderModule } from './order/order.module';
 import { ChatModule } from './chat/chat.module';
+import { RealtimeModule } from './realtime/realtime.module';
+import { MessageModule } from './message/message.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     UsersModule, 
-    AuthModule, ProductModule, UploadModule, ReviewModule, FavoriteModule, OrderModule, ChatModule,
+    AuthModule, ProductModule, UploadModule, ReviewModule, FavoriteModule, OrderModule, ChatModule, RealtimeModule, MessageModule, NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

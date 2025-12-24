@@ -15,7 +15,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("Initializing socket...");
     if (!isLoading && !session && !socketRef.current) return;
 
-    socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL || "", {
+    socketRef.current = io(process.env.NEXT_PUBLIC_BACKEND_URL || "", {
       transports: ["websocket"],
     });
 
