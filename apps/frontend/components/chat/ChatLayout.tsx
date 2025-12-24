@@ -13,7 +13,13 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { LoadingSpinner } from "../Loading";
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+import { useSocket } from "@/context/useSocket";
 
 interface ChatLayoutProps {
   conversations: Conversation[];
@@ -41,13 +47,19 @@ export default function ChatLayout({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  
-  const conversationIdFromUrl = searchParams.get('conversationId');
-  const isNewChat = searchParams.get('newChat') === 'true';
-  
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+
+  const socket = useSocket();
+
+  const conversationIdFromUrl = searchParams.get("conversationId");
+  const isNewChat = searchParams.get("newChat") === "true";
+
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newlyCreatedChat, setNewlyCreatedChat] = useState<Conversation | null>(null);
+  const [newlyCreatedChat, setNewlyCreatedChat] = useState<Conversation | null>(
+    null
+  );
   const [isFetchingNewChat, setIsFetchingNewChat] = useState(false);
 
   // Fetch the newly created chat when redirected with newChat flag
@@ -56,22 +68,24 @@ export default function ChatLayout({
       if (conversationIdFromUrl && isNewChat && !newlyCreatedChat) {
         try {
           setIsFetchingNewChat(true);
-          const response = await authFetch(`${BACKEND_URL}/chat/${conversationIdFromUrl}`);
-          
+          const response = await authFetch(
+            `${BACKEND_URL}/chat/${conversationIdFromUrl}`
+          );
+
           if (!response.ok) {
-            throw new Error('Failed to fetch new chat');
+            throw new Error("Failed to fetch new chat");
           }
-          
+
           const chatData = await response.json();
-          console.log('Fetched new chat:', chatData);
+          console.log("Fetched new chat:", chatData);
           setNewlyCreatedChat(chatData);
-          
+
           // Remove newChat flag from URL but keep conversationId
           const params = new URLSearchParams(searchParams.toString());
-          params.delete('newChat');
+          params.delete("newChat");
           router.replace(`${pathname}?${params.toString()}`, { scroll: false });
         } catch (error) {
-          console.error('Error fetching new chat:', error);
+          console.error("Error fetching new chat:", error);
         } finally {
           setIsFetchingNewChat(false);
         }
@@ -85,20 +99,23 @@ export default function ChatLayout({
   const allConversations = useMemo(() => {
     // Start with conversations from props
     const merged = [...conversations];
-    
+
     // Add newly created chat if it exists and isn't already in the list
-    if (newlyCreatedChat && !merged.some(conv => conv.id === newlyCreatedChat.id)) {
+    if (
+      newlyCreatedChat &&
+      !merged.some((conv) => conv.id === newlyCreatedChat.id)
+    ) {
       // Insert at the beginning since it's the newest
       merged.unshift(newlyCreatedChat);
     } else if (newlyCreatedChat) {
       // If it's already in the list, move it to the top
-      const index = merged.findIndex(conv => conv.id === newlyCreatedChat.id);
+      const index = merged.findIndex((conv) => conv.id === newlyCreatedChat.id);
       if (index > -1) {
         const [existingChat] = merged.splice(index, 1);
         merged.unshift(existingChat);
       }
     }
-    
+
     // Sort by lastMessageAt (newest first)
     return merged.sort((a, b) => {
       const dateA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
@@ -110,19 +127,23 @@ export default function ChatLayout({
   // Handle URL parameter to select conversation
   useEffect(() => {
     if (conversationIdFromUrl && allConversations.length > 0) {
-      console.log('Looking for conversation with ID:', conversationIdFromUrl);
-      console.log('Available conversations:', allConversations.map(c => c.id));
-      
-      const foundConversation = allConversations.find(conv => 
-        conv.id.toString() === conversationIdFromUrl || 
-        Number(conv.id) === Number(conversationIdFromUrl)
+      console.log("Looking for conversation with ID:", conversationIdFromUrl);
+      console.log(
+        "Available conversations:",
+        allConversations.map((c) => c.id)
       );
-      
+
+      const foundConversation = allConversations.find(
+        (conv) =>
+          conv.id.toString() === conversationIdFromUrl ||
+          Number(conv.id) === Number(conversationIdFromUrl)
+      );
+
       if (foundConversation) {
-        console.log('Found! Setting conversation ID:', foundConversation.id);
+        console.log("Found! Setting conversation ID:", foundConversation.id);
         setSelectedConversationId(foundConversation.id.toString());
       } else {
-        console.warn('Conversation not found');
+        console.warn("Conversation not found");
         setSelectedConversationId(null);
       }
     }
@@ -131,10 +152,10 @@ export default function ChatLayout({
   // Handle manual conversation selection (update URL)
   const handleConversationSelect = (conversationId: string) => {
     setSelectedConversationId(conversationId);
-    
+
     // Update URL
     const params = new URLSearchParams(searchParams.toString());
-    params.set('conversationId', conversationId);
+    params.set("conversationId", conversationId);
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
@@ -210,7 +231,9 @@ export default function ChatLayout({
         // conversation props
         fetchNextConversationsPage={fetchNextConversationsPage}
         hasNextConversations={hasNextConversations}
-        isFetchingNextConversationPage={isFetchingNextConversationPage || isFetchingNewChat}
+        isFetchingNextConversationPage={
+          isFetchingNextConversationPage || isFetchingNewChat
+        }
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         isConversationLoading={isConversationLoading || isFetchingNewChat}
@@ -225,11 +248,28 @@ export default function ChatLayout({
   }
 
   // Desktop Layout
-  const handleSendMessage = (content: string) => {
-    if (!selectedConversation) return;
+  const [sendNewMessage, setSendNewMessage] = useState<Message>();
 
-    const newMessage: Message = {
+  const handleSendMessage = (content: string) => {
+    console.log('sending message ', content)
+    if (!selectedConversation || !socket) return;
+
+    const payload = {
+      conversationId: selectedConversation.id,
+      senderId: currentUser.id,
+      receiverId: selectedConversation.participant.id,
+      content,
+      type: "text",
+    };
+
+    // EMIT EVENT TO BACKEND
+    socket.emit("notification:new", payload);
+
+    console.log('message sent')
+    // optimistic UI update
+    const optimisticMessage: Message = {
       id: Date.now().toString(),
+      chatId: selectedConversation.id,
       senderId: currentUser.id,
       receiverId: selectedConversation.participant.id,
       content,
@@ -237,8 +277,27 @@ export default function ChatLayout({
       type: "text",
       status: "sent",
     };
-    setMessages((prev) => [...prev, newMessage]);
+
+    setMessages((prev) => [...prev, optimisticMessage]);
   };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleIncomingMessage = (message: Message) => {
+      console.log("Received message via socket:", message);
+      // ignore messages from other conversations
+      if (message.chatId !== selectedConversationId) return;
+
+      setMessages((prev) => [...prev, message]);
+    };
+
+    socket.on("message:receive", handleIncomingMessage);
+
+    return () => {
+      socket.off("message:receive", handleIncomingMessage);
+    };
+  }, [socket, selectedConversationId]);
 
   const handleEditMessage = (messageId: string, newContent: string) => {
     setMessages((prev) =>
@@ -281,7 +340,9 @@ export default function ChatLayout({
           showReturnToWebsite={true}
           fetchNextConversationsPage={fetchNextConversationsPage}
           hasNextConversations={hasNextConversations}
-          isFetchingNextConversationPage={isFetchingNextConversationPage || isFetchingNewChat}
+          isFetchingNextConversationPage={
+            isFetchingNextConversationPage || isFetchingNewChat
+          }
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           isConversationLoading={isConversationLoading || isFetchingNewChat}
