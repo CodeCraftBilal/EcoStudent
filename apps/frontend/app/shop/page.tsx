@@ -13,10 +13,7 @@ import { BACKEND_URL } from "@/lib/types/constants";
 import { getUserLocation } from "@/lib/location";
 import { ContentLoader } from "@/components/Loading";
 import { addToFavorite, removeFromFavorite } from "@/lib/utils/favorite";
-import {
-  SnackbarProvider,
-  useSnackbar,
-} from "@/components/ui/dialogBoxes/SnackBarManager";
+import { useSnackbar } from "@/components/ui/dialogBoxes/SnackBarManager";
 
 const ShopPage = () => {
   // ----------------------------------
@@ -31,12 +28,24 @@ const ShopPage = () => {
   });
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [cart, setCart] = useState<Set<string>>(new Set());
 
   const lastItemRef = useRef<HTMLDivElement | null>(null);
 
+  // debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+  
+    return () => {
+      clearTimeout(timer);
+    }
+  }, [searchQuery])
+  
   // ----------------------------------
   // Stable memoized filters
   // ----------------------------------
@@ -70,7 +79,7 @@ const ShopPage = () => {
         params.append("lng", String(location.longitude));
       }
 
-      if (searchQuery) params.append("searchQuery", searchQuery);
+      if (debouncedSearch) params.append("searchQuery", debouncedSearch);
       if (stableFilters.category !== "all")
         params.append("category", stableFilters.category);
 
@@ -92,22 +101,30 @@ const ShopPage = () => {
       const res = await authFetch(url);
       return res.json();
     },
-    [searchQuery, stableFilters]
+    [debouncedSearch, stableFilters]
   );
 
   // ----------------------------------
   // Infinite Query
   // ----------------------------------
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, refetch, isLoading: isProductsLoading } =
-    useInfiniteQuery({
-      queryKey: ["products", stableFilters, searchQuery],
-      queryFn: fetchProducts,
-      initialPageParam: 0,
-      getNextPageParam: (lastPage, allPages) => {
-        if (lastPage.length < 12) return undefined;
-        return allPages.length * 12;
-      },
-    });
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+    isLoading: isProductsLoading,
+  } = useInfiniteQuery({
+    queryKey: ["products", stableFilters, debouncedSearch],
+    queryFn: fetchProducts,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.length < 12) return undefined;
+      return allPages.length * 12;
+    },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
 
   // ----------------------------------
   // Flatten pages (Memoized)
@@ -188,7 +205,6 @@ const ShopPage = () => {
     }
   }, []);
 
-
   // ----------------------------------
   // Render
   // ----------------------------------
@@ -219,6 +235,12 @@ const ShopPage = () => {
             Showing {items.length} of {items.length} items
           </p>
         </div>
+
+        {isProductsLoading && (
+          <div className="w-full">
+            <ContentLoader columns={4} count={8} type="grid" />
+          </div>
+        )}
 
         {!isProductsLoading && items.length === 0 ? (
           <motion.div
@@ -269,11 +291,7 @@ const ShopPage = () => {
 };
 
 const App: React.FC = () => {
-  return (
-    <SnackbarProvider>
-      <ShopPage />
-    </SnackbarProvider>
-  );
+  return <ShopPage />;
 };
 
 export default App;

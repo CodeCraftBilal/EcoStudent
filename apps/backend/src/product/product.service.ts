@@ -7,7 +7,6 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ProductService {
-
   constructor(private readonly prisma: PrismaService) {}
   async create(createProductDto: CreateProductDto) {
     try {
@@ -38,6 +37,7 @@ export class ProductService {
   }
 
   async findAll(filters: any) {
+    console.log('filters: ', filters)
     const conditions: string[] = [];
     const params: any[] = [];
 
@@ -84,6 +84,17 @@ export class ProductService {
       params.push(exchangeArr);
     }
 
+    // Search filter (title + description)
+    if (filters.searchQuery) {
+      const searchTerm = `%${filters.searchQuery}%`;
+
+      conditions.push(
+        `(p.title ILIKE $${params.length + 1} OR p.description ILIKE $${params.length + 1})`,
+      );
+
+      params.push(searchTerm);
+    }
+
     // Min price filter
     if (filters.minPrice) {
       conditions.push(`p.price >= $${params.length + 1}`);
@@ -109,6 +120,7 @@ export class ProductService {
       ? Number(filters.maxDistance)
       : null;
 
+      console.log('whereSql: ', whereSQL)
     try {
       const rawProducts: any[] = await this.prisma.$queryRawUnsafe(
         `

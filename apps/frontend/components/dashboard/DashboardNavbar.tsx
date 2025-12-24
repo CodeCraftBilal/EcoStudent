@@ -69,7 +69,7 @@ export default function DashboardNavbar() {
   }, []);
 
   useEffect(() => {
-    refreshSession();
+    // refreshSession();
   }, []);
 
   const dashboardLinks = [

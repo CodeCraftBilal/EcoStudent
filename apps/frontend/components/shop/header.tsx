@@ -1,30 +1,12 @@
 "use client";
 
-import {
-  Search,
-  MapPin,
-  ShoppingCart,
-  Filter,
-  Leaf,
-  NotebookIcon,
-  Bell,
-  MessageCircleHeartIcon,
-  MessageCircle,
-  Heart,
-  LogOut,
-  Home,
-  Settings,
-  User,
-} from "lucide-react";
+import { Search, Filter, Leaf, Bell, MessageCircle } from "lucide-react";
 import { Filters, FiltersProps } from "./filters";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "@/context/useSession";
-import { Session } from "inspector/promises";
 import NotificationDropdown from "../dashboard/Notification";
 import { notificationsData } from "../dashboard/DashboardNavbar";
-import { messagesNotificationData } from "@/data/Notifications";
 import Image from "next/image";
 import ProfileDropDown from "../dashboard/ProfileDropDown";
 
@@ -55,14 +37,6 @@ export function ShopNavBar({
     setSearchQuery("");
   };
 
-  // geting param from the session
-  let sessionParam = false;
-  const param = useSearchParams().get("session");
-  if (param === "true") {
-    sessionParam = true;
-  } else {
-    sessionParam = false;
-  }
   const { session, isLoading } = useSession();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -70,8 +44,7 @@ export function ShopNavBar({
   const [unreadNotifications, setUnreadNotifications] = useState(4);
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
     useState(false);
-  const [isMessagesDropDownOpen, setIsMessagesDropDownOpen] =
-    useState(false);
+  const [isMessagesDropDownOpen, setIsMessagesDropDownOpen] = useState(false);
   const [notifications, setNotifications] = useState(notificationsData);
   const [messages, setMessages] = useState(notificationsData);
   const handleMarkAsRead = (notificationId: string) => {
@@ -159,7 +132,8 @@ export function ShopNavBar({
                   onMarkAllAsRead={handleMarkAllAsRead}
                 />
               </div>
-              <div className="relative">
+
+              <div className="relative max-md:hidden">
                 <button
                   onClick={() =>
                     setIsMessagesDropDownOpen(!isMessagesDropDownOpen)
@@ -192,17 +166,25 @@ export function ShopNavBar({
 
             {/* show when user is not logged in */}
             {session && session.userName ? (
-              <div className={`hidden md:flex items-center space-x-4`}>
+              <div className={`md:flex items-center space-x-4`}>
                 <div className="relative">
                   <button
                     onClick={toggleProfileDropdown}
                     className="flex items-center space-x-2 px-0 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm relative">
-                      { session.profile ?
-                        <Image fill className="rounded-full object-center object-cover" src={session.profile} alt={session.userName} />
-                        : <div className="flex items-center justify-center rounded-full w-8 h-8"><p>{session.userName[0].toUpperCase()}</p></div>
-                      }
+                      {session.profile ? (
+                        <Image
+                          fill
+                          className="rounded-full object-center object-cover"
+                          src={session.profile}
+                          alt={session.userName}
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center rounded-full w-8 h-8">
+                          <p>{session.userName[0].toUpperCase()}</p>
+                        </div>
+                      )}
                     </div>
                     <div className="hidden md:block text-left">
                       <div className="text-sm font-medium text-gray-900">
@@ -216,14 +198,13 @@ export function ShopNavBar({
 
                   {/* Profile Dropdown Menu */}
                   {isProfileDropdownOpen && (
-                    
-                    <ProfileDropDown closeAllMenus={closeAllMenus}/>
+                    <ProfileDropDown closeAllMenus={closeAllMenus} />
                   )}
                 </div>
               </div>
             ) : (
               <div
-                className={`hidden ${sessionParam ? "" : "md:flex"} items-center space-x-4`}
+                className={`${session ? "" : "md:flex"} items-center space-x-4`}
               >
                 <Link
                   href={"/auth/signin"}
@@ -233,7 +214,7 @@ export function ShopNavBar({
                 </Link>
                 <Link
                   href={"/auth/signup"}
-                  className="font-bold bg-green-600 cursor-pointer text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors shadow-lg"
+                  className={`${session ? "" : "max-md:hidden"} font-bold bg-green-600 cursor-pointer text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors shadow-lg`}
                 >
                   Sign Up
                 </Link>

@@ -24,7 +24,7 @@ const HomeNavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    refreshSession()
+    // refreshSession()
   }, [])
   
   useEffect(() => {
