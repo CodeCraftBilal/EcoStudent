@@ -1,26 +1,31 @@
+// src/notification/notification.service.ts
 import { Injectable } from '@nestjs/common';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class NotificationService {
-  create(createNotificationDto: CreateNotificationDto) {
-    return 'This action adds a new notification';
+  
+  constructor(private prisma: PrismaService) {}
+
+  async createMessageNotification(message: any) {
+    return this.prisma.notifications.create({
+      data: {
+        userid: message.receiverId,
+        type: 'MESSAGE',
+        title: 'New Message',
+        message: message.content,
+        relatedentitytype: 'chat',
+        relatedentityid: message.chatId,
+        created_at: new Date(),
+      },
+    });
   }
 
+  findOne(arg0: number) {
+    throw new Error('Method not implemented.');
+  }
   findAll() {
-    return `This action returns all notification`;
+    throw new Error('Method not implemented.');
   }
-
-  findOne(id: number) {
-    return `This action returns a #${id} notification`;
-  }
-
-  update(id: number, updateNotificationDto: UpdateNotificationDto) {
-    return `This action updates a #${id} notification`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} notification`;
-  }
+  
 }

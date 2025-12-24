@@ -1,26 +1,49 @@
-import { Injectable } from '@nestjs/common';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
+// src/message/message.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { SendMessageDto } from './dto/create-message.dto';
 
 @Injectable()
 export class MessageService {
-  create(createMessageDto: CreateMessageDto) {
-    return 'This action adds a new message';
-  }
+  constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return `This action returns all message`;
-  }
+  async createMessage(senderId: number, dto: SendMessageDto) {
+    const chat = await this.prisma.chat.findFirst({
+      where: {
+        chatId: dto.chatId,
+        OR: [{ senderId }, { receiverId: senderId }],
+      },
+    });
 
-  findOne(id: number) {
-    return `This action returns a #${id} message`;
-  }
+    if (!chat) throw new NotFoundException('Chat not found');
 
-  update(id: number, updateMessageDto: UpdateMessageDto) {
-    return `This action updates a #${id} message`;
-  }
+    const message = await this.prisma.message.create({
+      data: {
+        chatId: dto.chatId,
+        senderId,
+        receiverId: dto.receiverId,
+        content: dto.content,
+        messageType: dto.messageType,
+      },
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} message`;
+    // Update chat preview
+    await this.prisma.chat.update({
+      where: { chatId: dto.chatId },
+      data: {
+        lastMessage: dto.content,
+        lastMessageAt: new Date(),
+      },
+    });
+
+    return {
+      id: message.messageId.toString(),
+      chatId: message.chatId,
+      senderId: message.senderId,
+      receiverId: message.receiverId,
+      content: message.content,
+      type: message.messageType,
+      timestamp: message.createdAt?.toISOString(),
+    };
   }
 }

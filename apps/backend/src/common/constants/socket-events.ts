@@ -4,6 +4,7 @@ export const SOCKET_EVENTS = {
   LEAVE: 'chat:leave',
 
   MESSAGE_SEND: 'message:send',
+  MESSAGE_RECEIVE: 'message:receive',
   MESSAGE_NEW: 'message:new',
 
   NOTIFICATION_NEW: 'notification:new',
