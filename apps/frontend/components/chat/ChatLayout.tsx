@@ -248,7 +248,6 @@ export default function ChatLayout({
   }
 
   // Desktop Layout
-  const [sendNewMessage, setSendNewMessage] = useState<Message>();
 
   const handleSendMessage = (content: string) => {
     console.log('sending message ', content)
@@ -263,7 +262,7 @@ export default function ChatLayout({
     };
 
     // EMIT EVENT TO BACKEND
-    socket.emit("notification:new", payload);
+    socket.emit("message:send", payload);
 
     console.log('message sent')
     // optimistic UI update
@@ -292,10 +291,10 @@ export default function ChatLayout({
       setMessages((prev) => [...prev, message]);
     };
 
-    socket.on("message:receive", handleIncomingMessage);
+    socket.on("message:new", handleIncomingMessage);
 
     return () => {
-      socket.off("message:receive", handleIncomingMessage);
+      socket.off("message:new", handleIncomingMessage);
     };
   }, [socket, selectedConversationId]);
 
