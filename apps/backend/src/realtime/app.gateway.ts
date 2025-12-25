@@ -87,11 +87,12 @@ export class AppGateway {
     console.log('handleSendMessage payload', payload);
     const senderId = client.data.userId;
 
+    this.server.emit(SOCKET_EVENTS.MESSAGE_RECEIVE, { status: 'ok' });
     const message = await this.messageService.createMessage(senderId, payload);
 
     // Emit to chat participants
     this.server
-      .to(`user:${message.receiverId}`)
+      .to(`user_${message.receiverId}`)
       .emit(SOCKET_EVENTS.MESSAGE_NEW, message);
 
     // Emit notification
