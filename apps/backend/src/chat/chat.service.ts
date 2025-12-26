@@ -200,6 +200,7 @@ export class ChatService {
             profilePicture: true,
             isVerified: true,
             rating: true,
+            isOnline: true,
           },
         },
         users_chat_receiveridTousers: {
@@ -209,6 +210,7 @@ export class ChatService {
             profilePicture: true,
             isVerified: true,
             rating: true,
+            isOnline: true,
           },
         },
         product: {
@@ -269,7 +271,7 @@ export class ChatService {
         profilePicture: participant?.profilePicture,
         verified: participant?.isVerified,
         rating: participant?.rating,
-        isOnline: true,
+        isOnline: participant?.isOnline,
       },
       lastMessage: lastMessage,
       lastMessageAt: lastMessageAt?.toISOString(),
