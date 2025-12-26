@@ -24,7 +24,7 @@ export default function ChatHeader({
   showReturnToWebsite = true
 }: ChatHeaderProps) {
   return (
-    <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+    <div className="bg-white/90 border-b border-gray-200 p-4 flex items-center justify-between max-md:sticky top-15 z-10">
       {/* Left Section - Back Button and User Info */}
       <div className="flex items-center space-x-3 flex-1 min-w-0">
         {showBackButton && onBack && (

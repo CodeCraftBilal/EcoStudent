@@ -20,6 +20,8 @@ import {
   useSearchParams,
 } from "next/navigation";
 import { useSocket } from "@/context/useSocket";
+import OrderSidebar from "./OrderSidebar";
+import { useSession } from "@/context/useSession";
 
 interface ChatLayoutProps {
   conversations: Conversation[];
@@ -47,7 +49,7 @@ export default function ChatLayout({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
+  const { session } = useSession()
   const socket = useSocket();
 
   const conversationIdFromUrl = searchParams.get("conversationId");
@@ -219,6 +221,73 @@ export default function ChatLayout({
     setMessages(msgs);
   }, [msgs]);
 
+  const handleSendMessage = (content: string) => {
+    console.log("sending message ", content);
+    try {
+      if (!selectedConversation || !socket)
+        throw new Error("Socket does not initialize");
+
+      const payload = {
+        conversationId: selectedConversation.id,
+        senderId: currentUser.id,
+        receiverId: selectedConversation.participant.id,
+        content,
+        type: "text",
+      };
+
+      // EMIT EVENT TO BACKEND
+      socket.emit("message:send", {
+        data: {
+          chatId: Number(selectedConversation.id),
+          receiverId: payload.receiverId,
+          messageType: "TEXT",
+          content: payload.content,
+        },
+      });
+
+      // optimistic UI update
+      const optimisticMessage: Message = {
+        id: Date.now().toString(),
+        chatId: Number(selectedConversation.id),
+        senderId: currentUser.id,
+        receiverId: selectedConversation.participant.id,
+        content,
+        timestamp: new Date().toISOString(),
+        type: "text",
+        status: "sent",
+      };
+
+      setMessages((prev) => [...prev, optimisticMessage]);
+    } catch (err) {
+      console.log("Socket not initialized: ", err);
+    }
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleIncomingMessage = (message: Message) => {
+      console.log("Received message via socket:", message);
+      // ignore messages from other conversations
+      if (message.chatId.toString() !== selectedConversationId) {
+        console.log("Ignored message for chatId:", typeof message.chatId);
+        console.log(
+          "Current selected conversationId:",
+          typeof selectedConversationId
+        );
+        return;
+      }
+
+      setMessages((prev) => [...prev, message]);
+    };
+
+    socket.on("message:receive", handleIncomingMessage);
+
+    return () => {
+      socket.off("message:new", handleIncomingMessage);
+    };
+  }, [socket, selectedConversationId]);
+
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
   // Use MobileChatLayout for mobile devices
@@ -243,69 +312,13 @@ export default function ChatLayout({
         hasNextMsgPage={hasNextPage}
         isFetchingNextMsgPage={isFetchingNextPage}
         isLoadingMessages={isMessagesLoading}
+        // input props
+        onMsgSend={handleSendMessage}
       />
     );
   }
 
   // Desktop Layout
-
-  const handleSendMessage = (content: string) => {
-    console.log("sending message ", content);
-    try {
-      if (!selectedConversation || !socket)
-        throw new Error("Socket does not initialize");
-
-      const payload = {
-        conversationId: selectedConversation.id,
-        senderId: currentUser.id,
-        receiverId: selectedConversation.participant.id,
-        content,
-        type: "text",
-      };
-
-      // EMIT EVENT TO BACKEND
-      socket.emit("message:send", {data: {
-        chatId: Number(selectedConversation.id),
-        receiverId: payload.receiverId,
-        messageType: "TEXT",
-        content: payload.content,
-      }});
-
-      // optimistic UI update
-      const optimisticMessage: Message = {
-        id: Date.now().toString(),
-        chatId: selectedConversation.id,
-        senderId: currentUser.id,
-        receiverId: selectedConversation.participant.id,
-        content,
-        timestamp: new Date().toISOString(),
-        type: "text",
-        status: "sent",
-      };
-
-      setMessages((prev) => [...prev, optimisticMessage]);
-    } catch (err) {
-      console.log("Socket not initialized: ", err);
-    }
-  };
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleIncomingMessage = (message: Message) => {
-      console.log("Received message via socket:", message);
-      // ignore messages from other conversations
-      if (message.chatId !== selectedConversationId) return;
-
-      setMessages((prev) => [...prev, message]);
-    };
-
-    socket.on("message:new", handleIncomingMessage);
-
-    return () => {
-      socket.off("message:new", handleIncomingMessage);
-    };
-  }, [socket, selectedConversationId]);
 
   const handleEditMessage = (messageId: string, newContent: string) => {
     setMessages((prev) =>
@@ -402,6 +415,18 @@ export default function ChatLayout({
           </>
         ) : (
           <ChatEmptyState />
+        )}
+      </div>
+
+        {/* Placeholder for Order Sidebar */}
+      <div className="w-80 lg:w-96 border-l border-gray-200">
+        {selectedConversation && (
+          <OrderSidebar
+            conversationId={selectedConversationId || undefined}
+            productId={Number(selectedConversation.item?.id)}
+            currentUser={{id: Number(session?.userId), role: session?.role}}
+            isOwner={Number(currentUser.id) === Number(selectedConversation.item?.sellerId)} // Adjust based on your logic
+          />
         )}
       </div>
     </div>

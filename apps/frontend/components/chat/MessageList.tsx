@@ -69,7 +69,7 @@ export default function MessageList({
 
   return (
     <div 
-      className="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col-reverse"
+      className="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col-reverse bg-gradient-to-br from-eco-100 to-eco-blue-100"
       onScroll={handleScroll}
     >
       {/* Invisible div at the bottom for scrolling */}
