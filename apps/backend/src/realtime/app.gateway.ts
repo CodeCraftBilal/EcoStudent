@@ -11,13 +11,13 @@ import {
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 import jwtConfig from 'src/auth/config/jwt.config';
-import { WsJwtGuard } from 'src/auth/gaurds/ws-jwt-auth/ws-jwt.guard';
 import { SOCKET_EVENTS } from 'src/common/constants/socket-events';
 import { MessageService } from 'src/message/message.service';
 import { NotificationService } from 'src/notification/notification.service';
+import { UsersService } from 'src/users/users.service';
 @WebSocketGateway({
   cors: {
-    origin: 'http://localhost:3000',
+    origin: '*',
     credentials: true,
   },
 })
@@ -30,6 +30,7 @@ export class AppGateway {
     private readonly authService: AuthService,
     private readonly messageService: MessageService,
     private readonly notificationService: NotificationService,
+    private readonly userService: UsersService,
     @Inject(jwtConfig.KEY)
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
   ) {}
@@ -52,13 +53,16 @@ export class AppGateway {
         payload.tokenVersion,
       );
 
+      await this.userService.update(user.id, { isOnline: true });
+
       client.data.userId = user.id;
       client.data.role = user.role;
 
       client.join(`user_${user.id}`);
 
       console.log(`Client connected: ${client.id} (User ID: ${user.id})`);
-    } catch {
+    } catch(err) {
+      console.log('something went wrong: ', err)
       client.disconnect();
     }
   }
@@ -75,7 +79,8 @@ export class AppGateway {
     return cookies['access_token'] || null;
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
+    await this.userService.update(client.data.userId, { isOnline: false });
     console.log(`Client disconnected: ${client.id}`);
   }
 
@@ -87,20 +92,19 @@ export class AppGateway {
     console.log('handleSendMessage payload', payload);
     const senderId = client.data.userId;
 
-    this.server.emit(SOCKET_EVENTS.MESSAGE_RECEIVE, { status: 'ok' });
-    const message = await this.messageService.createMessage(senderId, payload);
-
+    client.emit('message-received', { status: 'ok' });
+    const message = await this.messageService.createMessage(senderId, {...payload.data});
     // Emit to chat participants
     this.server
       .to(`user_${message.receiverId}`)
       .emit(SOCKET_EVENTS.MESSAGE_NEW, message);
 
     // Emit notification
-    const notification =
-      await this.notificationService.createMessageNotification(message);
+  //   const notification =
+  //     await this.notificationService.createMessageNotification(message);
 
-    this.server
-      .to(`user:${message.receiverId}`)
-      .emit(SOCKET_EVENTS.NOTIFICATION_NEW, notification);
+  //   this.server
+  //     .to(`user:${message.receiverId}`)
+  //     .emit(SOCKET_EVENTS.NOTIFICATION_NEW, notification);
   }
 }

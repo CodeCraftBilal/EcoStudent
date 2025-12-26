@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useSession } from "./useSession";
 
@@ -8,30 +8,37 @@ const SocketContext = createContext<Socket | null>(null);
 export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
-  const socketRef = useRef<Socket | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const { session, isLoading } = useSession();
 
   useEffect(() => {
+    if (isLoading || !session) {
+      return;
+    }
+
     console.log("Initializing socket...");
-    if (!isLoading && !session && !socketRef.current) return;
 
-    socketRef.current = io(process.env.NEXT_PUBLIC_BACKEND_URL || "", {
+    const newSocket = io(process.env.NEXT_PUBLIC_BACKEND_URL!, {
       transports: ["websocket"],
+      withCredentials: true, // important for auth cookies
     });
 
-    socketRef.current.on("connect", () => {
-      console.log("Socket connected:", socketRef.current?.id);
+    newSocket.on("connect", () => {
+      console.log("Socket connected:", newSocket.id);
     });
+
+    setSocket(newSocket);
 
     return () => {
-      socketRef.current?.disconnect();
-      socketRef.current = null;
+      console.log("Disconnecting socket...");
+      newSocket.disconnect();
+      setSocket(null);
     };
-  }, [ session, isLoading ]);
+  }, [session, isLoading]);
 
   return (
-    <SocketContext.Provider value={socketRef.current}>
-        {children}
+    <SocketContext.Provider value={socket}>
+      {children}
     </SocketContext.Provider>
-  )
+  );
 };

@@ -250,34 +250,43 @@ export default function ChatLayout({
   // Desktop Layout
 
   const handleSendMessage = (content: string) => {
-    console.log('sending message ', content)
-    if (!selectedConversation || !socket) return;
+    console.log("sending message ", content);
+    try {
+      if (!selectedConversation || !socket)
+        throw new Error("Socket does not initialize");
 
-    const payload = {
-      conversationId: selectedConversation.id,
-      senderId: currentUser.id,
-      receiverId: selectedConversation.participant.id,
-      content,
-      type: "text",
-    };
+      const payload = {
+        conversationId: selectedConversation.id,
+        senderId: currentUser.id,
+        receiverId: selectedConversation.participant.id,
+        content,
+        type: "text",
+      };
 
-    // EMIT EVENT TO BACKEND
-    socket.emit("message:send", payload);
+      // EMIT EVENT TO BACKEND
+      socket.emit("message:send", {data: {
+        chatId: Number(selectedConversation.id),
+        receiverId: payload.receiverId,
+        messageType: "TEXT",
+        content: payload.content,
+      }});
 
-    console.log('message sent')
-    // optimistic UI update
-    const optimisticMessage: Message = {
-      id: Date.now().toString(),
-      chatId: selectedConversation.id,
-      senderId: currentUser.id,
-      receiverId: selectedConversation.participant.id,
-      content,
-      timestamp: new Date().toISOString(),
-      type: "text",
-      status: "sent",
-    };
+      // optimistic UI update
+      const optimisticMessage: Message = {
+        id: Date.now().toString(),
+        chatId: selectedConversation.id,
+        senderId: currentUser.id,
+        receiverId: selectedConversation.participant.id,
+        content,
+        timestamp: new Date().toISOString(),
+        type: "text",
+        status: "sent",
+      };
 
-    setMessages((prev) => [...prev, optimisticMessage]);
+      setMessages((prev) => [...prev, optimisticMessage]);
+    } catch (err) {
+      console.log("Socket not initialized: ", err);
+    }
   };
 
   useEffect(() => {
