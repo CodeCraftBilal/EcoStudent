@@ -8,7 +8,7 @@ import { Prisma } from '@prisma/client';
 @Injectable()
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto, userId: number) {
     try {
       const categoryId = await this.prisma.category.findUnique({
         where: { categoryName: createProductDto.productType },
@@ -20,6 +20,7 @@ export class ProductService {
       const product = await this.prisma.product.create({
         data: {
           ...createProductDto,
+          userId,
           originalPrice: parseInt(createProductDto.originalPrice),
           price: parseInt(createProductDto.price),
           categoryId: categoryId.categoryId,

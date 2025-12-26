@@ -1,7 +1,7 @@
 // components/chat/OrderSidebar/index.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Order } from "@/lib/types/dashboard/order/type";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
@@ -17,6 +17,7 @@ import OrderTimeline from "./OrderTimeline";
 import OrderGuidelines from "./OrderGuidelines";
 import CreateOrderSection from "./CreateOrderSection";
 import OrderErrorState from "./OrderErrorState";
+import OrderActions from "./OrderActions";
 
 interface OrderSidebarProps {
   conversationId?: string;
@@ -38,6 +39,24 @@ export default function OrderSidebar({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  // Calculate if cancellation is allowed (within 10% of total time)
+  const canCancelOrder = useMemo(() => {
+    if (!order || !order.createdAt || !order.meetupTime) return false;
+    
+    const createdAt = new Date(order.createdAt).getTime();
+    const meetupTime = new Date(order.meetupTime).getTime();
+    const now = Date.now();
+    
+    // Total time between creation and meetup
+    const totalTime = meetupTime - createdAt;
+    
+    // Cancellation allowed within first 10% of total time
+    const cancellationDeadline = createdAt + (totalTime * 0.1);
+    
+    return now < cancellationDeadline;
+  }, [order]);
 
   // Fetch order details
   useEffect(() => {
@@ -50,7 +69,7 @@ export default function OrderSidebar({
 
         // Try to fetch existing order for this conversation/product
         const response = await authFetch(
-          `${BACKEND_URL}/orders/conversation/${conversationId || productId}`
+          `${BACKEND_URL}/order/conversation/${conversationId || productId}`
         );
 
         if (response.ok) {
@@ -113,7 +132,7 @@ export default function OrderSidebar({
 
     try {
       setLoading(true);
-      const response = await authFetch(`${BACKEND_URL}/orders/${order.id}`, {
+      const response = await authFetch(`${BACKEND_URL}/order/${order.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates)
@@ -134,9 +153,41 @@ export default function OrderSidebar({
     }
   };
 
+  // Update order status
+  const handleUpdateStatus = async (status: Order['status']) => {
+    if (!order) return;
+
+    try {
+      setIsUpdatingStatus(true);
+      const response = await authFetch(`${BACKEND_URL}/order/${order.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status })
+      });
+
+      if (response.ok) {
+        const updatedOrder = await response.json();
+        setOrder(updatedOrder);
+      } else {
+        throw new Error(`Failed to ${status} order`);
+      }
+    } catch (err) {
+      console.error(`Error ${status}ing order:`, err);
+      setError(`Failed to ${status} order`);
+      throw err;
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  // Check if user is buyer
+  const isBuyer = useMemo(() => {
+    return order?.buyerId === currentUser.id;
+  }, [order, currentUser.id]);
+
   if (loading) {
     return (
-      <div className="w-80 lg:w-96 border-l border-gray-200 bg-gradient-to-br from-eco-50 to-eco-blue-50 flex items-center justify-center">
+      <div className="w-full h-full border-l border-gray-200 bg-gradient-to-br from-eco-50 to-eco-blue-50 flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner size="small" />
           <p className="text-gray-400 text-sm mt-2">Loading order details...</p>
@@ -150,7 +201,7 @@ export default function OrderSidebar({
   }
 
   return (
-    <div className="w-full h-full border-l border-gray-200 bg-gradient-to-br from-eco-100 to-eco-blue-100 overflow-y-auto">
+    <div className="w-full h-full border-l border-gray-200 bg-gradient-to-br from-eco-50 to-eco-blue-50 overflow-y-auto">
       <div className="p-6">
         <OrderHeader order={order} />
         
@@ -165,6 +216,17 @@ export default function OrderSidebar({
         ) : (
           <>
             <OrderProductInfo product={order.product} orderId={order.id} />
+            
+            {/* Order Actions (Accept/Cancel buttons) */}
+            <OrderActions
+              order={order}
+              isOwner={isOwner}
+              isBuyer={isBuyer}
+              canCancel={canCancelOrder}
+              isUpdating={isUpdatingStatus}
+              onAccept={() => handleUpdateStatus('accepted')}
+              onCancel={() => handleUpdateStatus('cancelled')}
+            />
             
             <div className="space-y-6">
               <OrderStatusSection 
@@ -193,7 +255,12 @@ export default function OrderSidebar({
                 onUpdate={handleUpdateOrder}
               />
               
-              <OrderTimeSection meetupTime={order.meetupTime} />
+              <OrderTimeSection 
+                meetupTime={order.meetupTime}
+                isOwner={isOwner}
+                isEditing={isEditing}
+                onUpdate={handleUpdateOrder}
+              />
               
               <OrderParticipants 
                 buyer={order.buyer}
@@ -202,6 +269,16 @@ export default function OrderSidebar({
               />
               
               <OrderTimeline status={order.status} />
+              
+              {/* Cancellation Info */}
+              {canCancelOrder && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-sm text-yellow-800 flex items-center gap-2">
+                    <span className="font-medium">Cancellation Window:</span>
+                    You can cancel this order within the first 10% of the time until meetup.
+                  </p>
+                </div>
+              )}
             </div>
           </>
         )}

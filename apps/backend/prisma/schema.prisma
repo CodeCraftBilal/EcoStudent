@@ -101,7 +101,7 @@ model exchanges {
   meetupLongitude Decimal          @map("meetuplongitude") @db.Decimal(11, 8)
   meetupTime      DateTime         @map("meetuptime") @db.Timestamp(6)
   completedAt     DateTime?        @map("completed_at") @db.Timestamp(6)
-  createdAt       DateTime?        @default(now()) @map("created_at") @db.Timestamp(6)
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamp(6)
   users           Users            @relation(fields: [buyerId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_buyer")
   product         product          @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_product")
   reviews         reviews[]
@@ -122,11 +122,11 @@ model notifications {
 
 model product {
   productId        Int               @id @default(autoincrement()) @map("productid")
-  userId           Int?              @map("userid")
-  categoryId       Int?              @map("categoryid")
+  userId           Int              @map("userid")
+  categoryId       Int              @map("categoryid")
   title            String            @db.VarChar(255)
   description      String?
-  price            Decimal?          @db.Decimal(10, 2)
+  price            Decimal          @db.Decimal(10, 2)
   views            Int?
   images           Json?             @db.Json
   viewCount        Int?              @map("viewcount")

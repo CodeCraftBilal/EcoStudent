@@ -37,7 +37,7 @@ export default function OrderProductInfo({ product, orderId }: OrderProductInfoP
       </div>
 
       <button
-        onClick={() => router.push(`/orders/${orderId}`)}
+        onClick={() => router.push(`/order/${orderId}`)}
         className="w-full px-4 py-2 bg-eco-500 text-white rounded-lg hover:bg-eco-600 transition-colors text-sm font-medium flex items-center justify-center gap-2"
       >
         View Full Order
