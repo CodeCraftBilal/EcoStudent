@@ -11,10 +11,10 @@ import {
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 import jwtConfig from 'src/auth/config/jwt.config';
-import { WsJwtGuard } from 'src/auth/gaurds/ws-jwt-auth/ws-jwt.guard';
 import { SOCKET_EVENTS } from 'src/common/constants/socket-events';
 import { MessageService } from 'src/message/message.service';
 import { NotificationService } from 'src/notification/notification.service';
+import { UsersService } from 'src/users/users.service';
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -30,6 +30,7 @@ export class AppGateway {
     private readonly authService: AuthService,
     private readonly messageService: MessageService,
     private readonly notificationService: NotificationService,
+    private readonly userService: UsersService,
     @Inject(jwtConfig.KEY)
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
   ) {}
@@ -76,6 +77,12 @@ export class AppGateway {
     return cookies['access_token'] || null;
   }
 
+  private async markUserOnline(userId: number) {
+    // Implementation to mark user as online
+    await this.userService.update(userId, { isOnline: true });
+    ;
+  }
+
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
   }
@@ -90,12 +97,12 @@ export class AppGateway {
     client.emit('message-received', { status: 'ok' });
     const message = await this.messageService.createMessage(senderId, {...payload.data});
 
-  //   // Emit to chat participants
+    // Emit to chat participants
     this.server
       .to(`user:${message.receiverId}`)
       .emit(SOCKET_EVENTS.MESSAGE_NEW, message);
 
-  //   // Emit notification
+    // Emit notification
   //   const notification =
   //     await this.notificationService.createMessageNotification(message);
 

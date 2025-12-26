@@ -15,7 +15,7 @@ export class ChatService {
   ) {}
 
   async create(createChatDto: CreateChatDto, senderId: number) {
-    console.log('creating chat...')
+    
     
     // Check if chat already exists between these users for this product
     const existingChat = await this.prisma.chat.findFirst({
@@ -152,6 +152,7 @@ export class ChatService {
   }
 
   async getConversations(query: any, userId: number) {
+    
     const limit = query.limit && query.limit < PageSize ? query.limit : PageSize;
     const page = query.page ?? 1;
     const skip = (page - 1) * limit;
@@ -223,8 +224,11 @@ export class ChatService {
         },
       },
     }),
+
+
     this.usersService.findOne(userId)]);
 
+    
     const mappedConversations = rawConversations.map((chat) => 
       this.formatChatResponse(chat, userId)
     );

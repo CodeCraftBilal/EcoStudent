@@ -8,13 +8,10 @@ import {
   Delete,
   Req,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { FindMessagesDto } from './dto/find-messages.dto';
-import { AuthGuard } from '@nestjs/passport';
 
 @Controller('chat')
 export class ChatController {
@@ -22,7 +19,7 @@ export class ChatController {
 
   @Post()
   create(@Body() createChatDto: CreateChatDto, @Req() req) {
-    console.log('createChatDto: ', createChatDto);
+    
     return this.chatService.create(createChatDto, req.user.id);
   }
 
@@ -33,7 +30,7 @@ export class ChatController {
 
   @Get('messages/:id') 
   getMessages(@Param('id') chatId: string, @Req() req, @Query() query) {
-    console.log('params: ', chatId)
+    
     return this.chatService.getMessages(req.user.id, +chatId, query)
   }
 
