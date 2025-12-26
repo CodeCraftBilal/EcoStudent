@@ -17,7 +17,7 @@ import { MessageService } from 'src/message/message.service';
 import { NotificationService } from 'src/notification/notification.service';
 @WebSocketGateway({
   cors: {
-    origin: 'http://localhost:3000',
+    origin: '*',
     credentials: true,
   },
 })
@@ -58,7 +58,8 @@ export class AppGateway {
       client.join(`user_${user.id}`);
 
       console.log(`Client connected: ${client.id} (User ID: ${user.id})`);
-    } catch {
+    } catch(err) {
+      console.log('something went wrong: ', err)
       client.disconnect();
     }
   }
@@ -86,20 +87,20 @@ export class AppGateway {
   ) {
     console.log('handleSendMessage payload', payload);
     const senderId = client.data.userId;
+    client.emit('message-received', { status: 'ok' });
+    const message = await this.messageService.createMessage(senderId, {...payload.data});
 
-    const message = await this.messageService.createMessage(senderId, payload);
-
-    // Emit to chat participants
+  //   // Emit to chat participants
     this.server
       .to(`user:${message.receiverId}`)
       .emit(SOCKET_EVENTS.MESSAGE_NEW, message);
 
-    // Emit notification
-    const notification =
-      await this.notificationService.createMessageNotification(message);
+  //   // Emit notification
+  //   const notification =
+  //     await this.notificationService.createMessageNotification(message);
 
-    this.server
-      .to(`user:${message.receiverId}`)
-      .emit(SOCKET_EVENTS.NOTIFICATION_NEW, notification);
+  //   this.server
+  //     .to(`user:${message.receiverId}`)
+  //     .emit(SOCKET_EVENTS.NOTIFICATION_NEW, notification);
   }
 }

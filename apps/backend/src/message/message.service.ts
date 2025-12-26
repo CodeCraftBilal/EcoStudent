@@ -8,6 +8,7 @@ export class MessageService {
   constructor(private prisma: PrismaService) {}
 
   async createMessage(senderId: number, dto: SendMessageDto) {
+    console.log('Creating message with DTO:', dto, ' from senderId:', senderId);
     const chat = await this.prisma.chat.findFirst({
       where: {
         chatId: dto.chatId,
