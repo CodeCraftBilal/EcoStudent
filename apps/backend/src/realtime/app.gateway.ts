@@ -83,28 +83,4 @@ export class AppGateway {
     await this.userService.update(client.data.userId, { isOnline: false });
     console.log(`Client disconnected: ${client.id}`);
   }
-
-  @SubscribeMessage(SOCKET_EVENTS.MESSAGE_SEND)
-  async handleSendMessage(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() payload: any,
-  ) {
-    console.log('handleSendMessage payload', payload);
-    const senderId = client.data.userId;
-
-    client.emit('message-received', { status: 'ok' });
-    const message = await this.messageService.createMessage(senderId, {...payload.data});
-    // Emit to chat participants
-    this.server
-      .to(`user_${message.receiverId}`)
-      .emit(SOCKET_EVENTS.MESSAGE_NEW, message);
-
-    // Emit notification
-  //   const notification =
-  //     await this.notificationService.createMessageNotification(message);
-
-  //   this.server
-  //     .to(`user:${message.receiverId}`)
-  //     .emit(SOCKET_EVENTS.NOTIFICATION_NEW, notification);
-  }
 }
