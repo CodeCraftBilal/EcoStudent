@@ -1,71 +1,44 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+// src/auth/ws-jwt.guard.ts
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Socket } from 'socket.io';
-import type { ConfigType } from '@nestjs/config';
-import { Inject } from '@nestjs/common';
-import { AuthService } from 'src/auth/auth.service';
-import jwtConfig from 'src/auth/config/jwt.config';
+import { WsException } from '@nestjs/websockets';
 
 @Injectable()
 export class WsJwtGuard implements CanActivate {
-  constructor(
-    private readonly jwtService: JwtService,
-    private readonly authService: AuthService,
-    @Inject(jwtConfig.KEY)
-    private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
-  ) {}
+  constructor(private jwtService: JwtService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    console.log('WsJwtGuard: canActivate called');
-    const client: Socket = context.switchToWs().getClient();
-
+    const client = context.switchToWs().getClient();
     const token = this.extractToken(client);
-    if (!token) throw new UnauthorizedException('Missing token');
+
+    if (!token) {
+      throw new WsException('Unauthorized');
+    }
 
     try {
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.jwtConfiguration.secret as string,
-      });
-
-      // Validate against DB (tokenVersion check)
-      const user = await this.authService.validateJWTUser(
-        payload.sub,
-        payload.tokenVersion,
-      );
-
-      // Attach useful info to socket
-      client.data.userId = user.id;
-      client.data.role = user.role;
-      client.data.tokenVersion = user.tokenVersion;
-
+      const payload = await this.jwtService.verifyAsync(token);
+      client.data.userId = payload.sub;
+      client.data.role = payload.role;
       return true;
-    } catch (err) {
-      throw new UnauthorizedException('Invalid or expired token');
+    } catch {
+      throw new WsException('Unauthorized');
     }
   }
 
-  private extractToken(client: Socket): string | null {
-    // 1. From Authorization header
-    const authHeader =
-      client.handshake.headers?.authorization as string | undefined;
-
-    if (authHeader?.startsWith('Bearer ')) {
-      return authHeader.split(' ')[1];
+  private extractToken(client: any): string | null {
+    const authHeader = client.handshake.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      return authHeader.substring(7);
     }
 
-    // 2. From cookies (access_token)
     const cookieHeader = client.handshake.headers?.cookie;
-    if (!cookieHeader) return null;
+    if (cookieHeader) {
+      const cookies = Object.fromEntries(
+        cookieHeader.split(';').map((c) => c.trim().split('=')),
+      );
+      return cookies['access_token'] || null;
+    }
 
-    const cookies = Object.fromEntries(
-      cookieHeader.split(';').map((c) => c.trim().split('=')),
-    );
-
-    return cookies['access_token'] || null;
+    return null;
   }
 }

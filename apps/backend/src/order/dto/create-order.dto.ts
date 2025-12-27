@@ -4,6 +4,9 @@ import { exchange_type } from "generated/prisma";
 export class CreateOrderDto {
 
     @IsNumber()
+    buyerId: number;
+
+    @IsNumber()
     productId: number;
 
     @Max(5000)

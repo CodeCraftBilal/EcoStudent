@@ -50,7 +50,7 @@ export default function ChatLayout({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { session } = useSession()
-  const socket = useSocket();
+  const { socket } = useSocket();
 
   const conversationIdFromUrl = searchParams.get("conversationId");
   const isNewChat = searchParams.get("newChat") === "true";
@@ -423,6 +423,7 @@ export default function ChatLayout({
         {selectedConversation && (
           <OrderSidebar
             conversationId={selectedConversationId || undefined}
+            selectedConversation={selectedConversation}
             productId={Number(selectedConversation.item?.id)}
             currentUser={{id: Number(session?.userId), role: session?.role}}
             isOwner={Number(currentUser.id) === Number(selectedConversation.item?.sellerId)} // Adjust based on your logic

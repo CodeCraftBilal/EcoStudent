@@ -61,7 +61,7 @@ export default function OrderPriceSection({
         </div>
       ) : (
         <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-gray-900">${agreedPrice.toFixed(2)}</span>
+          <span className="text-3xl font-bold text-gray-900">${agreedPrice ? agreedPrice.toFixed(2) : "0.00"}</span>
           {originalPrice && (
             <span className="text-sm text-gray-500 line-through">
               Original: ${originalPrice.toFixed(2)}

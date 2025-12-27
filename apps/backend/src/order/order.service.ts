@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -6,6 +6,7 @@ import { ProductService } from 'src/product/product.service';
 import { UpdateReviewDto } from 'src/review/dto/update-review.dto';
 import { ReviewService } from 'src/review/review.service';
 import { CreateReviewDto } from 'src/review/dto/create-review.dto';
+import { OrderGateway } from './order.gateway';
 
 const PAGE_LIMIT = 12;
 
@@ -15,11 +16,14 @@ export class OrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly productService: ProductService,
-    private readonly reviewService: ReviewService
+    private readonly reviewService: ReviewService,
+    @Inject(forwardRef(() => OrderGateway))
+    private readonly orderGateway: OrderGateway,
   ) {}
 
   async create(createOrderDto: CreateOrderDto, sellerId: number) {
     try {
+
       // Find the product
       const product = await this.prisma.product.findUnique({
         where: {
@@ -27,6 +31,17 @@ export class OrderService {
         },
         include: {
           users: true, // Include seller info
+        },
+      });
+
+      
+      const chat = await this.prisma.chat.findFirst({
+        where: {
+          productId: createOrderDto.productId,
+          OR: [
+            { senderId: createOrderDto.buyerId, receiverId: product?.userId },
+            { senderId: product?.userId, receiverId: createOrderDto.buyerId },
+          ],
         },
       });
 
@@ -49,7 +64,7 @@ export class OrderService {
       const order = await this.prisma.exchanges.create({
         data: {
           productId: createOrderDto.productId,
-          buyerId: 65,
+          buyerId: createOrderDto.buyerId,
           exchangeType: product.exchangeType,
           agreedPrice: createOrderDto.agreedPrice,
           meetupLocation: createOrderDto.meetupLocation,
@@ -74,10 +89,11 @@ export class OrderService {
           },
         },
       });
+
       console.log("Order created:", order);
 
       // Format the response
-      return {
+      const formattedOrder = {
         id: order.exchangeId,
         productId: order.productId,
         buyerId: order.buyerId,
@@ -109,6 +125,11 @@ export class OrderService {
           profilePicture: order.product.users ? order.product.users.profilePicture : null,
         },
       };
+
+      if(chat)
+        await this.orderGateway.emitOrderCreated(formattedOrder, chat?.chatId);
+      
+      return formattedOrder;
     } catch (error) {
       console.log("Error creating order:", error);
       if (error instanceof NotFoundException || error instanceof ForbiddenException) {

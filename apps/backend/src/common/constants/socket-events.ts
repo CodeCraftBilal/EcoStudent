@@ -11,4 +11,18 @@ export const SOCKET_EVENTS = {
 
   TYPING_START: 'typing:start',
   TYPING_STOP: 'typing:stop',
+
+  ORDER: {
+    // Client events
+    JOIN_CONVERSATION: 'order:join_conversation',
+    LEAVE_CONVERSATION: 'order:leave_conversation',
+    
+    // Server events
+    CREATED: 'order:created',
+    UPDATED: 'order:updated',
+    STATUS_CHANGED: 'order:status_changed',
+    CANCELLED: 'order:cancelled',
+    ACCEPTED: 'order:accepted',
+    COMPLETED: 'order:completed',
+  },
 };

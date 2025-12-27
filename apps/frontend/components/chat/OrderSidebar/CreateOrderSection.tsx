@@ -5,16 +5,67 @@ import { DollarSign, MapPin, Calendar } from "lucide-react";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 
-const LocationMap = dynamic(() => import("@/components/dashboard/purchase/LocationMap"), {
-  ssr: false,
-});
+const LocationMap = dynamic(
+  () => import("@/components/dashboard/purchase/LocationMap"),
+  { ssr: false }
+);
 
 interface CreateOrderSectionProps {
   onCreateOrder: (orderData: any) => Promise<void>;
   isOwner: boolean;
 }
 
-export default function CreateOrderSection({ onCreateOrder, isOwner }: CreateOrderSectionProps) {
+type FieldErrors = {
+  agreedPrice?: string;
+  meetupLocation?: string;
+  meetupTime?: string;
+};
+
+/* ==================== CUSTOM FORM HOOK ==================== */
+function useFormValidation() {
+  const [errors, setErrors] = useState<FieldErrors>({});
+
+  const validate = (values: {
+    agreedPrice: number;
+    meetupLocation: string;
+    meetupTime: string;
+  }): boolean => {
+    const newErrors: FieldErrors = {};
+
+    if (!values.agreedPrice || values.agreedPrice <= 0) {
+      newErrors.agreedPrice = "Agreed price must be greater than 0";
+    }
+
+    if (!values.meetupLocation.trim()) {
+      newErrors.meetupLocation = "Meetup location is required";
+    } else if (values.meetupLocation.trim().length < 5) {
+      newErrors.meetupLocation =
+        "Meetup location must be at least 5 characters long";
+    } else if (values.meetupLocation.trim().length > 90) {
+      newErrors.meetupLocation =
+        "Meetup location must be at smaller than 90 characters";
+    }
+
+    if (values.meetupTime && new Date(values.meetupTime) < new Date()) {
+      newErrors.meetupTime = "Meetup time cannot be in the past";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const clearError = (field: keyof FieldErrors) => {
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
+  return { errors, validate, clearError };
+}
+
+/* ==================== COMPONENT ==================== */
+export default function CreateOrderSection({
+  onCreateOrder,
+  isOwner,
+}: CreateOrderSectionProps) {
   const [agreedPrice, setAgreedPrice] = useState<number>(0);
   const [meetupLocation, setMeetupLocation] = useState("");
   const [meetupTime, setMeetupTime] = useState("");
@@ -22,11 +73,17 @@ export default function CreateOrderSection({ onCreateOrder, isOwner }: CreateOrd
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { errors, validate, clearError } = useFormValidation();
+
+  /* -------------------- SUBMIT -------------------- */
   const handleSubmit = async () => {
-    if (!agreedPrice || !meetupLocation) {
-      alert("Please fill in all required fields");
-      return;
-    }
+    const isValid = validate({
+      agreedPrice,
+      meetupLocation,
+      meetupTime,
+    });
+
+    if (!isValid) return;
 
     try {
       setIsSubmitting(true);
@@ -35,7 +92,9 @@ export default function CreateOrderSection({ onCreateOrder, isOwner }: CreateOrd
         meetupLocation,
         meetupLatitude: tempCoordinates.lat || 0,
         meetupLongitude: tempCoordinates.lng || 0,
-        meetupTime: meetupTime || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        meetupTime:
+          meetupTime ||
+          new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       });
     } catch (error) {
       console.error("Failed to create order:", error);
@@ -47,12 +106,15 @@ export default function CreateOrderSection({ onCreateOrder, isOwner }: CreateOrd
   const handleLocationSelect = (lat: number, lng: number, address: string) => {
     setTempCoordinates({ lat, lng });
     setMeetupLocation(address);
+    clearError("meetupLocation");
   };
 
   if (!isOwner) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-5 border border-eco-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Details</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Order Details
+        </h3>
         <p className="text-gray-600 text-center py-8">
           The seller will create an order for this product.
         </p>
@@ -64,82 +126,101 @@ export default function CreateOrderSection({ onCreateOrder, isOwner }: CreateOrd
     <>
       <div className="space-y-6">
         <div className="bg-white rounded-xl shadow-sm p-5 border border-eco-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Order</h3>
-          <p className="text-gray-600 mb-6">Set the terms for this exchange. Only you (the owner) can edit these details.</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Create New Order
+          </h3>
 
-          {/* Price Input */}
+          {/* ---------------- PRICE ---------------- */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
-                Agreed Price *
-              </div>
+              {/* <DollarSign className="inline w-4 h-4 mr-1" /> */}
+              <h1 className="inline font-extrabold w-4 h-4 mr-1"> RS</h1>
+              Agreed Price *
             </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
-              <input
-                type="number"
-                value={agreedPrice || ""}
-                onChange={(e) => setAgreedPrice(parseFloat(e.target.value) || 0)}
-                className="w-full pl-8 pr-4 py-3 border border-eco-200 rounded-lg focus:ring-2 focus:ring-eco-500 focus:border-eco-500 bg-white"
-                placeholder="Enter agreed price"
-                min="0"
-                max="5000"
-                step="0.01"
-                required
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Maximum: $5000</p>
+
+            <input
+              type="number"
+              value={agreedPrice || ""}
+              onChange={(e) => {
+                setAgreedPrice(Number(e.target.value) || 0);
+                clearError("agreedPrice");
+              }}
+              className={`w-full px-4 py-3 border rounded-lg ${
+                errors.agreedPrice
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-eco-200 focus:ring-eco-500"
+              }`}
+            />
+
+            {errors.agreedPrice && (
+              <p className="text-sm text-red-500 mt-1">{errors.agreedPrice}</p>
+            )}
           </div>
 
-          {/* Location Input */}
+          {/* ---------------- LOCATION ---------------- */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                Meetup Location *
-              </div>
+              <MapPin className="inline w-4 h-4 mr-1" />
+              Meetup Location *
             </label>
+
             <div className="flex gap-2">
               <input
                 type="text"
                 value={meetupLocation}
-                onChange={(e) => setMeetupLocation(e.target.value)}
-                className="flex-1 px-4 py-3 border border-eco-200 rounded-lg focus:ring-2 focus:ring-eco-500 focus:border-eco-500 bg-white"
-                placeholder="Enter meetup address"
-                required
+                onChange={(e) => {
+                  setMeetupLocation(e.target.value);
+                  clearError("meetupLocation");
+                }}
+                className={`flex-1 px-4 py-3 border rounded-lg ${
+                  errors.meetupLocation
+                    ? "border-red-500 focus:ring-red-500"
+                    : "border-eco-200 focus:ring-eco-500"
+                }`}
               />
+
               <button
                 type="button"
                 onClick={() => setIsMapOpen(true)}
-                className="px-4 py-3 bg-eco-50 text-eco-600 border border-eco-200 rounded-lg hover:bg-eco-100 transition-colors"
+                className="px-4 py-3 bg-eco-50 border rounded-lg"
               >
                 <MapPin className="w-5 h-5" />
               </button>
             </div>
+
+            {errors.meetupLocation && (
+              <p className="text-sm text-red-500 mt-1">
+                {errors.meetupLocation}
+              </p>
+            )}
           </div>
 
-          {/* Time Input */}
+          {/* ---------------- TIME ---------------- */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Meetup Time
-              </div>
+              <Calendar className="inline w-4 h-4 mr-1" />
+              Meetup Time
             </label>
+
             <input
               type="datetime-local"
               value={meetupTime}
-              onChange={(e) => setMeetupTime(e.target.value)}
-              className="w-full px-4 py-3 border border-eco-200 rounded-lg focus:ring-2 focus:ring-eco-500 focus:border-eco-500 bg-white"
-              min={new Date().toISOString().slice(0, 16)}
+              onChange={(e) => {
+                setMeetupTime(e.target.value);
+                clearError("meetupTime");
+              }}
+              className="w-full px-4 py-3 border border-eco-200 rounded-lg"
             />
+
+            {errors.meetupTime && (
+              <p className="text-sm text-red-500 mt-1">{errors.meetupTime}</p>
+            )}
           </div>
 
           <button
             onClick={handleSubmit}
-            disabled={!agreedPrice || !meetupLocation || isSubmitting}
-            className="w-full px-4 py-3 bg-gradient-to-r from-eco-500 to-eco-blue-500 text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitting}
+            className="w-full px-4 py-3 bg-eco-500 text-white rounded-lg disabled:opacity-50"
           >
             {isSubmitting ? "Creating Order..." : "Create Order"}
           </button>
@@ -154,7 +235,7 @@ export default function CreateOrderSection({ onCreateOrder, isOwner }: CreateOrd
         longitude={tempCoordinates.lng}
         locationName={meetupLocation || "Select Location"}
         address={meetupLocation}
-        selectable={true}
+        selectable
       />
     </>
   );

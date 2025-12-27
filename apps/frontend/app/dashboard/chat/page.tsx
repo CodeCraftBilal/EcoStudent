@@ -6,7 +6,6 @@ import { BACKEND_URL } from "@/lib/types/constants";
 import { Conversation, User } from "@/lib/types/messages/types";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { mockConversations } from "@/data/dashboard/messages";
 
 type ApiResponse = {
   conversations: Conversation[];
@@ -16,7 +15,6 @@ type ApiResponse = {
 const PAGE_SIZE = 30;
 
 export default function ChatPage() {
-  const [conversations, setConversations] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
