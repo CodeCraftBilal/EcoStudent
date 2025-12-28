@@ -11,6 +11,7 @@ import {
   Plus,
   ShoppingBasket,
   Info,
+  MessageCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -211,7 +212,7 @@ export default function DashboardNavbar() {
             />
 
             {/* Notifications */}
-            <div className="relative">
+            <div className="relative flex gap-2">
               <button
                 onClick={() =>
                   setIsNotificationDropdownOpen(!isNotificationDropdownOpen)
@@ -234,6 +235,17 @@ export default function DashboardNavbar() {
                 onMarkAsRead={handleMarkAsRead}
                 onMarkAllAsRead={handleMarkAllAsRead}
               />
+
+              <button
+                className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-xl transition-colors"
+              >
+                <MessageCircle className="w-5 h-5" />
+                {notifications.filter((n) => !n.read).length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {notifications.filter((n) => !n.read).length}
+                  </span>
+                )}
+              </button>
             </div>
 
             {/* Profile Dropdown */}
