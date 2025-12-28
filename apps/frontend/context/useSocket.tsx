@@ -4,7 +4,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { BACKEND_URL } from '@/lib/types/constants';
-import { useSearchParams } from 'next/navigation';
 import { useSession } from './useSession';
 
 interface SocketContextType {
@@ -95,6 +94,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       setOrderSocket(null);
       setIsOrderConnected(false);
     }
+    console.log('Order socket disconnected manually');
   };
 
   return (
