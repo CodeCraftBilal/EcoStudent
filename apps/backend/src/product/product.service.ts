@@ -4,9 +4,11 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FindByUIDParams } from './types/types';
 import { Prisma } from '@prisma/client';
+import { PRODUCT_STATUS } from 'generated/prisma';
 
 @Injectable()
 export class ProductService {
+  
   constructor(private readonly prisma: PrismaService) {}
   async create(createProductDto: CreateProductDto, userId: number) {
     try {
@@ -485,4 +487,12 @@ export class ProductService {
       };
     }
   }
+
+  updateProductStatus(productId: number, status: string) {
+    this.prisma.product.update({
+      where: { productId: productId },
+      data: {status: status as PRODUCT_STATUS},
+    })
+  }
+  
 }
