@@ -21,8 +21,8 @@ export default function OrderActions({
   onAccept,
   onCancel
 }: OrderActionsProps) {
-  const socketRef = useSocket();
-  const isOrderSocketConnected = socketRef?.connected;
+  const {orderSocket} = useSocket();
+  const isOrderSocketConnected = orderSocket?.connected;
 
   // Buyer actions for pending orders
   if (isBuyer && order.status === 'pending') {

@@ -59,8 +59,6 @@ export default function OrderSidebar({
 
   // Join/Leave conversation room for real-time updates
   useEffect(() => {
-
-    
     if (!orderSocket || !conversationId) return;
     // Join conversation room
     orderSocket.emit(SOCKET_EVENTS.ORDER.JOIN_CONVERSATION, { 
@@ -390,12 +388,12 @@ export default function OrderSidebar({
               <div className="flex items-center justify-between text-sm text-gray-600">
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${
-                    orderSocket?.connected 
+                    isConnected 
                       ? 'bg-green-500 animate-pulse' 
                       : 'bg-gray-400'
                   }`} />
                   <span>
-                    {orderSocket?.connected ? 'Live updates enabled' : 'Connecting...'}
+                    {isConnected ? 'Live updates enabled' : 'Connecting...'}
                   </span>
                 </div>
                 <span className="text-xs text-gray-500">
