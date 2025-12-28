@@ -14,6 +14,11 @@ import { SOCKET_EVENTS } from "@/lib/socket-events";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { authFetch } from "@/lib/authFetch";
 
+
+type NotiApiResponse = {
+  notifications: Notification[];
+  unreadCount: number;
+}
 interface NotificationContextType {
   notifications: Notification[];
   messageNotifications: Notification[];
@@ -50,8 +55,13 @@ export const NotificationProvider = ({
   const { socket } = useSocket();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [messageNotifications, setMessageNotifications] = useState<Notification[]>([]);
+  const [messageNotifications, setMessageNotifications] = useState<
+    Notification[]
+  >([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0)
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
+  console.log("Notifications Context Rendered");
   /* ===============================
      FETCH INITIAL DATA (REST)
   ================================*/
@@ -61,22 +71,26 @@ export const NotificationProvider = ({
     const fetchNotifications = async () => {
       try {
         const [notifRes, msgRes] = await Promise.all([
-          authFetch(`${BACKEND_URL}/notification`, {
+          authFetch(`${BACKEND_URL}/notification/user/${session.userId}`, {
             credentials: "include",
           }),
-          authFetch(`${BACKEND_URL}/messages/notifications`, {
+          authFetch(`${BACKEND_URL}/notification/user/${session.userId}/message`, {
             credentials: "include",
           }),
         ]);
 
         if (notifRes.ok) {
-          const notifData: Notification[] = await notifRes.json();
-          setNotifications(notifData);
+          const notifData: NotiApiResponse = await notifRes.json();
+          console.log("Fetched Notifications:", notifData);
+          setNotifications(notifData.notifications);
+          setUnreadNotificationCount(notifData.unreadCount);
         }
 
         if (msgRes.ok) {
-          const msgData: Notification[] = await msgRes.json();
-          setMessageNotifications(msgData);
+          const msgData: NotiApiResponse = await msgRes.json();
+          console.log("Fetched Message Notifications:", msgData);
+          setMessageNotifications(msgData.notifications);
+          setUnreadMessageCount(msgData.unreadCount);
         }
       } catch (err) {
         console.error("Failed to fetch notifications:", err);
@@ -93,7 +107,7 @@ export const NotificationProvider = ({
     if (!socket || !session || isLoading) return;
 
     const handleNewNotification = (notification: Notification) => {
-      setNotifications(prev => [notification, ...prev]);
+      setNotifications((prev) => [notification, ...prev]);
     };
 
     socket.on(
@@ -113,35 +127,53 @@ export const NotificationProvider = ({
      ADDERS (MANUAL / FUTURE USE)
   ================================*/
   const addNotification = useCallback((notification: Notification) => {
-    setNotifications(prev => [notification, ...prev]);
+    setNotifications((prev) => [notification, ...prev]);
   }, []);
 
   const addMessageNotification = useCallback((notification: Notification) => {
-    setMessageNotifications(prev => [notification, ...prev]);
+    setMessageNotifications((prev) => [notification, ...prev]);
   }, []);
 
   /* ===============================
      MARK READ
   ================================*/
-  const markAsRead = (
+  const markAsRead = async (
     id: string,
     type: "notification" | "message" = "notification"
   ) => {
-    const updater = (items: Notification[]) =>
-      items.map(n => (n.id === id ? { ...n, read: true } : n));
+    if (!session) return;
+    try {
+      console.log("Marking as read:", id, type);
+      const res = await authFetch(
+        `${BACKEND_URL}/notification/${id}/markasread`,
+        {
+          method: "PATCH",
+          credentials: "include",
+        }
+      );
 
-    if (type === "message") {
-      setMessageNotifications(updater);
-    } else {
-      setNotifications(updater);
+      const updater = (items: Notification[]) =>
+        items.map((n) => (n.id === id ? { ...n, read: true } : n));
+
+      if (type === "message") {
+        setMessageNotifications(updater);
+      } else {
+        setNotifications(updater);
+      }
+    } catch (err) {
+      console.error("Failed to mark notification as read:", err);
+      return;
     }
   };
 
-  const markAllAsRead = (
-    type: "notification" | "message" = "notification"
-  ) => {
+  const markAllAsRead = async (type: "notification" | "message" = "notification") => {
+
+     const res = await authFetch(`${BACKEND_URL}/notification/markallasread`, {
+      method: 'PATCH',
+      credentials: 'include'
+     })
     const updater = (items: Notification[]) =>
-      items.map(n => ({ ...n, read: true }));
+      items.map((n) => ({ ...n, read: true }));
 
     if (type === "message") {
       setMessageNotifications(updater);
@@ -153,8 +185,8 @@ export const NotificationProvider = ({
   /* ===============================
      COUNTS
   ================================*/
-  const unreadNotificationCount = notifications.filter(n => !n.read).length;
-  const unreadMessageCount = messageNotifications.filter(n => !n.read).length;
+  // const unreadNotificationCount = notifications.filter((n) => !n.read).length;
+  // const unreadMessageCount = messageNotifications.filter((n) => !n.read).length;
 
   return (
     <NotificationContext.Provider

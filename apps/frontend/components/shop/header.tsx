@@ -6,9 +6,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { useSession } from "@/context/useSession";
 import NotificationDropdown from "../dashboard/Notification";
-import { notificationsData } from "../dashboard/DashboardNavbar";
 import Image from "next/image";
 import ProfileDropDown from "../dashboard/ProfileDropDown";
+import { useNotification } from "@/context/useNotification";
 
 interface HeaderProps extends FiltersProps {
   searchQuery: string;
@@ -39,24 +39,20 @@ export function ShopNavBar({
 
   const { session, isLoading } = useSession();
 
+  const {
+    notifications,
+    messageNotifications,
+    unreadNotificationCount,
+    unreadMessageCount,
+    markAsRead,
+    markAllAsRead,
+  } = useNotification();
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [unreadNotifications, setUnreadNotifications] = useState(4);
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
     useState(false);
   const [isMessagesDropDownOpen, setIsMessagesDropDownOpen] = useState(false);
-  const [notifications, setNotifications] = useState(notificationsData);
-  const [messages, setMessages] = useState(notificationsData);
-  const handleMarkAsRead = (notificationId: string) => {
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === notificationId ? { ...notif, read: true } : notif
-      )
-    );
-  };
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
-  };
 
   const closeAllMenus = () => {
     setIsMobileMenuOpen(false);
@@ -106,8 +102,6 @@ export function ShopNavBar({
             <div
               className={`${session && session.userName ? "flex" : "hidden"} gap-4 items-center justify-center`}
             >
-              {/* <Bell className={`w-3 h-3 sm:w-5 sm:h-5 hover:text-green-500 text-gray-600`}/> */}
-
               <div className="relative">
                 <button
                   onClick={() =>
@@ -116,9 +110,9 @@ export function ShopNavBar({
                   className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-xl transition-colors"
                 >
                   <Bell className="w-5 h-5" />
-                  {notifications.filter((n) => !n.read).length > 0 && (
+                  {unreadNotificationCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {notifications.filter((n) => !n.read).length}
+                      {unreadNotificationCount}
                     </span>
                   )}
                 </button>
@@ -128,8 +122,9 @@ export function ShopNavBar({
                   isOpen={isNotificationDropdownOpen}
                   onClose={() => setIsNotificationDropdownOpen(false)}
                   notifications={notifications}
-                  onMarkAsRead={handleMarkAsRead}
-                  onMarkAllAsRead={handleMarkAllAsRead}
+                  onMarkAsRead={markAsRead}
+                  onMarkAllAsRead={markAllAsRead}
+                  notificationCount={unreadNotificationCount}
                 />
               </div>
 
@@ -141,9 +136,9 @@ export function ShopNavBar({
                   className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-xl transition-colors"
                 >
                   <MessageCircle className="w-5 h-5" />
-                  {notifications.filter((n) => !n.read).length > 0 && (
+                  {unreadMessageCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {notifications.filter((n) => !n.read).length}
+                      {unreadMessageCount}
                     </span>
                   )}
                 </button>
@@ -152,16 +147,12 @@ export function ShopNavBar({
                   notificationType="Messages"
                   isOpen={isMessagesDropDownOpen}
                   onClose={() => setIsMessagesDropDownOpen(false)}
-                  notifications={messages}
-                  onMarkAsRead={handleMarkAsRead}
-                  onMarkAllAsRead={handleMarkAllAsRead}
+                  notifications={messageNotifications}
+                  onMarkAsRead={markAsRead}
+                  onMarkAllAsRead={markAllAsRead}
+                  notificationCount={unreadMessageCount}
                 />
               </div>
-              {/* <button className="relative p-2 text-gray-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors">
-                <Heart className="w-5 h-5" />
-              </button> */}
-              {/* <MessageCircle className={`w-3 h-3 sm:w-5 sm:h-5 hover:text-green-500 text-gray-600`} />
-              <Heart className={`w-3 h-3 sm:w-5 sm:h-5 hover:text-green-500 text-gray-600`} /> */}
             </div>
 
             {/* show when user is not logged in */}

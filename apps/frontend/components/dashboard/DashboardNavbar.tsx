@@ -22,55 +22,32 @@ import { getUserLocation } from "@/lib/location";
 import Image from "next/image";
 import ProfileDropDown from "./ProfileDropDown";
 import { InfoDialog } from "../ui/dialogBoxes/Pre-configuredDialog";
-
-// mock notifications
-export const notificationsData = [
-  {
-    id: "1",
-    type: "message" as const,
-    title: "New Message",
-    message: "Ali sent you a message about the Calculus book",
-    time: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
-    read: false,
-    link: "/chat",
-  },
-  {
-    id: "2",
-    type: "sale" as const,
-    title: "Item Sold",
-    message: "Your Scientific Calculator has been sold",
-    time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    read: false,
-    link: "/dashboard/listings",
-  },
-  {
-    id: "3",
-    type: "review" as const,
-    title: "New Review",
-    message: "Sara gave you 5 stars for the uniform",
-    time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    read: true,
-    link: "/dashboard/reviews",
-  },
-];
+import { useNotification } from "@/context/useNotification";
 
 export default function DashboardNavbar() {
   // fetching session
-  const { session, isLoading ,refreshSession } = useSession();
+  const { session, isLoading, refreshSession } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
     useState(false);
+  const [isMessagesDropDownOpen, setIsMessagesDropDownOpen] = useState(false);
+
   const pathname = usePathname();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    getUserLocation();
-  }, []);
+  const {
+    notifications,
+    messageNotifications,
+    markAllAsRead,
+    markAsRead,
+    unreadMessageCount,
+    unreadNotificationCount,
+  } = useNotification();
 
   useEffect(() => {
-    // refreshSession();
+    getUserLocation();
   }, []);
 
   const dashboardLinks = [
@@ -112,35 +89,27 @@ export default function DashboardNavbar() {
     setIsProfileDropdownOpen(false);
   };
 
-  //
-  const [notifications, setNotifications] = useState(notificationsData);
-
-  // Notification handlers
-  const handleMarkAsRead = (notificationId: string) => {
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === notificationId ? { ...notif, read: true } : notif
-      )
-    );
-  };
-
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
-  };
-  
   // session expiry dialog
   const handleClose = () => {
-    router.push(`/auth/signin?from=${pathname}`)
-  }
+    router.push(`/auth/signin?from=${pathname}`);
+  };
 
-  if(!isLoading && !session) {
-    return <InfoDialog description="Your Session is Expired. Signin again." title="Session" isOpen={true} onClose={handleClose} buttons={[
-      {
-        text: 'Signin',
-        onClick: handleClose,
-        variant: 'outline'
-      }
-    ]} />
+  if (!isLoading && !session) {
+    return (
+      <InfoDialog
+        description="Your Session is Expired. Signin again."
+        title="Session"
+        isOpen={true}
+        onClose={handleClose}
+        buttons={[
+          {
+            text: "Signin",
+            onClick: handleClose,
+            variant: "outline",
+          },
+        ]}
+      />
+    );
   }
 
   return (
@@ -185,7 +154,7 @@ export default function DashboardNavbar() {
           </div>
 
           {/* Right Section - Search, Actions, Profile */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             {/*Quick Action Button */}
             <button
               onClick={() => {
@@ -212,47 +181,67 @@ export default function DashboardNavbar() {
             />
 
             {/* Notifications */}
-            <div className="relative flex gap-2">
-              <button
-                onClick={() =>
-                  setIsNotificationDropdownOpen(!isNotificationDropdownOpen)
-                }
-                className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-xl transition-colors"
-              >
-                <Bell className="w-5 h-5" />
-                {notifications.filter((n) => !n.read).length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {notifications.filter((n) => !n.read).length}
-                  </span>
-                )}
-              </button>
+            <div
+              className={`${session && session.userName ? "flex" : "hidden"} gap-2 items-center justify-center`}
+            >
+              <div className="relative">
+                <button
+                  onClick={() =>
+                    setIsNotificationDropdownOpen(!isNotificationDropdownOpen)
+                  }
+                  className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-xl transition-colors"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadNotificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {unreadNotificationCount}
+                    </span>
+                  )}
+                </button>
 
-              <NotificationDropdown
-                notificationType="Notifications"
-                isOpen={isNotificationDropdownOpen}
-                onClose={() => setIsNotificationDropdownOpen(false)}
-                notifications={notifications}
-                onMarkAsRead={handleMarkAsRead}
-                onMarkAllAsRead={handleMarkAllAsRead}
-              />
+                <NotificationDropdown
+                  notificationType="Notifications"
+                  isOpen={isNotificationDropdownOpen}
+                  onClose={() => setIsNotificationDropdownOpen(false)}
+                  notifications={notifications}
+                  onMarkAsRead={markAsRead}
+                  onMarkAllAsRead={markAllAsRead}
+                  notificationCount={unreadNotificationCount}
+                />
+              </div>
 
-              <button
-                className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-xl transition-colors"
-              >
-                <MessageCircle className="w-5 h-5" />
-                {notifications.filter((n) => !n.read).length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {notifications.filter((n) => !n.read).length}
-                  </span>
-                )}
-              </button>
+              <div className="relative max-md:hidden">
+                <button
+                  onClick={() =>
+                    setIsMessagesDropDownOpen(!isMessagesDropDownOpen)
+                  }
+                  className="relative p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-xl transition-colors"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  {unreadMessageCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {unreadMessageCount}
+                    </span>
+                  )}
+                </button>
+
+                <NotificationDropdown
+                  notificationType="Messages"
+                  isOpen={isMessagesDropDownOpen}
+                  onClose={() => setIsMessagesDropDownOpen(false)}
+                  notifications={messageNotifications}
+                  onMarkAsRead={markAsRead}
+                  onMarkAllAsRead={markAllAsRead}
+                  notificationCount={unreadMessageCount}
+                />
+              </div>
             </div>
 
             {/* Profile Dropdown */}
             <div className="relative">
               <button
                 onClick={toggleProfileDropdown}
-                className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-colors"
+                className="flex items-center space-x-2 p-2 pr-0 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm relative">
                   {session?.profile ? (

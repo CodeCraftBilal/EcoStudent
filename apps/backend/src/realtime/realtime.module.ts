@@ -9,6 +9,7 @@ import refreshConfig from 'src/auth/config/refresh.config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MessageService } from 'src/message/message.service';
 import { NotificationService } from 'src/notification/notification.service';
+import { NotificationGateway } from 'src/notification/notification.gateway';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { NotificationService } from 'src/notification/notification.service';
     PrismaService,
     MessageService,
     NotificationService,
+    NotificationGateway,
   ],
 })
 export class RealtimeModule {}

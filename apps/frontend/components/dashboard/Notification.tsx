@@ -3,16 +3,17 @@
 import { useState, useRef, useEffect, JSX } from "react";
 import { Bell, MessageCircle, ShoppingBag, Star, Package, Check, Settings } from "lucide-react";
 import Link from "next/link";
+import { Notification } from "@/lib/types/types";
 
-interface Notification {
-  id: string;
-  type: 'message' | 'sale' | 'review' | 'system' | 'warning';
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  link?: string;
-}
+// interface Notification {
+//   id: string;
+//   type: 'message' | 'sale' | 'review' | 'system' | 'warning';
+//   title: string;
+//   message: string;
+//   time: string;
+//   read: boolean;
+//   link?: string;
+// }
 
 interface NotificationDropdownProps {
   notificationType: 'Messages' | 'Notifications';
@@ -21,6 +22,7 @@ interface NotificationDropdownProps {
   notifications: Notification[];
   onMarkAsRead: (notificationId: string) => void;
   onMarkAllAsRead: () => void;
+  notificationCount: number;
 }
 
 export default function NotificationDropdown({
@@ -29,7 +31,8 @@ export default function NotificationDropdown({
   onClose,
   notifications,
   onMarkAsRead,
-  onMarkAllAsRead
+  onMarkAllAsRead,
+  notificationCount
 }: NotificationDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -88,7 +91,7 @@ export default function NotificationDropdown({
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <h3 className="font-semibold text-gray-900">{notificationType}</h3>
         <div className="flex items-center space-x-2">
-          {unreadCount > 0 && (
+          {notificationCount > 0 && (
             <button
               onClick={onMarkAllAsRead}
               className="text-xs text-eco-600 hover:text-eco-700 font-medium"

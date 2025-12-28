@@ -5,11 +5,9 @@ import WelcomeHeader from "./WelcomeHeader";
 import QuickStats from "./QuickStats";
 import QuickActions from "./QuickActions";
 import RecentActivity from "./RecentActivity";
-import MyListings from "./MyListings";
 import UploadItemModal from "./UploadItemModal";
 import { DashboardStats, Listing, Activity, UploadItemData } from "@/lib/types/dashboard/types";
-import { BACKEND_URL } from "@/lib/types/constants";
-import { authFetch } from "@/lib/authFetch";
+import { useNotification } from "@/context/useNotification";
 
 interface DashboardLayoutProps {
   userName: string;
@@ -21,13 +19,14 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({
   userName,
   stats,
-  listings,
   activities
 }: DashboardLayoutProps) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const {notifications} = useNotification();
+
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-eco-50 to-eco-blue-50 p-4">
+    <div className="h-screen bg-gradient-to-br from-eco-50 to-eco-blue-50 p-4">
       <div className="max-w-7xl mx-auto">
         <WelcomeHeader 
           userName={userName} 
@@ -43,14 +42,14 @@ export default function DashboardLayout({
           </div>
           
           {/* Right Column - Recent Activity */}
-          <div className="lg:col-span-1">
-            <RecentActivity activities={activities} />
+          <div className="lg:col-span-1 h-[calc(100vh-120px)]">
+            <RecentActivity activities={notifications} />
           </div>
         </div>
 
         {/* My Listings */}
         <div className="mt-6">
-          <MyListings listings={listings} />
+          {/* <MyListings listings={listings} /> */}
         </div>
 
         {/* Upload Modal */}

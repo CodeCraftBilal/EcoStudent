@@ -6,7 +6,7 @@ import { Order } from "@/lib/types/dashboard/order/type";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { useSocket } from "@/context/useSocket";
-import { SOCKET_EVENTS } from "@/lib/types/socket-events";
+import { SOCKET_EVENTS } from "@/lib/socket-events";
 import LoadingSpinner from "../../Loading/LoadingSpinner";
 import OrderHeader from "./OrderHeader";
 import OrderStatusSection from "./OrderStatusSection";

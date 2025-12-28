@@ -17,9 +17,14 @@ export const SOCKET_EVENTS = {
     RECEIVE: 'message:receive',
     TYPING: 'message:typing',
     READ: 'message:read',
+  },
+
+  NOTIFICATION: {
+    NOTIFICATION_NEW: 'notification:new',
   }
 } as const;
 
 export type SocketEvent = typeof SOCKET_EVENTS;
 export type OrderEvent = typeof SOCKET_EVENTS.ORDER;
 export type MessageEvent = typeof SOCKET_EVENTS.MESSAGE;
+export type NotificationEvent = typeof SOCKET_EVENTS.NOTIFICATION;

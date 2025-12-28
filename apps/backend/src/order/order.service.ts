@@ -14,7 +14,8 @@ import { UpdateReviewDto } from 'src/review/dto/update-review.dto';
 import { ReviewService } from 'src/review/review.service';
 import { CreateReviewDto } from 'src/review/dto/create-review.dto';
 import { OrderGateway } from './order.gateway';
-import { exchange_status } from 'generated/prisma';
+import { exchange_status, NOTIFICATION_TYPE } from 'generated/prisma';
+import { NotificationService } from 'src/notification/notification.service';
 
 const PAGE_LIMIT = 12;
 
@@ -26,6 +27,7 @@ export class OrderService {
     private readonly reviewService: ReviewService,
     @Inject(forwardRef(() => OrderGateway))
     private readonly orderGateway: OrderGateway,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto, sellerId: number) {
@@ -56,7 +58,9 @@ export class OrderService {
 
       // Check if buyer is not the seller
       if (product.userId === createOrderDto.buyerId) {
-        throw new ForbiddenException('You cannot create an order for your own product');
+        throw new ForbiddenException(
+          'You cannot create an order for your own product',
+        );
       }
 
       // Update product status to reserved
@@ -93,6 +97,24 @@ export class OrderService {
             },
           },
         },
+      });
+
+      this.notificationService.createMessageNotification({
+        userId: sellerId,
+        type: 'order',
+        title: 'New Order Created',
+        message: `A new order has been created for your product: ${product.title}`,
+        relatedEntityType: 'order',
+        relatedEntityId: order.exchangeId,
+      });
+      
+      this.notificationService.createMessageNotification({
+        userId: createOrderDto.buyerId,
+        type: 'order',
+        title: 'New Order Created',
+        message: `A new order has been created for product: ${product.title}`,
+        relatedEntityType: 'order',
+        relatedEntityId: order.exchangeId,
       });
 
       console.log('Order created:', order);
@@ -144,8 +166,14 @@ export class OrderService {
         where: {
           productId: existingOrder.productId,
           OR: [
-            { senderId: existingOrder.buyerId, receiverId: existingOrder.product.userId },
-            { senderId: existingOrder.product.userId, receiverId: existingOrder.buyerId },
+            {
+              senderId: existingOrder.buyerId,
+              receiverId: existingOrder.product.userId,
+            },
+            {
+              senderId: existingOrder.product.userId,
+              receiverId: existingOrder.buyerId,
+            },
           ],
         },
       });
@@ -201,6 +229,16 @@ export class OrderService {
 
       const formattedOrder = this.formatOrderResponse(updatedOrder);
 
+      // notifications
+      this.notificationService.createMessageNotification({
+        userId: existingOrder.buyerId,
+        type: 'order',
+        title: 'Order Updated',
+        message: `The order #${orderId} for product "${existingOrder.product.title}" has been updated by the seller.`,
+        relatedEntityType: 'order',
+        relatedEntityId: orderId,
+      });
+
       // Emit socket event
       if (chat) {
         await this.orderGateway.emitOrderUpdated(formattedOrder, chat.chatId);
@@ -228,7 +266,7 @@ export class OrderService {
         },
       });
 
-      if(!existingOrder) {
+      if (!existingOrder) {
         throw new NotFoundException('Order not found');
       }
 
@@ -251,8 +289,14 @@ export class OrderService {
         where: {
           productId: updatedOrder.productId,
           OR: [
-            { senderId: updatedOrder.buyerId, receiverId: updatedOrder.product.userId },
-            { senderId: updatedOrder.product.userId, receiverId: updatedOrder.buyerId },
+            {
+              senderId: updatedOrder.buyerId,
+              receiverId: updatedOrder.product.userId,
+            },
+            {
+              senderId: updatedOrder.product.userId,
+              receiverId: updatedOrder.buyerId,
+            },
           ],
         },
       });
@@ -263,12 +307,36 @@ export class OrderService {
       // Emit socket events
       if (chat) {
         if (status === 'cancelled') {
-          await this.productService.updateProductStatus(updatedOrder.productId, 'active');
-          await this.orderGateway.emitOrderCancelled(formattedOrder, chat.chatId);
+          await this.productService.updateProductStatus(
+            updatedOrder.productId,
+            'active',
+          );
+          await this.orderGateway.emitOrderCancelled(
+            formattedOrder,
+            chat.chatId,
+          );
         } else if (oldStatus !== status) {
-          await this.orderGateway.emitOrderStatusChanged(formattedOrder, chat.chatId, oldStatus || '');
+          await this.orderGateway.emitOrderStatusChanged(
+            formattedOrder,
+            chat.chatId,
+            oldStatus || '',
+          );
         }
         await this.orderGateway.emitOrderUpdated(formattedOrder, chat.chatId);
+
+        await this.sendNotification(updatedOrder.buyerId, 
+          'Order status updated',
+          `Order status is ${updatedOrder.status}`,
+          'order',
+          updatedOrder.exchangeId
+        )
+        
+        await this.sendNotification(updatedOrder.product.userId, 
+          'Order status updated',
+          `Order status is ${updatedOrder.status}`,
+          'order',
+          updatedOrder.exchangeId
+        )
       }
 
       return formattedOrder;
@@ -723,58 +791,55 @@ export class OrderService {
     userId: number,
     title: string,
     message: string,
-    type: string,
+    type: NOTIFICATION_TYPE,
     entityId: number,
   ) {
-    await this.prisma.notifications.create({
-      data: {
-        userid: userId,
-        title,
-        message,
-        type,
-        relatedentitytype: 'order',
-        relatedentityid: entityId,
-        isread: false,
-      },
+    await this.notificationService.createMessageNotification({
+      userId: userId,
+      type: type as NOTIFICATION_TYPE,
+      title,
+      message,
+      relatedEntityType: 'order',
+      relatedEntityId: entityId,
     });
   }
 
   private formatOrderResponse(order: any) {
     const formattedOrder = {
-        id: order.exchangeId,
-        productId: order.productId,
-        buyerId: order.buyerId,
-        sellerId: order.product.userId,
-        status: order.status,
-        agreedPrice: Number(order.agreedPrice),
-        meetupLocation: order.meetupLocation,
-        meetupLatitude: Number(order.meetupLatitude),
-        meetupLongitude: Number(order.meetupLongitude),
-        meetupTime: order.meetupTime.toISOString(),
-        createdAt: order.createdAt ? order.createdAt.toISOString() : null,
-        product: {
-          id: order.product.productId,
-          title: order.product.title,
-          price: order.product.price ? Number(order.product.price) : 0,
-          images: order.product.images as string[],
-          userId: order.product.userId,
-        },
-        buyer: {
-          id: order.users.userId,
-          name: order.users.userName,
-          email: order.users.email,
-          profilePicture: order.users.profilePicture,
-        },
-        seller: {
-          id: order.product.users ? order.product.users.userId : null,
-          name: order.product.users ? order.product.users.userName : null,
-          email: order.product.users ? order.product.users.email : null,
-          profilePicture: order.product.users
-            ? order.product.users.profilePicture
-            : null,
-        },
-      };
+      id: order.exchangeId,
+      productId: order.productId,
+      buyerId: order.buyerId,
+      sellerId: order.product.userId,
+      status: order.status,
+      agreedPrice: Number(order.agreedPrice),
+      meetupLocation: order.meetupLocation,
+      meetupLatitude: Number(order.meetupLatitude),
+      meetupLongitude: Number(order.meetupLongitude),
+      meetupTime: order.meetupTime.toISOString(),
+      createdAt: order.createdAt ? order.createdAt.toISOString() : null,
+      product: {
+        id: order.product.productId,
+        title: order.product.title,
+        price: order.product.price ? Number(order.product.price) : 0,
+        images: order.product.images as string[],
+        userId: order.product.userId,
+      },
+      buyer: {
+        id: order.users.userId,
+        name: order.users.userName,
+        email: order.users.email,
+        profilePicture: order.users.profilePicture,
+      },
+      seller: {
+        id: order.product.users ? order.product.users.userId : null,
+        name: order.product.users ? order.product.users.userName : null,
+        email: order.product.users ? order.product.users.email : null,
+        profilePicture: order.product.users
+          ? order.product.users.profilePicture
+          : null,
+      },
+    };
 
-      return formattedOrder;
+    return formattedOrder;
   }
 }
