@@ -20,13 +20,11 @@ export class ChatService {
         OR: [
           {
             senderId: senderId,
-            receiverId: createChatDto.receiverId,
-            productId: createChatDto.productId,
+            receiverId: createChatDto.receiverId
           },
           {
             senderId: createChatDto.receiverId,
             receiverId: senderId,
-            productId: createChatDto.productId,
           },
         ],
       },
@@ -49,6 +47,7 @@ export class ChatService {
     });
 
     if (existingChat) {
+      await this.update(existingChat.chatId, {productId: createChatDto.productId});
       return this.formatChatResponse(existingChat, senderId);
     }
 
