@@ -488,8 +488,8 @@ export class ProductService {
     }
   }
 
-  updateProductStatus(productId: number, status: string) {
-    this.prisma.product.update({
+  async updateProductStatus(productId: number, status: string) {
+    await this.prisma.product.update({
       where: { productId: productId },
       data: {status: status as PRODUCT_STATUS},
     })
