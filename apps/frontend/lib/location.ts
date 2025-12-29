@@ -11,6 +11,7 @@ type GeoLocation = {
 export const getUserLocation = async (
   forcePrompt: boolean = false
 ): Promise<GeoLocation | null> => {
+  console.log('getuser location is running')
   try {
     const permission = await navigator.permissions.query({
       name: "geolocation",

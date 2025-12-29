@@ -107,6 +107,12 @@ export const NotificationProvider = ({
     if (!socket || !session || isLoading) return;
 
     const handleNewNotification = (notification: Notification) => {
+      console.log('recieved notification is ', notification)
+      if(notification.type != 'message') {
+        setUnreadNotificationCount((count) => count + 1);
+      } else {
+        setUnreadMessageCount(count => count + 1);
+      }
       setNotifications((prev) => [notification, ...prev]);
     };
 

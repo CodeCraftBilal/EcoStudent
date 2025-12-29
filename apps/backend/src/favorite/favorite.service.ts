@@ -84,7 +84,7 @@ export class FavoriteService {
       };
     } else {
       return {
-        error: false,
+        error: true,
         message: "Can't remove Item",
       };
     }

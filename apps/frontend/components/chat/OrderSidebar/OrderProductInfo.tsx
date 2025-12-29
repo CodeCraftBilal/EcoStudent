@@ -1,5 +1,6 @@
 // components/chat/OrderSidebar/OrderProductInfo.tsx
 import { Package, ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 interface OrderProductInfoProps {
@@ -36,13 +37,13 @@ export default function OrderProductInfo({ product, orderId }: OrderProductInfoP
         </div>
       </div>
 
-      <button
-        onClick={() => router.push(`/order/${orderId}`)}
+      <Link
+        href={`/dashboard/purchases?orderId=${orderId}`}
         className="w-full px-4 py-2 bg-eco-500 text-white rounded-lg hover:bg-eco-600 transition-colors text-sm font-medium flex items-center justify-center gap-2"
       >
         View Full Order
         <ExternalLink className="w-4 h-4" />
-      </button>
+      </Link>
     </div>
   );
 }

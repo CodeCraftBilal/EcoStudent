@@ -47,16 +47,17 @@ export const removeFromFavorite = async (
   });
 
   if (!res.ok) {
-    if (res.status === 401)
+    if (res.status === 401) {
       return {
         error: true,
         message: "Sign in to remove from favorites",
       };
-  } else {
-    return {
-      error: true,
-      message: "Item not found in favorites",
-    };
+    } else {
+      return {
+        error: true,
+        message: "Item not found in favorites",
+      };
+    }
   }
 
   const result = await res.json();
