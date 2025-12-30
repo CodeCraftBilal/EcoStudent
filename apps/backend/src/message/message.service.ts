@@ -1,14 +1,17 @@
 // src/message/message.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SendMessageDto } from './dto/create-message.dto';
 import { NotificationService } from 'src/notification/notification.service';
+import { ChatService } from 'src/chat/chat.service';
+import { MessageGateway } from './message.gateway';
 
 @Injectable()
 export class MessageService {
   
   constructor(private prisma: PrismaService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private readonly chatService: ChatService
   ) {}
 
   async createMessage(senderId: number, dto: SendMessageDto) {
@@ -69,6 +72,14 @@ export class MessageService {
     type: message.messageType,
     timestamp: message.createdAt?.toISOString(),
   };
+}
+
+getMessagesByUserId(userId: number, query:any) {
+  this.chatService.getMessages(
+    userId,
+    Number(query.chatId),
+    query,
+  );
 }
 
 

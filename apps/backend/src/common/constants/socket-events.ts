@@ -3,9 +3,12 @@ export const SOCKET_EVENTS = {
   JOIN: 'chat:join',
   LEAVE: 'chat:leave',
 
-  MESSAGE_SEND: 'message:send',
-  MESSAGE_RECEIVE: 'message:receive',
-  MESSAGE_NEW: 'message:new',
+  MESSAGE: {
+    MESSAGE_SEND: 'message:send',
+    MESSAGE_RECEIVE: 'message:receive',
+    MESSAGE_NEW: 'message:new',
+    MESSAGE_READ: 'message:read'
+  },
 
   NOTIFICATION_NEW: 'notification:new',
 

@@ -10,9 +10,15 @@ import { NotificationGateway } from 'src/notification/notification.gateway';
 
 @Module({
   controllers: [MessageController],
-  providers: [MessageService, MessageGateway, PrismaService, ChatService, UsersService,
+  providers: [
+    MessageService,
+    MessageGateway,
+    PrismaService,
+    ChatService,
+    UsersService,
     NotificationService,
-    NotificationGateway
+    NotificationGateway,
   ],
+  exports:[MessageService, MessageGateway]
 })
 export class MessageModule {}

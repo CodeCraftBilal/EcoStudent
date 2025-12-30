@@ -2,18 +2,12 @@ import { Inject, UseGuards } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import {
-  ConnectedSocket,
-  MessageBody,
-  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 import jwtConfig from 'src/auth/config/jwt.config';
-import { SOCKET_EVENTS } from 'src/common/constants/socket-events';
-import { MessageService } from 'src/message/message.service';
-import { NotificationService } from 'src/notification/notification.service';
 import { UsersService } from 'src/users/users.service';
 @WebSocketGateway({
   cors: {
@@ -28,8 +22,6 @@ export class AppGateway {
   constructor(
     private readonly jwtService: JwtService,
     private readonly authService: AuthService,
-    private readonly messageService: MessageService,
-    private readonly notificationService: NotificationService,
     private readonly userService: UsersService,
     @Inject(jwtConfig.KEY)
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
