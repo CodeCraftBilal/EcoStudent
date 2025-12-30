@@ -50,7 +50,7 @@ export default function MessageList({
   };
 
   // Intersection observer for loading more messages when scrolling to top
-  const firstItemRef = useRef<HTMLDivElement | null>(null);
+  const lastItemRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && hasNextMsgPage && !isFetchingNextMsgPage) {
@@ -60,7 +60,7 @@ export default function MessageList({
       }
     });
 
-    if (firstItemRef.current) observer.observe(firstItemRef.current);
+    if (lastItemRef.current) observer.observe(lastItemRef.current);
 
     return () => {
       observer.disconnect();
@@ -86,7 +86,7 @@ export default function MessageList({
         return (
           <div key={message.id}>
             {/* Message */}
-            <div ref={isLast ? firstItemRef : null}>
+            <div ref={isLast ? lastItemRef : null}>
               <MessageItem
                 message={message}
                 isOwnMessage={message.senderId === currentUserId}
