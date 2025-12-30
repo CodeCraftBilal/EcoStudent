@@ -49,6 +49,7 @@ model Message {
   messageType  message_type @map("messagetype")
   content      String       @db.VarChar(1000)
   voiceNoteUrl String?      @map("voicenoteurl") @db.VarChar(255)
+  status  MESSAGE_STATUS  @default(sent)
   isRead       Boolean      @default(false) @map("isread")
   createdAt    DateTime?    @default(now()) @map("created_at") @db.Timestamp(6)
   chat         chat?        @relation(fields: [chatId], references: [chatId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_chat")
@@ -240,4 +241,10 @@ enum NOTIFICATION_TYPE {
   listing
   order
   other
+}
+
+enum MESSAGE_STATUS {
+  sent
+  delivered
+  read
 }
