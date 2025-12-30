@@ -39,7 +39,12 @@ export class MessageGateway {
   }
 
   @SubscribeMessage(SOCKET_EVENTS.MESSAGE.MESSAGE_READ)
-  handleSubscribeMessageRead(data: any) {
-    console.log('read all messages ', data)
+  async handleSubscribeMessageRead(@MessageBody() data: any, @ConnectedSocket() client: Socket) {
+    console.log('read all messages ', data);
+    console.log('client ', client.data)
+    const readMsg = await this.messageService.markAllAsRead(parseInt(data.chatId), client.data.userId)
+    
+    console.log('sender: ', readMsg);
+    this.server.to(`user_${readMsg.userId}`).emit(SOCKET_EVENTS.MESSAGE.MESSAGE_READ, {chatId: readMsg.chatId});
   }
 }

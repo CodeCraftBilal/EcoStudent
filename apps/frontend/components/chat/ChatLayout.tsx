@@ -22,6 +22,7 @@ import {
 import { useSocket } from "@/context/useSocket";
 import OrderSidebar from "./OrderSidebar";
 import { useSession } from "@/context/useSession";
+import { SOCKET_EVENTS } from "@/lib/socket-events";
 
 interface ChatLayoutProps {
   conversations: Conversation[];
@@ -49,7 +50,7 @@ export default function ChatLayout({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { session } = useSession()
+  const { session } = useSession();
   const { socket } = useSocket();
 
   const conversationIdFromUrl = searchParams.get("conversationId");
@@ -221,6 +222,19 @@ export default function ChatLayout({
     setMessages(msgs);
   }, [msgs]);
 
+  // read recipent
+  const handleMarkAllAsRead = () => {
+    console.log("marking all as read");
+    if (!socket || !selectedConversation) {
+      console.log("no socket or selted conversatoin");
+      return;
+    }
+
+    socket.emit(SOCKET_EVENTS.MESSAGE.READ, {
+      chatId: selectedConversation.id,
+    });
+  };
+
   const handleSendMessage = (content: string) => {
     console.log("sending message ", content);
     try {
@@ -281,10 +295,22 @@ export default function ChatLayout({
       setMessages((prev) => [...prev, message]);
     };
 
+    const handleRead = (data: { chatId: string }) => {
+      console.log('marking all read from socket ', data)
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.chatId === Number(data.chatId) && msg.status !== "read"
+            ? { ...msg, status: "read" }
+            : msg
+        )
+      );
+    };
+
     socket.on("message:receive", handleIncomingMessage);
 
+    socket.on(SOCKET_EVENTS.MESSAGE.READ, handleRead);
     return () => {
-      socket.off("message:new", handleIncomingMessage);
+      socket.off("message:receive", handleIncomingMessage);
     };
   }, [socket, selectedConversationId]);
 
@@ -405,6 +431,7 @@ export default function ChatLayout({
                 hasNextMsgPage={hasNextPage}
                 fetchNextMsgPage={fetchNextPage}
                 isFetchingNextMsgPage={isFetchingNextPage}
+                markAllAsRead={handleMarkAllAsRead}
               />
             )}
 
@@ -418,15 +445,18 @@ export default function ChatLayout({
         )}
       </div>
 
-        {/* Placeholder for Order Sidebar */}
+      {/* Placeholder for Order Sidebar */}
       <div className="w-80 lg:w-96 border-l border-gray-200">
         {selectedConversation && (
           <OrderSidebar
             conversationId={selectedConversationId || undefined}
             selectedConversation={selectedConversation}
             productId={Number(selectedConversation.item?.id)}
-            currentUser={{id: Number(session?.userId), role: session?.role}}
-            isOwner={Number(currentUser.id) === Number(selectedConversation.item?.sellerId)} // Adjust based on your logic
+            currentUser={{ id: Number(session?.userId), role: session?.role }}
+            isOwner={
+              Number(currentUser.id) ===
+              Number(selectedConversation.item?.sellerId)
+            } // Adjust based on your logic
           />
         )}
       </div>

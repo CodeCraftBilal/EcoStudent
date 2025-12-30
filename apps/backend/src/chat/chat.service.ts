@@ -341,6 +341,7 @@ export class ChatService {
         messageType: true,
         isRead: true,
         createdAt: true,
+        status: true,
       },
     });
 
@@ -351,7 +352,7 @@ export class ChatService {
       content: msg.content,
       timestamp: msg.createdAt ? msg.createdAt.toISOString() : null,
       type: msg.messageType,
-      status: msg.isRead ? 'read' : 'delivered',
+      status: msg.status,
       isEdited: false,
       replyTo: null,
     }));

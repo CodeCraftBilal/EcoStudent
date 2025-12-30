@@ -1,13 +1,15 @@
 // src/message/message.service.ts
-import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SendMessageDto } from './dto/create-message.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { ChatService } from 'src/chat/chat.service';
 import { MessageGateway } from './message.gateway';
+import { userInfo } from 'os';
 
 @Injectable()
 export class MessageService {
+  
   
   constructor(private prisma: PrismaService,
     private notificationService: NotificationService,
@@ -70,6 +72,7 @@ export class MessageService {
     receiverId: message.receiverId,
     content: message.content,
     type: message.messageType,
+    status: message.status,
     timestamp: message.createdAt?.toISOString(),
   };
 }
@@ -82,5 +85,18 @@ getMessagesByUserId(userId: number, query:any) {
   );
 }
 
+async markAllAsRead(chatId: number, receiverId: number) {
+    const chat = await this.chatService.findOne(chatId, receiverId)
+    if(!chat) throw new ForbiddenException('Chat not found!')
 
+    await this.prisma.message.updateMany({
+      where: {chatId},
+      data: {status: 'read'},
+    })
+
+    return {
+      userId: chat.participant.id,
+      chatId: chat.id
+    };
+  }
 }

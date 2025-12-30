@@ -14,6 +14,7 @@ interface MessageListProps {
   hasNextMsgPage: boolean;
   fetchNextMsgPage: () => void;
   isFetchingNextMsgPage: boolean;
+  markAllAsRead: () => void
 }
 
 export default function MessageList({
@@ -25,8 +26,9 @@ export default function MessageList({
   hasNextMsgPage,
   fetchNextMsgPage,
   isFetchingNextMsgPage,
+  markAllAsRead
 }: MessageListProps) {
-  console.log('message: ', messages)
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
 
@@ -48,6 +50,30 @@ export default function MessageList({
     const isAtBottom = element.scrollHeight - element.scrollTop === element.clientHeight;
     setShouldScrollToBottom(isAtBottom);
   };
+
+  // Intersection observer for mark messages read
+  const firstItemRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+  if (!sortedMessages.length) return;
+
+  const latestMessage = sortedMessages[0];
+  const isSender = latestMessage.senderId === currentUserId;
+
+  const observer = new IntersectionObserver(entries => {
+    if (
+      entries[0].isIntersecting &&
+      latestMessage.status !== "read" &&
+      !isSender
+    ) {
+      markAllAsRead();
+    }
+  });
+
+  if (firstItemRef.current) observer.observe(firstItemRef.current);
+
+  return () => observer.disconnect();
+}, [sortedMessages, currentUserId]);
+
 
   // Intersection observer for loading more messages when scrolling to top
   const lastItemRef = useRef<HTMLDivElement | null>(null);
@@ -83,10 +109,14 @@ export default function MessageList({
           : null;
         const showDateSeparator = messageDate !== nextMessageDate;
         const isLast = index === sortedMessages.length -1;
+        
+        const isLatestMessage = message.id === sortedMessages[0]?.id;
+
+        if(isLatestMessage) console.log('atest message ' ,message)
         return (
           <div key={message.id}>
             {/* Message */}
-            <div ref={isLast ? lastItemRef : null}>
+            <div ref={isLatestMessage ? firstItemRef : isLast ? lastItemRef : null}>
               <MessageItem
                 message={message}
                 isOwnMessage={message.senderId === currentUserId}
