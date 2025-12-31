@@ -135,12 +135,12 @@ export default function MessageList({
           <div key={message.id}>
             {/* Message */}
             {showUnreadSeparator && (
-        <div className="flex justify-center my-3">
-          <span className="bg-blue-500 text-white text-xs font-medium px-4 py-1 rounded-full shadow">
-            Unread messages
-          </span>
-        </div>
-      )}
+              <div className="flex justify-center my-3">
+                <span className="bg-eco-blue-400 text-white text-xs font-medium px-4 py-1 rounded-full shadow">
+                  Unread messages
+                </span>
+              </div>
+            )}
             <div
               ref={isLatestMessage ? firstItemRef : isLast ? lastItemRef : null}
             >

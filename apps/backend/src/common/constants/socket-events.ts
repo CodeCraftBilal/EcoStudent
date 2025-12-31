@@ -10,7 +10,10 @@ export const SOCKET_EVENTS = {
     MESSAGE_READ: 'message:read'
   },
 
-  NOTIFICATION_NEW: 'notification:new',
+  NOTIFICATION: {
+    NEW: 'notification:new',
+    MESSAGE_UNREAD: 'notification:unread'
+  },
 
   TYPING_START: 'typing:start',
   TYPING_STOP: 'typing:stop',

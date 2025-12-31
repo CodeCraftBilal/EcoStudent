@@ -8,6 +8,6 @@ export class NotificationGateway {
     server: Socket;
 
     sendNotification(notification: any) {
-        this.server.to(`user_${notification.userId}`).emit(SOCKET_EVENTS.NOTIFICATION_NEW, notification);
+        this.server.to(`user_${notification.userId}`).emit(SOCKET_EVENTS.NOTIFICATION.NEW, notification);
     }
 }

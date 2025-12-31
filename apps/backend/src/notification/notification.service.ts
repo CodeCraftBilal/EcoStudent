@@ -82,7 +82,7 @@ export class NotificationService {
       }),
 
       this.prisma.message.count({
-        where: { receiverId: userId, isRead: false },
+        where: { receiverId: userId, NOT: { status: 'read'} },
       }),
     ]);
 
