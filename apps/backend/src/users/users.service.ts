@@ -194,6 +194,13 @@ export class UsersService {
     }
   }
 
+  async updateProfile(userId: number, body: UpdateUserDto, id: number) {
+    if(userId != id ) throw new UnauthorizedException('Invalid request !')
+    const user = await this.update(userId, body);
+    const formatedUser = this.formateUser(user);
+    return formatedUser;
+  }
+
   formateUser(user: any) {
     const formatedUser = {
       id: user?.userId,

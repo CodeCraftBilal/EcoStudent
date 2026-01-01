@@ -87,12 +87,15 @@ export default function ProfilePage() {
 
   const handleSaveProfile = async (updatedProfile: UserProfileType) => {
     setIsEditing(false);
-
+    console.log('saving profile')
     try {
       const res = await authFetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/${session?.userId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/profile/update/${session?.userId}`,
         {
           method: "PATCH",
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({
             userName: updatedProfile.name,
             email: updatedProfile.email,
@@ -259,7 +262,7 @@ export default function ProfilePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     City
                   </label>
-                  <p className="text-gray-900">{profile.location}</p>
+                  <p className="text-gray-900">{profile.location || "Not provided"}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">

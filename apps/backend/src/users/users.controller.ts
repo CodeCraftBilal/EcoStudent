@@ -62,6 +62,11 @@ export class UsersController {
     });
   }
 
+  @Patch('profile/update/:userId')
+  handleProfileUpdate( @Param('userId') userId ,@Req() req, @Body() body) {
+    return this.usersService.updateProfile(+userId, body, req.user.id);
+  }
+
   @Get('profile')
   getUserProfile(@Req() req) {
     return this.usersService.getUserProfile(req.user.id);
