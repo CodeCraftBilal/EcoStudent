@@ -10,7 +10,6 @@ import { hash } from 'argon2';
 
 @Injectable()
 export class UsersService {
-  
   constructor(private readonly prisma: PrismaService) {}
   async create(createUserDto: CreateUserDto) {
     const isUserExits = await this.prisma.users.findUnique({
@@ -177,12 +176,12 @@ export class UsersService {
   }
 
   async updateUserLocation(body: any, userId: any) {
-    const user = await this.update(userId, body)
+    const user = await this.update(userId, body);
     return {
       success: true,
       error: false,
-      message: `${user.userName} you location is updated successfuly`
-    }
+      message: `${user.userName} you location is updated successfuly`,
+    };
   }
 
   async updateProfilePicture(userId: number, body: UpdateUserDto) {
@@ -190,12 +189,12 @@ export class UsersService {
     return {
       success: true,
       error: false,
-      message: `${user.userName} you profile is updated successfuly`
-    }
+      message: `${user.userName} you profile is updated successfuly`,
+    };
   }
 
   async updateProfile(userId: number, body: UpdateUserDto, id: number) {
-    if(userId != id ) throw new UnauthorizedException('Invalid request !')
+    if (userId != id) throw new UnauthorizedException('Invalid request !');
     const user = await this.update(userId, body);
     const formatedUser = this.formateUser(user);
     return formatedUser;
@@ -221,5 +220,72 @@ export class UsersService {
     };
 
     return formatedUser;
+  }
+
+  async getDashboardStats(userId: number) {
+    const [
+      itemsForSale,
+      itemsSold,
+      totalEarnings,
+      unreadMessages,
+      itemsBought,
+      positiveReviews,
+    ] = await Promise.all([
+      this.prisma.product.count({
+        where: {
+          userId,
+          status: 'active',
+        },
+      }),
+      // items sold
+      this.prisma.product.count({
+        where: {
+          userId,
+          status: 'sold',
+        },
+      }),
+      // total earnings
+      this.prisma.exchanges.aggregate({
+        where: {
+          product: {
+            userId,
+            status: 'sold',
+          },
+          status: 'completed',
+        },
+        _sum: {
+          agreedPrice: true,
+        },
+      }),
+      // unread Messages
+      this.prisma.message.count({
+        where: {
+          receiverId: userId,
+          status: {
+            not: 'read',
+          },
+        },
+      }),
+      this.prisma.exchanges.count({
+        where: {
+          buyerId: userId,
+          status: 'completed',
+        },
+      }),
+      this.prisma.reviews.count({
+        where: {
+          revieweduserid: userId,
+        },
+      }),
+    ]);
+
+    return {
+      itemsForSale,
+      itemsSold,
+      totalEarnings: totalEarnings._sum.agreedPrice || 0,
+      unreadMessages,
+      itemsBought,
+      positiveReviews,
+    }
   }
 }
