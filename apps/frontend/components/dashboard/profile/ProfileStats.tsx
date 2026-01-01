@@ -51,20 +51,6 @@ export default function ProfileStats({ stats }: ProfileStatsProps) {
       color: "text-purple-600",
       bgColor: "bg-purple-50"
     },
-    {
-      title: "Response Rate",
-      value: `${stats.responseRate}%`,
-      icon: TrendingUp,
-      color: "text-green-600",
-      bgColor: "bg-green-50"
-    },
-    {
-      title: "Completion Rate",
-      value: `${stats.completionRate}%`,
-      icon: TrendingUp,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50"
-    }
   ];
 
   return (
