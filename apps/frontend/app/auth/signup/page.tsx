@@ -18,6 +18,7 @@ import { useSession } from "@/context/useSession";
 import { redirect, useRouter } from "next/navigation";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { getUserLocation } from "@/lib/location";
 
 type FormData = {
   userName: string;
@@ -61,9 +62,6 @@ export default function SignupPage() {
   const watchPassword = watch("password");
   // const watchConfirmPassword = watch("confirmPassword");
   // const watchAllFields = watch();
-
-  const i = useRef(0);
-  console.log(i.current++);
 
   // Check session
   const { session, isLoading } = useSession();
@@ -135,6 +133,9 @@ export default function SignupPage() {
       setError(fieldName as keyof FormData, {});
     });
 
+    // gerUserLocation
+    const location = await getUserLocation();
+
     // Check if passwords match
     if (data.password !== data.confirmPassword) {
       setServerMessage({
@@ -150,6 +151,8 @@ export default function SignupPage() {
       ...data,
       phoneNumber: data.phoneNumber || null,
       userLocation: data.userLocation || null,
+      latitude: location?.latitude,
+      longitude: location?.longitude,
     };
 
     console.log("Submitting data:", submitData);
