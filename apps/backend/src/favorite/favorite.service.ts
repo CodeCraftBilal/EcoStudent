@@ -277,7 +277,7 @@ export class FavoriteService {
         originalPrice: p.originalprice ? Number(p.originalprice) : undefined,
         category: p.categoryname ?? '',
         condition: p.productcondition,
-        image: Array.isArray(p.images) ? p.images[0] : '',
+        image: Array.isArray(p.images) ? p.images[0] : undefined,
         distance: p.distance ? Number(Number(p.distance).toFixed(1)) : 0,
         seller: {
           id: p.userid.toString(),

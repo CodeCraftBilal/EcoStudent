@@ -54,7 +54,7 @@ export default function ProfileStats({ stats }: ProfileStatsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
       {statCards.map((stat, index) => (
         <div key={index} className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 text-center">
           <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${stat.bgColor} mb-2`}>
