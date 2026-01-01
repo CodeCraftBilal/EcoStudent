@@ -232,6 +232,8 @@ export class ChatService {
       this.usersService.findOne(userId),
     ]);
 
+    console.log('raw conversation: ', rawConversations)
+
     const mappedConversations = rawConversations.map((chat) =>
       this.formatChatResponse(chat, userId),
     );
@@ -246,7 +248,9 @@ export class ChatService {
 
   // Helper function to format chat response
   private formatChatResponse(chat: any, currentUserId: number) {
-    const isSender = chat.senderId === currentUserId;
+
+    console.log('type of sender Id ', typeof chat.senderId)
+    const isSender = chat.senderId == currentUserId;
     const participant = isSender
       ? chat.users_chat_receiveridTousers
       : chat.users_chat_senderidTousers;
@@ -269,7 +273,7 @@ export class ChatService {
       participant: {
         id: participant?.userId,
         name: participant?.userName,
-        profilePicture: participant?.profilePicture,
+        avatar: participant?.profilePicture,
         verified: participant?.isVerified,
         rating: participant?.rating,
         isOnline: participant?.isOnline,

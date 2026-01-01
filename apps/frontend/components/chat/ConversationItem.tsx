@@ -41,11 +41,20 @@ export default function ConversationItem({
       <div className="flex space-x-3">
         {/* Avatar */}
         <div className="relative flex-shrink-0">
-          <img
+          { conversation.participant.avatar ? (
+            <img
             src={conversation.participant.avatar}
             alt={conversation.participant.name}
             className="w-12 h-12 rounded-full object-cover"
-          />
+            />
+          ) : (
+            <div className="flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg text-eco-700 bg-eco-50">
+              <span>
+              {conversation.participant.name[0]}
+
+              </span>
+            </div>
+          )}
           {conversation.participant.isOnline && (
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
           )}

@@ -447,7 +447,7 @@ export default function ChatLayout({
 
       {/* Placeholder for Order Sidebar */}
       <div className="w-80 lg:w-96 border-l border-gray-200">
-        {selectedConversation && (
+        {selectedConversation && currentUser && (
           <OrderSidebar
             conversationId={selectedConversationId || undefined}
             selectedConversation={selectedConversation}
