@@ -167,13 +167,13 @@ export default function LocationMap({
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-xs text-gray-500 mb-1">Latitude</p>
                     <p className="font-mono text-sm text-gray-900">
-                      {selectedCoords.lat.toFixed(6)}
+                      {selectedCoords.lat}
                     </p>
                   </div>
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-xs text-gray-500 mb-1">Longitude</p>
                     <p className="font-mono text-sm text-gray-900">
-                      {selectedCoords.lng.toFixed(6)}
+                      {selectedCoords.lng }
                     </p>
                   </div>
                 </div>

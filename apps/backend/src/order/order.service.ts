@@ -510,7 +510,7 @@ export class OrderService {
         title: d.product.title,
         description: d.product.description,
         price: d.agreedPrice,
-        image: d.product.images?.[0] ?? '',
+        image: d.product.images?.[0],
         category: d.product.category?.categoryName,
         condition: d.product.productCondition,
       },
