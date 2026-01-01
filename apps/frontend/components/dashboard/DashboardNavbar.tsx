@@ -26,7 +26,7 @@ import { useNotification } from "@/context/useNotification";
 
 export default function DashboardNavbar() {
   // fetching session
-  const { session, isLoading, refreshSession } = useSession();
+  const { session, isLoading } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
@@ -120,7 +120,7 @@ export default function DashboardNavbar() {
           <div className="flex items-center space-x-8">
             {/* Logo */}
             <Link href="/dashboard" className="flex items-center space-x-2">
-              <Leaf className="w-8 h-8 text-green-600" />
+              <Image src={"/logo.png"} alt="EcoStudent" width={50} height={50} />
               <div>
                 <span className="text-xl font-bold text-gray-900">
                   EcoStudent

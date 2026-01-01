@@ -69,9 +69,9 @@ export function ShopNavBar({
         <div className="flex items-center justify-between h-16">
           <Link
             href={"/"}
-            className="max-md:hidden flex items-center space-x-4"
+            className="max-md:hidden flex items-center space-x-1"
           >
-            <Leaf className="w-8 h-8 text-green-600" />
+            <Image src={"/logo.png"} alt="EcoStudent" width={50} height={50} />
             <h1 className="text-2xl font-bold text-gray-900">EcoStudent</h1>
           </Link>
 

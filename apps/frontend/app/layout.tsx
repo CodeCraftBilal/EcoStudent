@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   title: "Ecosutdent - A platform for students to share and discover resources",
   description: "A platform for students to share and discover resources.",
   icons: {
-    icon: "/logo.svg",
+    icon: "/logo.png",
   },
 };
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/context/useSession";
+import Image from "next/image";
 
 const HomeNavBar = () => {
   // checking the session
@@ -49,7 +50,8 @@ const HomeNavBar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <Leaf className="w-8 h-8 text-green-600" />
+            {/* <Leaf className="w-8 h-8 text-green-600" /> */}
+            <Image src={'/logo.png'} alt='EcoStudent' width={50} height={50} />
             <span className="text-2xl font-bold text-gray-900">EcoStudent</span>
           </div>
 
