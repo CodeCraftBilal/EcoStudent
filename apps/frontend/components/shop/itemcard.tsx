@@ -29,11 +29,8 @@ interface ItemCardProps {
 const ItemCard = React.memo(
   ({
     item,
-    index,
     isFavorite,
-    isInCart,
     onToggleFavorite,
-    onToggleCart,
   }: ItemCardProps) => {
     // from filter
     const pathName = usePathname();
@@ -109,7 +106,7 @@ const ItemCard = React.memo(
             <img
               src={item.image}
               alt={item.title}
-              className="w-full h-28 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-28 sm:h-48 object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </Link>
           <div className="absolute top-2 right-2 flex space-x-1">
