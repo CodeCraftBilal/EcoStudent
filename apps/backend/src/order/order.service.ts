@@ -107,7 +107,7 @@ export class OrderService {
         relatedEntityType: 'order',
         relatedEntityId: order.exchangeId,
       });
-      
+
       this.notificationService.createMessageNotification({
         userId: createOrderDto.buyerId,
         type: 'order',
@@ -324,19 +324,21 @@ export class OrderService {
         }
         await this.orderGateway.emitOrderUpdated(formattedOrder, chat.chatId);
 
-        await this.sendNotification(updatedOrder.buyerId, 
+        await this.sendNotification(
+          updatedOrder.buyerId,
           'Order status updated',
           `Order status is ${updatedOrder.status}`,
           'order',
-          updatedOrder.exchangeId
-        )
-        
-        await this.sendNotification(updatedOrder.product.userId, 
+          updatedOrder.exchangeId,
+        );
+
+        await this.sendNotification(
+          updatedOrder.product.userId,
           'Order status updated',
           `Order status is ${updatedOrder.status}`,
           'order',
-          updatedOrder.exchangeId
-        )
+          updatedOrder.exchangeId,
+        );
       }
 
       return formattedOrder;
@@ -375,13 +377,23 @@ export class OrderService {
     return `This action removes a #${id} order`;
   }
 
-  async getAllByBuyerId(userId: number, query: any) {
+  async getAllOrders(query: any, buyerId?: number, sellerId?: number) {
     const page = query.page ? Number(query.page) : 1;
     const limit = query.limit ? Number(query.limit) : 12;
     const skip = (page - 1) * limit;
 
+    const isBuyer = !!buyerId;
+    const userId = buyerId ?? sellerId;
+
     const where: any = {
-      buyerId: userId,
+      ...(buyerId && { buyerId }),
+      ...(sellerId && {
+        product: {
+          users: {
+            userId: sellerId,
+          },
+        },
+      }),
 
       // STATUS FILTER
       ...(query.status &&

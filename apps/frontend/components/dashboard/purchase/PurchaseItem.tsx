@@ -18,6 +18,7 @@ import LocationMap from "@/components/dashboard/purchase/LocationMap";
 
 interface PurchaseItemProps {
   purchase: Purchase;
+  isPurchase: boolean;
   onRatePurchase: (
     purchaseId: string,
     rating: number,
@@ -28,6 +29,7 @@ interface PurchaseItemProps {
 export default function PurchaseItem({
   purchase,
   onRatePurchase,
+  isPurchase
 }: PurchaseItemProps) {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showLocationMap, setShowLocationMap] = useState(false);
@@ -119,6 +121,7 @@ export default function PurchaseItem({
     <>
       {/* Review Form Modal */}
       <ReviewForm
+      isSeller={!isPurchase}
         isOpen={showReviewForm}
         onClose={() => setShowReviewForm(false)}
         onSubmit={handleReviewSubmit}
@@ -268,7 +271,7 @@ export default function PurchaseItem({
           </div>
 
           {/* Rating Section */}
-          {purchase.status === "completed" && (
+          {purchase.status === "completed" && isPurchase && (
             <div className="mt-4 pt-4 border-t border-green-100">
               {!purchase.rating ? (
                 <div className="flex items-center justify-between">
@@ -294,7 +297,7 @@ export default function PurchaseItem({
                             key={i}
                             className={`w-4 h-4 ${
                               i < purchase.rating!
-                                ? "text-[#F59E0B] fill-current"
+                                ? "text-eco-sun fill-current"
                                 : "text-gray-300"
                             }`}
                           />
@@ -321,20 +324,20 @@ export default function PurchaseItem({
           {purchase.status === "cancelled" && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-green-100">
               <p className="text-sm text-gray-600">The Order were cancelled</p>
-              <button
+              {/* <button
                 onClick={() => setShowReviewForm(true)}
                 className="flex items-center space-x-1 text-green-600 hover:text-green-700 transition-colors text-sm font-medium"
-              ></button>
+              ></button> */}
             </div>
           )}
           {/* canceled order */}
           {purchase.status === "pending" && (
             <div className="mt-4 pt-4 border-t border-green-100">
               <p className="text-sm font-bold text-center text-green-600">{getHoursLeft(purchase.deliveredDate)}</p>
-              <button
+              {/* <button
                 onClick={() => setShowReviewForm(true)}
                 className="flex items-center space-x-1 text-green-600 hover:text-green-700 transition-colors text-sm font-medium"
-              ></button>
+              ></button> */}
             </div>
           )}
         </div>

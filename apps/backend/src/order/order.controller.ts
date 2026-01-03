@@ -34,7 +34,12 @@ export class OrderController {
 
   @Get('purchases')
   purchases(@Req() req, @Query() query) {
-    return this.orderService.getAllByBuyerId(req.user.id, query);
+    return this.orderService.getAllOrders(query, req.user.id);
+  }
+  
+  @Get('sellings')
+  sellings(@Req() req, @Query() query) {
+    return this.orderService.getAllOrders(query, undefined ,req.user.id);
   }
 
   @Get('cancel/:id')

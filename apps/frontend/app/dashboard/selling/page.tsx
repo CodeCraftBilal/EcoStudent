@@ -58,7 +58,7 @@ export default function PurchasesPage() {
       if (sortBy) params.append("sortBy", sortBy);
 
       const res = await authFetch(
-        `${BACKEND_URL}/order/purchases?${params.toString()}`
+        `${BACKEND_URL}/order/sellings?${params.toString()}`
       );
       if (!res.ok) throw new Error("Failed to fetch Purchases");
       const result = await res.json();
@@ -189,7 +189,11 @@ export default function PurchasesPage() {
 
         {/* Purchases List or Empty State */}
         {purchases.length === 0 ? (
-          <EmptyPurchases />
+          <EmptyPurchases
+            title="No Sellings Yet"
+            description="You haven't made any Sell yet. Start Selling our marketplace to find amazing deals on books, uniforms, and educational supplies from students near you."
+            tagLine="Make money and help the environment by Selling to fellow students."
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {purchases.map((purchase, index) => {
@@ -197,6 +201,7 @@ export default function PurchasesPage() {
               return (
                 <div key={purchase.id} ref={isLast ? lastItemRef : null}>
                   <PurchaseItem
+                    isPurchase={false}
                     purchase={purchase}
                     onRatePurchase={handleRatePurchase}
                   />
