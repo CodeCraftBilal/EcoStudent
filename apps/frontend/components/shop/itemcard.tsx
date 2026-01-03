@@ -16,6 +16,8 @@ import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { useSnackbar } from "../ui/dialogBoxes/SnackBarManager";
 import { getUserLocation } from "@/lib/location";
+import { ErrorDialog } from "../ui/dialogBoxes/Pre-configuredDialog";
+import { useSession } from "@/context/useSession";
 
 interface ItemCardProps {
   item: Item;
@@ -38,6 +40,9 @@ const ItemCard = React.memo(
     console.log(pathName);
 
     const [isCreatingChat, setIsCreatingChat] = useState(false);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const {session, isLoading} = useSession();
+    const [isAuthRedirecting, setIsAuthRedirecting] = useState(false);
 
     const formatTimeAgo = (dateString: string) => {
       const date = new Date(dateString);
@@ -62,9 +67,14 @@ const ItemCard = React.memo(
     // const [loadingChat, setLoadingChat] = useState(null)
     const handleMessageSeller = async (sellerId: string, productId: string) => {
       console.log(`sellerId: ${sellerId}, productId: ${productId}`);
-      setIsCreatingChat(true);
-      await getUserLocation(true)
+      if(isLoading || !session) {
+        setIsDialogOpen(true);
+        return
+      }
+      
       try {
+        setIsCreatingChat(true);
+        await getUserLocation(true)
         const response = await authFetch(`${BACKEND_URL}/chat`, {
           method: "POST",
           headers: {
@@ -94,6 +104,17 @@ const ItemCard = React.memo(
         console.error(err);
       }
     };
+
+    const handleDialogClose = () => {
+      setIsDialogOpen(false);
+    }
+    
+    const handleDialogSignUpClick = () => {
+      setIsAuthRedirecting(true);
+      router.push('/auth/signup');
+      // setIsDialogOpen(false);
+    }
+
 
     return (
       <div className="bg-white cursor-default rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
@@ -309,6 +330,20 @@ const ItemCard = React.memo(
             </div>
           )}
         </div>
+
+        <ErrorDialog 
+        title="Sign Up"
+        description="sign up to message seller"
+        isOpen={isDialogOpen}
+        onClose={handleDialogClose}
+        buttons={[
+          {
+            text: 'Sign In',
+            onClick: handleDialogSignUpClick,
+            isLoading: isAuthRedirecting
+          }
+        ]}
+         />
       </div>
     );
   }
