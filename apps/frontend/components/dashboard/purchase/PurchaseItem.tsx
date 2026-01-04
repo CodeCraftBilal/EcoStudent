@@ -172,7 +172,7 @@ export default function PurchaseItem({
             <img
               src={purchase.item.image}
               alt={purchase.item.title}
-              className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+              className="w-20 h-20 rounded-lg object-cover shrink-0"
             />
 
             {/* Item Details */}
@@ -200,7 +200,7 @@ export default function PurchaseItem({
                       ? "bg-green-50 text-green-700 border border-green-200"
                       : purchase.item.condition === "good"
                         ? "bg-blue-50 text-blue-700 border border-blue-200"
-                        : "bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20"
+                        : "bg-eco-sun/10 text-eco-sun border"
                   }`}
                 >
                   {purchase.item.condition.charAt(0).toUpperCase() +
@@ -226,7 +226,7 @@ export default function PurchaseItem({
                   {purchase.seller.name}
                 </Link>
                 <div className="flex items-center space-x-1 text-xs text-gray-500">
-                  <Star className="w-3 h-3 text-[#F59E0B] fill-current" />
+                  <Star className="w-3 h-3 text-eco-sun fill-current" />
                   <span>{purchase.seller.rating}</span>
                   {purchase.seller.verified && (
                     <span className="text-blue-500 ml-1">✓ Verified</span>
@@ -251,7 +251,7 @@ export default function PurchaseItem({
               onClick={() => setShowLocationMap(true)}
               className="flex items-center cursor-pointer space-x-2 text-sm text-green-600 hover:text-green-700 transition-colors group flex-1 min-w-0"
             >
-              <MapPin className="w-4 h-4 flex-shrink-0" />
+              <MapPin className="w-4 h-4 shrink-0" />
               <span className="truncate text-left">
                 {purchase.meetupLocation}
               </span>

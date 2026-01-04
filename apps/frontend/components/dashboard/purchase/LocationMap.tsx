@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { X, MapPin, Navigation, ExternalLink, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Map } from "@/components/ui/map";
 
 interface LocationMapProps {
   isOpen: boolean;
@@ -85,7 +86,7 @@ export default function LocationMap({
               className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             >
               {/* Header */}
-              <div className="sticky top-0 bg-white border-b border-eco-200 px-6 py-4 flex items-center justify-between">
+              <div className="sticky top-0 bg-white border-b border-eco-200 px-6 py-4 flex items-center justify-between z-20">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-eco-50 rounded-lg">
                     <MapPin className="w-6 h-6 text-eco-600" />
@@ -123,20 +124,9 @@ export default function LocationMap({
                     className="relative w-full h-64 cursor-pointer"
                     onClick={handleMapClick}
                   >
-                    {mapUrl ? (
-                      <img
-                        src={mapUrl}
-                        alt="Location Map"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-64 bg-gradient-to-br from-eco-50 to-eco-blue-50 flex items-center justify-center">
-                        <div className="text-center">
-                          <MapPin className="w-12 h-12 text-eco-400 mx-auto mb-3" />
-                          <p className="text-gray-600">Loading map...</p>
-                        </div>
-                      </div>
-                    )}
+                    <Map center={[latitude, longitude]} zoom={12}>
+
+                    </Map>
                     
                     {/* Selection Marker */}
                     {selectable && (
@@ -183,7 +173,7 @@ export default function LocationMap({
                   {selectable ? (
                     <button
                       onClick={handleConfirmLocation}
-                      className="flex-1 bg-gradient-to-r from-eco-500 to-eco-blue-500 text-white font-medium py-3 px-4 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                      className="flex-1 bg-linear-to-r from-eco-500 to-eco-blue-500 text-white font-medium py-3 px-4 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                     >
                       <Check className="w-5 h-5" />
                       Confirm This Location
@@ -193,7 +183,7 @@ export default function LocationMap({
                       href={googleMapsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 bg-gradient-to-r from-eco-500 to-eco-blue-500 text-white font-medium py-3 px-4 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                      className="flex-1 bg-linear-to-r from-eco-500 to-eco-blue-500 text-white font-medium py-3 px-4 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                     >
                       <Navigation className="w-5 h-5" />
                       Open in Google Maps
