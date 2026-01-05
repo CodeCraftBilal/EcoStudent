@@ -1,4 +1,4 @@
-import { PrismaClient, exchange_type, exchange_status } from '../../apps/backend/generated/prisma';
+import { PrismaClient, exchange_type, exchange_status } from '../../generated/prisma';
 import { faker } from '@faker-js/faker';
 
 export async function seedExchanges(prisma: PrismaClient) {

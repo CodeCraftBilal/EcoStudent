@@ -207,9 +207,9 @@ enum message_type {
 enum product_type {
   books
   bags
-  uniforms
-  calculators
-  geomatry
+  uniform
+  calculator
+  geometry
   other
 }
 
