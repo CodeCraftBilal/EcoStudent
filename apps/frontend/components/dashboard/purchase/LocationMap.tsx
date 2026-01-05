@@ -124,6 +124,7 @@ export default function LocationMap({
                     className="relative w-full h-64 cursor-pointer"
                     onClick={handleMapClick}
                   >
+                    {/* latitude: 32.4799, longitude: 74.34 */}
                     <Map center={[latitude, longitude]} zoom={12}>
 
                     </Map>

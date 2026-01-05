@@ -161,76 +161,89 @@ export class ChatService {
     const skip = (page - 1) * limit;
 
     const [rawConversations, currentUser] = await Promise.all([
-      this.prisma.chat.findMany({
-        skip,
-        take: limit,
-        orderBy: {
-          lastMessageAt: 'desc',
-        },
-        where: {
-          OR: [{ senderId: userId }, { receiverId: userId }],
-          ...(query.searchQuery && {
-            OR: [
-              {
-                users_chat_senderidTousers: {
-                  userName: {
-                    contains: query.searchQuery,
-                    mode: 'insensitive',
-                  },
-                },
+  this.prisma.chat.findMany({
+    skip,
+    take: limit,
+    orderBy: {
+      lastMessageAt: 'desc',
+    },
+    where: {
+      OR: [{ senderId: userId }, { receiverId: userId }],
+      ...(query.searchQuery && {
+        OR: [
+          {
+            users_chat_senderidTousers: {
+              userName: {
+                contains: query.searchQuery,
+                mode: 'insensitive',
               },
-              {
-                users_chat_receiveridTousers: {
-                  userName: {
-                    contains: query.searchQuery,
-                    mode: 'insensitive',
-                  },
-                },
+            },
+          },
+          {
+            users_chat_receiveridTousers: {
+              userName: {
+                contains: query.searchQuery,
+                mode: 'insensitive',
               },
-            ],
-          }),
-          lastMessage: {
-            not: null,
-          },
-        },
-        include: {
-          users_chat_senderidTousers: {
-            select: {
-              userId: true,
-              userName: true,
-              profilePicture: true,
-              isVerified: true,
-              rating: true,
-              isOnline: true,
             },
           },
-          users_chat_receiveridTousers: {
-            select: {
-              userId: true,
-              userName: true,
-              profilePicture: true,
-              isVerified: true,
-              rating: true,
-              isOnline: true,
-            },
-          },
-          product: {
-            select: {
-              productId: true,
-              userId: true,
-              title: true,
-              price: true,
-              images: true,
-              exchangeType: true,
-              productCondition: true,
-              categoryId: true,
-            },
-          },
-        },
+        ],
       }),
+      lastMessage: {
+        not: null,
+      },
+    },
+    include: {
+      users_chat_senderidTousers: {
+        select: {
+          userId: true,
+          userName: true,
+          profilePicture: true,
+          isVerified: true,
+          rating: true,
+          isOnline: true,
+        },
+      },
+      users_chat_receiveridTousers: {
+        select: {
+          userId: true,
+          userName: true,
+          profilePicture: true,
+          isVerified: true,
+          rating: true,
+          isOnline: true,
+        },
+      },
+      product: {
+        select: {
+          productId: true,
+          userId: true,
+          title: true,
+          price: true,
+          images: true,
+          exchangeType: true,
+          productCondition: true,
+          categoryId: true,
+        },
+      },
+      _count: {
+        select: {
+          messages: {
+            where: {
+              receiverId: userId,
+              status: {
+                not: 'read'
+              }
+            },
+          },
+        },
+      },
+    },
+  }),
 
-      this.usersService.findOne(userId),
-    ]);
+  this.usersService.findOne(userId),
+]);
+
 
     console.log('raw conversation: ', rawConversations)
 
@@ -280,7 +293,7 @@ export class ChatService {
       },
       lastMessage: lastMessage,
       lastMessageAt: lastMessageAt?.toISOString(),
-      unreadCount: 0,
+      unreadCount: chat._count?.messages ?? 0,
       item: chat.product
         ? {
             id: chat.product.productId.toString(),
