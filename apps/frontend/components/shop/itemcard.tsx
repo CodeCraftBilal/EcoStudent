@@ -203,7 +203,7 @@ const ItemCard = React.memo(
             className="sm:hidden"
           >
             <h3
-              className={`font-semibold text-gray-900 text-sm max-md:h-10 line-clamp-2 ${item.title.length < 25 ? "min-h-[2rem]" : ""}`}
+              className={`font-semibold text-gray-900 text-sm max-md:h-10 line-clamp-2 ${item.title.length < 25 ? "min-h-8" : ""}`}
             >
               {item.title}
             </h3>
