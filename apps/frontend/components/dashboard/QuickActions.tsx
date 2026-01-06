@@ -68,11 +68,11 @@ export default function QuickActions({ onUploadItem }: QuickActionsProps) {
       href: "/shop?filter=nearby"
     },
     {
-      title: "My Reviews",
-      description: "See your ratings & feedback",
+      title: "Sellings",
+      description: "See your sellings & feedback",
       icon: Star,
       color: "bg-yellow-500 hover:bg-yellow-600",
-      href: "/dashboard/reviews"
+      href: "/dashboard/selling"
     }
   ];
 

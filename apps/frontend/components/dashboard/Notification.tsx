@@ -155,7 +155,7 @@ export default function NotificationDropdown({
       {/* Footer */}
       <div className="p-3 border-t border-gray-200 bg-gray-50 rounded-b-xl">
         <Link
-          href="/dashboard/notifications"
+          href="/dashboard/chat"
           className="block text-center text-sm text-eco-600 hover:text-eco-700 font-medium py-2"
         >
           View all {notificationType.toLowerCase()}

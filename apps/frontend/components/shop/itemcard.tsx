@@ -111,7 +111,7 @@ const ItemCard = React.memo(
     
     const handleDialogSignUpClick = () => {
       setIsAuthRedirecting(true);
-      router.push('/auth/signup');
+      router.push('/auth/signin?from=/shop');
       // setIsDialogOpen(false);
     }
 

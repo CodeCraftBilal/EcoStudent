@@ -26,7 +26,7 @@ export default function DashboardLayout({
 
 
   return (
-    <div className="h-screen bg-gradient-to-br from-eco-50 to-eco-blue-50 p-4">
+    <div className="h-screen bg-linear-to-br from-eco-50 to-eco-blue-50 p-4">
       <div className="max-w-7xl mx-auto">
         <WelcomeHeader 
           userName={userName} 
