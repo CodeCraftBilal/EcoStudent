@@ -1,6 +1,6 @@
 import { PrismaClient } from '../generated/prisma';
 
-import { seedUsers } from './seeds/users.seed';
+import { seedUsers, updateLocation } from './seeds/users.seed';
 import { seedCategories } from './seeds/categories.seed';
 import { seedCustomProducts, seedProducts } from './seeds/products.seed';
 import { seedChats } from './seeds/chats.seed';
@@ -13,6 +13,7 @@ const prisma = new PrismaClient();
 async function main() {
   await seedCategories(prisma);
   await seedUsers(prisma, 20);
+  await updateLocation(prisma, 33.54, 73.14);
   // await seedProducts(prisma);
   await seedCustomProducts(prisma);
   // await seedChats(prisma);

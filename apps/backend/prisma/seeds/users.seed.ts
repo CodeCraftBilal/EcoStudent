@@ -52,3 +52,19 @@ export async function seedUsers(prisma: PrismaClient, count = 20) {
 //     "heading": null,
 //     "speed": null
 // }
+
+export async function updateLocation(prisma:PrismaClient, latitude = 33.54, longitude = 73.14) {
+  const users = await prisma.users.findMany();
+
+  users.forEach( async (user) => {
+    await prisma.users.update({
+      where: {
+        userId: user.userId,
+      },
+      data: {
+        latitude,
+        longitude
+      }
+    })
+  })
+}
