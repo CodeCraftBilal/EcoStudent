@@ -11,11 +11,11 @@ import { seedReviews } from './seeds/reviews.seed';
 const prisma = new PrismaClient();
 
 async function main() {
-  await seedCategories(prisma);
-  await seedUsers(prisma, 20);
-  await updateLocation(prisma, 33.54, 73.14);
+  // await seedCategories(prisma);
+  // await seedUsers(prisma, 20);
+  await updateLocation(prisma, 31.45, 74.3);
   // await seedProducts(prisma);
-  await seedCustomProducts(prisma);
+  // await seedCustomProducts(prisma);
   // await seedChats(prisma);
   // await seedMessages(prisma);
   // await seedExchanges(prisma);
