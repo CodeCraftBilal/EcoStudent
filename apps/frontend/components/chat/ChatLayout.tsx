@@ -187,7 +187,7 @@ export default function ChatLayout({
         if (!res.ok) throw new Error("Failed to fetch messages");
 
         const result = await res.json();
-        console.log("Messages received: ", result);
+        console.log('unsorted messages: ', result);
         return result;
       } catch (err) {
         console.error(err);

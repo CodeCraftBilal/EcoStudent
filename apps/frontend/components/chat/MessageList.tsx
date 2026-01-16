@@ -35,6 +35,8 @@ export default function MessageList({
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
+  console.log('sorted messages: ', sortedMessages)
+
   // Scroll to bottom when new messages are added
   useEffect(() => {
     if (shouldScrollToBottom && messagesEndRef.current) {
