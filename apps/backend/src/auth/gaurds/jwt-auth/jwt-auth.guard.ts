@@ -1,7 +1,6 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { sup } from 'framer-motion/client';
 import { Observable } from 'rxjs';
 import { IS_PUBLIC_KEY } from 'src/auth/decorators/public.decorator';
 

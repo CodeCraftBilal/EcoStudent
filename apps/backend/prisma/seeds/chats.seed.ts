@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../apps/backend/generated/prisma';
+import { PrismaClient } from '../../generated/prisma';
 
 export async function seedChats(prisma: PrismaClient) {
   const users = await prisma.users.findMany();

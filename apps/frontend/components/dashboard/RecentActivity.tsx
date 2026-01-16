@@ -3,9 +3,10 @@
 import { MessageCircle, ShoppingBag, Star, Package, Clock } from "lucide-react";
 import Link from "next/link";
 import { Activity } from "@/lib/types/dashboard/types";
+import { Notification } from "@/lib/types/types";
 
 interface RecentActivityProps {
-  activities: Activity[];
+  activities: Notification[];
 }
 
 export default function RecentActivity({ activities }: RecentActivityProps) {
@@ -37,7 +38,7 @@ export default function RecentActivity({ activities }: RecentActivityProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm">
+    <div className="bg-white h-full rounded-2xl p-6 shadow-sm overflow-y-auto">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-900">Recent Activity</h2>
         <Link href="/dashboard/activity" className="text-green-600 hover:text-green-700 text-sm font-medium">
@@ -70,7 +71,7 @@ export default function RecentActivity({ activities }: RecentActivityProps) {
                   {activity.title}
                 </h3>
                 <p className="text-gray-600 text-sm mt-1">
-                  {activity.description}
+                  {activity.message}
                 </p>
                 <div className="flex items-center space-x-2 mt-2">
                   <Clock className="w-3 h-3 text-gray-400" />

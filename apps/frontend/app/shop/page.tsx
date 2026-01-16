@@ -14,6 +14,7 @@ import { getUserLocation } from "@/lib/location";
 import { ContentLoader } from "@/components/Loading";
 import { addToFavorite, removeFromFavorite } from "@/lib/utils/favorite";
 import { useSnackbar } from "@/components/ui/dialogBoxes/SnackBarManager";
+import { useSession } from "@/context/useSession";
 
 const ShopPage = () => {
   // ----------------------------------
@@ -28,11 +29,11 @@ const ShopPage = () => {
   });
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [cart, setCart] = useState<Set<string>>(new Set());
-
+  const { session } = useSession();
   const lastItemRef = useRef<HTMLDivElement | null>(null);
 
   // debounce search
@@ -40,12 +41,12 @@ const ShopPage = () => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
     }, 500);
-  
+
     return () => {
       clearTimeout(timer);
-    }
-  }, [searchQuery])
-  
+    };
+  }, [searchQuery]);
+
   // ----------------------------------
   // Stable memoized filters
   // ----------------------------------
@@ -72,6 +73,7 @@ const ShopPage = () => {
     async ({ pageParam = 0 }): Promise<Item[]> => {
       const location = await getUserLocation();
 
+      console.log("user location: ", location);
       const params = new URLSearchParams();
 
       if (location) {
@@ -168,42 +170,37 @@ const ShopPage = () => {
 
   const { showSuccess, showError } = useSnackbar();
   const toggleFavorite = useCallback(async (productId: string) => {
-    let wasFavorite = false;
+  if (!session) return;
 
+  const wasFavorite = favorites.has(productId); // read current state first
+
+  setFavorites((prev) => {
+    const newSet = new Set(prev);
+    if (wasFavorite) newSet.delete(productId);
+    else newSet.add(productId);
+    return newSet;
+  });
+
+  try {
+    const res = wasFavorite
+      ? await removeFromFavorite(productId)
+      : await addToFavorite(productId);
+
+    if (!res.error) showSuccess(res.message, 4000, "bottom-center");
+    else showError(res.message, 4000, "bottom-center");
+  } catch (err) {
+    console.error("Favorite update failed", err);
+
+    // rollback
     setFavorites((prev) => {
       const newSet = new Set(prev);
-      wasFavorite = newSet.has(productId); // <- read BEFORE modifying
-
-      if (wasFavorite) newSet.delete(productId);
-      else newSet.add(productId);
-
+      if (wasFavorite) newSet.add(productId);
+      else newSet.delete(productId);
       return newSet;
     });
+  }
+}, [favorites, session]);
 
-    try {
-      let res;
-      if (wasFavorite) {
-        res = await removeFromFavorite(productId);
-      } else {
-        res = await addToFavorite(productId);
-      }
-      if (!res.error) {
-        showSuccess(`${res.message}`, 4000, "bottom-center");
-      } else {
-        showError(`${res.message}`, 4000, "bottom-center");
-      }
-    } catch (err) {
-      console.error("Favorite update failed", err);
-
-      // rollback UI
-      setFavorites((prev) => {
-        const newSet = new Set(prev);
-        if (wasFavorite) newSet.add(productId);
-        else newSet.delete(productId);
-        return newSet;
-      });
-    }
-  }, []);
 
   // ----------------------------------
   // Render

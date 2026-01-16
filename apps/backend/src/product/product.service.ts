@@ -4,11 +4,13 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FindByUIDParams } from './types/types';
 import { Prisma } from '@prisma/client';
+import { PRODUCT_STATUS } from 'generated/prisma';
 
 @Injectable()
 export class ProductService {
+  
   constructor(private readonly prisma: PrismaService) {}
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto, userId: number) {
     try {
       const categoryId = await this.prisma.category.findUnique({
         where: { categoryName: createProductDto.productType },
@@ -20,6 +22,7 @@ export class ProductService {
       const product = await this.prisma.product.create({
         data: {
           ...createProductDto,
+          userId,
           originalPrice: parseInt(createProductDto.originalPrice),
           price: parseInt(createProductDto.price),
           categoryId: categoryId.categoryId,
@@ -484,4 +487,12 @@ export class ProductService {
       };
     }
   }
+
+  async updateProductStatus(productId: number, status: string) {
+    await this.prisma.product.update({
+      where: { productId: productId },
+      data: {status: status as PRODUCT_STATUS},
+    })
+  }
+  
 }

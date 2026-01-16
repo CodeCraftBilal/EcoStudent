@@ -197,6 +197,7 @@ export default function PurchasesPage() {
               return (
                 <div key={purchase.id} ref={isLast ? lastItemRef : null}>
                   <PurchaseItem
+                    isPurchase={true}
                     purchase={purchase}
                     onRatePurchase={handleRatePurchase}
                   />

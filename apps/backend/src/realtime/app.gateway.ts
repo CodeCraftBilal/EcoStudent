@@ -2,18 +2,12 @@ import { Inject, UseGuards } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import {
-  ConnectedSocket,
-  MessageBody,
-  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 import jwtConfig from 'src/auth/config/jwt.config';
-import { SOCKET_EVENTS } from 'src/common/constants/socket-events';
-import { MessageService } from 'src/message/message.service';
-import { NotificationService } from 'src/notification/notification.service';
 import { UsersService } from 'src/users/users.service';
 @WebSocketGateway({
   cors: {
@@ -28,8 +22,6 @@ export class AppGateway {
   constructor(
     private readonly jwtService: JwtService,
     private readonly authService: AuthService,
-    private readonly messageService: MessageService,
-    private readonly notificationService: NotificationService,
     private readonly userService: UsersService,
     @Inject(jwtConfig.KEY)
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
@@ -52,6 +44,8 @@ export class AppGateway {
         payload.sub,
         payload.tokenVersion,
       );
+
+      await this.userService.update(user.id, { isOnline: true });
 
       client.data.userId = user.id;
       client.data.role = user.role;
@@ -77,37 +71,8 @@ export class AppGateway {
     return cookies['access_token'] || null;
   }
 
-  private async markUserOnline(userId: number) {
-    // Implementation to mark user as online
-    await this.userService.update(userId, { isOnline: true });
-    ;
-  }
-
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
+    await this.userService.update(client.data.userId, { isOnline: false });
     console.log(`Client disconnected: ${client.id}`);
-  }
-
-  @SubscribeMessage(SOCKET_EVENTS.MESSAGE_SEND)
-  async handleSendMessage(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() payload: any,
-  ) {
-    console.log('handleSendMessage payload', payload);
-    const senderId = client.data.userId;
-    client.emit('message-received', { status: 'ok' });
-    const message = await this.messageService.createMessage(senderId, {...payload.data});
-
-    // Emit to chat participants
-    this.server
-      .to(`user:${message.receiverId}`)
-      .emit(SOCKET_EVENTS.MESSAGE_NEW, message);
-
-    // Emit notification
-  //   const notification =
-  //     await this.notificationService.createMessageNotification(message);
-
-  //   this.server
-  //     .to(`user:${message.receiverId}`)
-  //     .emit(SOCKET_EVENTS.NOTIFICATION_NEW, notification);
   }
 }

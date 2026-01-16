@@ -6,6 +6,7 @@ import TopLoader from "@/components/topLoader";
 import SessionProvider from "@/context/useSession";
 import InfiniteScrollProvider from "@/providers/InfiniteScrollProvider";
 import { SocketProvider } from "@/context/useSocket";
+import { NotificationProvider } from "@/context/useNotification";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
   title: "Ecosutdent - A platform for students to share and discover resources",
   description: "A platform for students to share and discover resources.",
   icons: {
-    icon: "/logo.svg",
+    icon: "/logo.png",
   },
 };
 
@@ -37,11 +38,14 @@ export default function RootLayout({
       >
         <SessionProvider>
           <SocketProvider>
+            <NotificationProvider>
+
             <InfiniteScrollProvider>
               <TopLoader />
               <Navbar />
               {children}
             </InfiniteScrollProvider>
+            </NotificationProvider>
           </SocketProvider>
         </SessionProvider>
       </body>

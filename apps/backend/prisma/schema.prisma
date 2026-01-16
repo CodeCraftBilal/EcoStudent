@@ -25,7 +25,7 @@ model Users {
   createdAt                             DateTime?        @map("created_at") @db.Timestamp(6)
   updatedAt                             DateTime?        @map("updated_at") @db.Timestamp(6)
   tokenversion                          Int              @default(0)
-  isOnline                              Boolean?         @map("isonline") @default(false)
+  isOnline                              Boolean?         @default(false) @map("isonline")
   messagesReceived                      Message[]        @relation("Message_receiveridTousers")
   messagesSent                          Message[]        @relation("Message_senderidTousers")
   chat_chat_receiveridTousers           chat[]           @relation("chat_receiveridTousers")
@@ -42,18 +42,19 @@ model Users {
 }
 
 model Message {
-  messageId    Int           @id @default(autoincrement()) @map("messageid")
+  messageId    Int          @id @default(autoincrement()) @map("messageid")
   chatId       Int          @map("chatid")
   senderId     Int          @map("senderid")
   receiverId   Int          @map("receiverid")
   messageType  message_type @map("messagetype")
   content      String       @db.VarChar(1000)
-  voiceNoteUrl String?       @map("voicenoteurl") @db.VarChar(255)
-  isRead       Boolean      @map("isread") @default(false)
-  createdAt    DateTime?     @map("created_at") @db.Timestamp(6) @default(now())
-  chat         chat?         @relation(fields: [chatId], references: [chatId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_chat")
-  receiver     Users?        @relation("Message_receiveridTousers", fields: [receiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_receiver")
-  sender       Users?        @relation("Message_senderidTousers", fields: [senderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_sender")
+  voiceNoteUrl String?      @map("voicenoteurl") @db.VarChar(255)
+  status  MESSAGE_STATUS  @default(sent)
+  isRead       Boolean      @default(false) @map("isread")
+  createdAt    DateTime?    @default(now()) @map("created_at") @db.Timestamp(6)
+  chat         chat?        @relation(fields: [chatId], references: [chatId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_chat")
+  receiver     Users?       @relation("Message_receiveridTousers", fields: [receiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_receiver")
+  sender       Users?       @relation("Message_senderidTousers", fields: [senderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_sender")
 
   @@map("Message")
 }
@@ -86,6 +87,7 @@ model chat {
   product                      product?  @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_product")
   users_chat_receiveridTousers Users?    @relation("chat_receiveridTousers", fields: [receiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_receiver")
   users_chat_senderidTousers   Users?    @relation("chat_senderidTousers", fields: [senderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_sender")
+
   @@unique([senderId, receiverId, productId], name: "senderid_receiverid_productid_unique", map: "chat_senderid_receiverid_unique")
 }
 
@@ -101,32 +103,32 @@ model exchanges {
   meetupLongitude Decimal          @map("meetuplongitude") @db.Decimal(11, 8)
   meetupTime      DateTime         @map("meetuptime") @db.Timestamp(6)
   completedAt     DateTime?        @map("completed_at") @db.Timestamp(6)
-  createdAt       DateTime?        @default(now()) @map("created_at") @db.Timestamp(6)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamp(6)
   users           Users            @relation(fields: [buyerId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_buyer")
   product         product          @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_product")
   reviews         reviews[]
 }
 
 model notifications {
-  notificationid    Int       @id @default(autoincrement())
-  type              String?   @db.VarChar(255)
+  notificationId    Int       @id @default(autoincrement()) @map("notificationid")
+  type              NOTIFICATION_TYPE
   title             String    @db.VarChar(255)
-  message           String?   @db.VarChar(255)
-  isread            Boolean?
-  relatedentitytype String?   @db.VarChar(50)
-  relatedentityid   Int?
-  created_at        DateTime? @db.Timestamp(6)
-  userid            Int?
-  users             Users?    @relation(fields: [userid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_notifications_users")
+  message           String    @db.VarChar(255)
+  isRead            Boolean?  @default(false) @map("isread")
+  relatedEntityType String?   @map("relatedentitytype") @db.VarChar(50)
+  relatedEntityId   Int?      @map("relatedentityid")
+  createdAt         DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  userId            Int       @map("userid")
+  users             Users?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_notifications_users")
 }
 
 model product {
   productId        Int               @id @default(autoincrement()) @map("productid")
-  userId           Int?              @map("userid")
-  categoryId       Int?              @map("categoryid")
+  userId           Int               @map("userid")
+  categoryId       Int               @map("categoryid")
   title            String            @db.VarChar(255)
   description      String?
-  price            Decimal?          @db.Decimal(10, 2)
+  price            Decimal           @db.Decimal(10, 2)
   views            Int?
   images           Json?             @db.Json
   viewCount        Int?              @map("viewcount")
@@ -205,9 +207,9 @@ enum message_type {
 enum product_type {
   books
   bags
-  uniforms
-  calculators
-  geomatry
+  uniform
+  calculator
+  geometry
   other
 }
 
@@ -229,4 +231,20 @@ enum PRODUCT_STATUS {
   sold
   reserved
   draft
+}
+
+enum NOTIFICATION_TYPE {
+  message
+  sale
+  review
+  purchase
+  listing
+  order
+  other
+}
+
+enum MESSAGE_STATUS {
+  sent
+  delivered
+  read
 }

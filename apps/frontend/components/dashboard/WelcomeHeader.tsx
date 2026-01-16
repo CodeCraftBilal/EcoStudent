@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell, Cross, Settings, X } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 interface WelcomeHeaderProps {
@@ -50,9 +51,11 @@ export default function WelcomeHeader({
             )}
           </button>
           
-          <button className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
+          <Link
+          href={'/dashboard/profile'}
+          className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
             <Settings className="w-6 h-6" />
-          </button>
+          </Link>
         </div>
       </div>
     </div>

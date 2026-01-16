@@ -13,6 +13,7 @@ interface ReviewFormProps {
   itemTitle: string;
   currentRating?: number;
   currentReview?: string;
+  isSeller: boolean
 }
 
 export default function ReviewForm({
@@ -23,6 +24,7 @@ export default function ReviewForm({
   itemTitle,
   currentRating = 0,
   currentReview = "",
+  isSeller
 }: ReviewFormProps) {
   const [rating, setRating] = useState(currentRating);
   const [review, setReview] = useState(currentReview);
@@ -94,6 +96,7 @@ export default function ReviewForm({
                       <button
                         key={star}
                         type="button"
+                        disabled={isSeller}
                         onClick={() => setRating(star)}
                         onMouseEnter={() => setHoverRating(star)}
                         onMouseLeave={() => setHoverRating(0)}
@@ -135,6 +138,7 @@ export default function ReviewForm({
                   <textarea
                     id="review"
                     value={review}
+                    readOnly={isSeller}
                     onChange={(e) => setReview(e.target.value)}
                     placeholder="What did you like about this purchase? Was the item as described? How was the seller?"
                     rows={4}
@@ -158,7 +162,7 @@ export default function ReviewForm({
                 </div>
 
                 {/* Submit Button */}
-                <button
+                {!isSeller && (<button
                   type="submit"
                   disabled={rating === 0 || !review.trim() || isSubmitting}
                   className="w-full bg-gradient-to-r from-green-500 to-[#3B82F6] text-white font-medium py-3 px-4 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
@@ -174,16 +178,17 @@ export default function ReviewForm({
                       Submit Review
                     </>
                   )}
-                </button>
+                </button>)
+                }
 
                 {/* Cancel Button */}
-                <button
+                {!isSeller && (<button
                   type="button"
                   onClick={onClose}
                   className="w-full mt-3 text-gray-600 font-medium py-3 px-4 rounded-lg hover:bg-green-50 transition-colors"
                 >
                   Cancel
-                </button>
+                </button>)}
               </form>
             </motion.div>
           </motion.div>

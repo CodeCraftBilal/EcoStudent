@@ -1,9 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
-import { not } from 'rxjs/internal/util/not';
 
 const PageSize = 30;
 
@@ -15,21 +14,17 @@ export class ChatService {
   ) {}
 
   async create(createChatDto: CreateChatDto, senderId: number) {
-    
-    
     // Check if chat already exists between these users for this product
     const existingChat = await this.prisma.chat.findFirst({
       where: {
         OR: [
           {
             senderId: senderId,
-            receiverId: createChatDto.receiverId,
-            productId: createChatDto.productId,
+            receiverId: createChatDto.receiverId
           },
           {
             senderId: createChatDto.receiverId,
             receiverId: senderId,
-            productId: createChatDto.productId,
           },
         ],
       },
@@ -39,6 +34,7 @@ export class ChatService {
         product: {
           select: {
             productId: true,
+            userId: true,
             title: true,
             price: true,
             images: true,
@@ -49,8 +45,9 @@ export class ChatService {
         },
       },
     });
-    
+
     if (existingChat) {
+      await this.update(existingChat.chatId, {productId: createChatDto.productId});
       return this.formatChatResponse(existingChat, senderId);
     }
 
@@ -67,6 +64,7 @@ export class ChatService {
         product: {
           select: {
             productId: true,
+            userId: true,
             title: true,
             price: true,
             images: true,
@@ -89,10 +87,7 @@ export class ChatService {
     const chat = await this.prisma.chat.findFirst({
       where: {
         chatId: id,
-        OR: [
-          { senderId: userId },
-          { receiverId: userId }
-        ]
+        OR: [{ senderId: userId }, { receiverId: userId }],
       },
       include: {
         users_chat_senderidTousers: {
@@ -144,7 +139,15 @@ export class ChatService {
   }
 
   update(id: number, updateChatDto: UpdateChatDto) {
-    return `This action updates a #${id} chat`;
+    console.log('updateing')
+    return this.prisma.chat.update({
+      where: {
+        chatId: id,
+      },
+      data: {
+        ...updateChatDto,
+      },
+    });
   }
 
   remove(id: number) {
@@ -152,85 +155,100 @@ export class ChatService {
   }
 
   async getConversations(query: any, userId: number) {
-    
-    const limit = query.limit && query.limit < PageSize ? query.limit : PageSize;
+    const limit =
+      query.limit && query.limit < PageSize ? query.limit : PageSize;
     const page = query.page ?? 1;
     const skip = (page - 1) * limit;
 
-    const [rawConversations, currentUser] = await Promise.all([this.prisma.chat.findMany({
-      skip,
-      take: limit,
-      orderBy: {
-        lastMessageAt: 'desc',
-      },
-      where: {
+    const [rawConversations, currentUser] = await Promise.all([
+  this.prisma.chat.findMany({
+    skip,
+    take: limit,
+    orderBy: {
+      lastMessageAt: 'desc',
+    },
+    where: {
+      OR: [{ senderId: userId }, { receiverId: userId }],
+      ...(query.searchQuery && {
         OR: [
-          { senderId: userId },
-          { receiverId: userId }
+          {
+            users_chat_senderidTousers: {
+              userName: {
+                contains: query.searchQuery,
+                mode: 'insensitive',
+              },
+            },
+          },
+          {
+            users_chat_receiveridTousers: {
+              userName: {
+                contains: query.searchQuery,
+                mode: 'insensitive',
+              },
+            },
+          },
         ],
-        ...(query.searchQuery && {
-          OR: [
-            {
-              users_chat_senderidTousers: {
-                userName: {
-                  contains: query.searchQuery,
-                  mode: 'insensitive',
-                },
-              },
-            },
-            {
-              users_chat_receiveridTousers: {
-                userName: {
-                  contains: query.searchQuery,
-                  mode: 'insensitive',
-                },
-              },
-            },
-          ],
-        }),
-        lastMessage: {
-          not: null,
-        }
+      }),
+      lastMessage: {
+        not: null,
       },
-      include: {
-        users_chat_senderidTousers: {
-          select: {
-            userId: true,
-            userName: true,
-            profilePicture: true,
-            isVerified: true,
-            rating: true,
-          },
+    },
+    include: {
+      users_chat_senderidTousers: {
+        select: {
+          userId: true,
+          userName: true,
+          profilePicture: true,
+          isVerified: true,
+          rating: true,
+          isOnline: true,
         },
-        users_chat_receiveridTousers: {
-          select: {
-            userId: true,
-            userName: true,
-            profilePicture: true,
-            isVerified: true,
-            rating: true,
-          },
+      },
+      users_chat_receiveridTousers: {
+        select: {
+          userId: true,
+          userName: true,
+          profilePicture: true,
+          isVerified: true,
+          rating: true,
+          isOnline: true,
         },
-        product: {
-          select: {
-            productId: true,
-            title: true,
-            price: true,
-            images: true,
-            exchangeType: true,
-            productCondition: true,
-            categoryId: true,
+      },
+      product: {
+        select: {
+          productId: true,
+          userId: true,
+          title: true,
+          price: true,
+          images: true,
+          exchangeType: true,
+          productCondition: true,
+          categoryId: true,
+        },
+      },
+      _count: {
+        select: {
+          messages: {
+            where: {
+              receiverId: userId,
+              status: {
+                not: 'read'
+              }
+            },
           },
         },
       },
-    }),
+    },
+  }),
+
+  this.usersService.findOne(userId),
+]);
 
 
-    this.usersService.findOne(userId)]);
+    console.log('raw conversation: ', rawConversations)
 
-    
-    const mappedConversations = rawConversations.map((chat) => 
-      this.formatChatResponse(chat, userId)
+    const mappedConversations = rawConversations.map((chat) =>
+      this.formatChatResponse(chat, userId),
     );
 
     const formattedCurrentUser = this.formatCurrentUser(currentUser);
@@ -243,19 +261,21 @@ export class ChatService {
 
   // Helper function to format chat response
   private formatChatResponse(chat: any, currentUserId: number) {
-    const isSender = chat.senderId === currentUserId;
-    const participant = isSender 
-      ? chat.users_chat_receiveridTousers 
+
+    console.log('type of sender Id ', typeof chat.senderId)
+    const isSender = chat.senderId == currentUserId;
+    const participant = isSender
+      ? chat.users_chat_receiveridTousers
       : chat.users_chat_senderidTousers;
-    
-    const otherUser = isSender 
-      ? chat.users_chat_senderidTousers 
+
+    const otherUser = isSender
+      ? chat.users_chat_senderidTousers
       : chat.users_chat_receiveridTousers;
 
     // Get last message from chat or from included messages
     let lastMessage = chat.lastMessage;
     let lastMessageAt = chat.lastMessageAt;
-    
+
     if (chat.messages && chat.messages.length > 0) {
       lastMessage = chat.messages[0]?.content;
       lastMessageAt = chat.messages[0]?.createdAt || chat.lastMessageAt;
@@ -266,23 +286,30 @@ export class ChatService {
       participant: {
         id: participant?.userId,
         name: participant?.userName,
-        profilePicture: participant?.profilePicture,
+        avatar: participant?.profilePicture,
         verified: participant?.isVerified,
         rating: participant?.rating,
-        isOnline: true,
+        isOnline: participant?.isOnline,
       },
       lastMessage: lastMessage,
       lastMessageAt: lastMessageAt?.toISOString(),
-      unreadCount: 0,
-      item: chat.product ? {
-        id: chat.product.productId.toString(),
-        title: chat.product.title,
-        price: chat.product.price,
-        image: chat.product.images ? (Array.isArray(chat.product.images) ? chat.product.images[0] : chat.product.images) : null,
-        exchangeType: chat.product.exchangeType,
-        condition: chat.product.productCondition,
-        category: chat.product.categoryId?.toString(),
-      } : null,
+      unreadCount: chat._count?.messages ?? 0,
+      item: chat.product
+        ? {
+            id: chat.product.productId.toString(),
+            sellerId: chat.product.userId,
+            title: chat.product.title,
+            price: chat.product.price,
+            image: chat.product.images
+              ? Array.isArray(chat.product.images)
+                ? chat.product.images[0]
+                : chat.product.images
+              : null,
+            exchangeType: chat.product.exchangeType,
+            condition: chat.product.productCondition,
+            category: chat.product.categoryId?.toString(),
+          }
+        : null,
     };
   }
 
@@ -294,7 +321,7 @@ export class ChatService {
       verified: currentUser.isVerified,
       isOnline: true,
       rating: currentUser.rating,
-    }
+    };
   }
 
   async getMessages(senderId: number, chatId: number, query: any) {
@@ -306,11 +333,8 @@ export class ChatService {
     const chat = await this.prisma.chat.findFirst({
       where: {
         chatId,
-        OR: [
-          { senderId: senderId },
-          { receiverId: senderId }
-        ]
-      }
+        OR: [{ senderId: senderId }, { receiverId: senderId }],
+      },
     });
 
     if (!chat) {
@@ -322,7 +346,7 @@ export class ChatService {
         chatId,
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: 'desc',
       },
       take: limit,
       skip,
@@ -334,9 +358,10 @@ export class ChatService {
         messageType: true,
         isRead: true,
         createdAt: true,
+        status: true,
       },
     });
-    
+
     return rawMessages.map((msg) => ({
       id: msg.messageId.toString(),
       senderId: msg.senderId,
@@ -344,7 +369,7 @@ export class ChatService {
       content: msg.content,
       timestamp: msg.createdAt ? msg.createdAt.toISOString() : null,
       type: msg.messageType,
-      status: msg.isRead ? 'read' : 'delivered',
+      status: msg.status,
       isEdited: false,
       replyTo: null,
     }));

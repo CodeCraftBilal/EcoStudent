@@ -1,4 +1,4 @@
-import { IsDecimal, IsEmail, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsDecimal, IsEmail, IsNumber, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -37,11 +37,11 @@ export class CreateUserDto {
   @MaxLength(255)
   userLocation: string;
 
-  @IsDecimal()
+  @IsNumber()
   @IsOptional()
   latitude: number;
 
-  @IsDecimal()
+  @IsNumber()
   @IsOptional()
   longitude: number;
 

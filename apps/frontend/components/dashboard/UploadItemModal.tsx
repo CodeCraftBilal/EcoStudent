@@ -7,11 +7,12 @@ import { UploadItemData } from "@/lib/types/dashboard/types";
 import imageCompression from "browser-image-compression";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
+import { SuccessDialog } from "../ui/dialogBoxes/Pre-configuredDialog";
 
 interface UploadItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  setIsUploadModalOpen: (uploadItem: boolean) => void
+  setIsUploadModalOpen: (uploadItem: boolean) => void;
   // onUpload: (data: UploadItemData) => Promise<void>;
 }
 
@@ -37,8 +38,10 @@ export default function UploadItemModal({
   const [serverError, setServerError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleUploadItem = async (data: UploadItemData): Promise<void> => {
     setIsLoading(true);
@@ -47,52 +50,56 @@ export default function UploadItemModal({
     try {
       // Create FormData for file upload
       const formData = new FormData();
-      
+
       // Append basic fields
-      formData.append('title', data.title);
-      formData.append('description', data.description || '');
-      formData.append('price', data.price.toString());
-      formData.append('originalPrice', data.originalPrice?.toString() || '0');
-      formData.append('productType', data.category);
-      formData.append('subCategory', data.subCategory || '');
-      formData.append('productCondition', data.condition);
-      formData.append('exchangeType', data.exchangeType);
+      formData.append("title", data.title);
+      formData.append("description", data.description || "");
+      formData.append("price", data.price.toString());
+      formData.append("originalPrice", data.originalPrice?.toString() || "0");
+      formData.append("productType", data.category);
+      formData.append("subCategory", data.subCategory || "");
+      formData.append("productCondition", data.condition);
+      formData.append("exchangeType", data.exchangeType);
 
       // Append images
       data.images.forEach((image, index) => {
-        formData.append('images', image);
+        formData.append("images", image);
       });
 
       // API call to upload item
       const response = await authFetch(`${BACKEND_URL}/product`, {
-        method: 'POST',
+        method: "POST",
         body: formData,
         // headers are automatically set by browser for FormData
       });
 
       if (!response.ok) {
-        console.log(response.status, response.statusText)
+        console.log(response.status, response.statusText);
         const errorData = await response.json();
-        throw new Error(`${JSON.stringify(errorData.message)}` || `Upload failed with status: ${response.status}`);
+        throw new Error(
+          `${JSON.stringify(errorData.message)}` ||
+            `Upload failed with status: ${response.status}`
+        );
       }
 
       const result = await response.json();
-      
+
       console.log("Item uploaded successfully:", result);
-      
+
       // Show success message
-      alert("Item listed successfully!");
-      
+      setIsDialogOpen(true);
+
       // Close modal
-      setIsUploadModalOpen(false);
-      
+      // setIsUploadModalOpen(false);
+
       // You might want to refresh the listings here
       // refreshListings();
-
     } catch (error: any) {
       console.error("Error uploading item:", error);
-      setUploadError(error.message || "Failed to upload item. Please try again.");
-      
+      setUploadError(
+        error.message || "Failed to upload item. Please try again."
+      );
+
       // Re-throw the error so the modal can handle it too
       throw error;
     } finally {
@@ -113,8 +120,8 @@ export default function UploadItemModal({
     defaultValues: {
       title: "",
       description: "",
-      price: '0',
-      originalPrice: '0',
+      price: "0",
+      originalPrice: "0",
       category: "books",
       subCategory: "",
       condition: "good",
@@ -235,26 +242,28 @@ export default function UploadItemModal({
     setIsSubmitting(true);
     setServerError(null);
 
-    if(data.category === 'other') {
-      console.log('category: ', data.category)
-      if(data.subCategory.length < 3) {
-        setError('subCategory', {message: 'Min leght is 3'})
+    if (data.category === "other") {
+      console.log("category: ", data.category);
+      if (data.subCategory.length < 3) {
+        setError("subCategory", { message: "Min leght is 3" });
       }
 
-      if(data.subCategory.length > 30) {
-        setError('subCategory', {message: 'Max length is 30'})
+      if (data.subCategory.length > 30) {
+        setError("subCategory", { message: "Max length is 30" });
       }
     }
 
-    console.log(typeof(data.price), typeof(data.originalPrice))
-    if(parseFloat(data.price) > parseFloat(data.originalPrice)) {
-      setError('price', {message: 'sale price should be less than orignal price'})
+    console.log(typeof data.price, typeof data.originalPrice);
+    if (parseFloat(data.price) > parseFloat(data.originalPrice)) {
+      setError("price", {
+        message: "sale price should be less than orignal price",
+      });
     }
 
     try {
       console.log("data: ", data);
       await handleUploadItem(data as UploadItemData);
-      onClose();
+      // onClose();
       reset();
       setSelectedImages([]);
     } catch (error: any) {
@@ -702,6 +711,25 @@ export default function UploadItemModal({
             </button>
           </div>
         </form>
+
+        <SuccessDialog 
+          title="Item Uploaded"
+          description="Item Uploaded Successfuly"
+          isOpen={isDialogOpen}
+          onClose={() => {
+            setIsDialogOpen(false);
+            setIsUploadModalOpen(false);
+          }}
+          buttons={[
+            {
+              text: 'OK',
+              onClick() {
+                setIsDialogOpen(false);
+                setIsUploadModalOpen(false);
+              }
+            }
+          ]}
+         />
       </div>
     </div>
   );

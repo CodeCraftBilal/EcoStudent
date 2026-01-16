@@ -43,7 +43,7 @@ export default function ProfileHeader({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-5">
       {/* Cover Image */}
       <div className="relative h-48 bg-gradient-to-r from-eco-500 to-eco-blue-500">
         {isEditing && (

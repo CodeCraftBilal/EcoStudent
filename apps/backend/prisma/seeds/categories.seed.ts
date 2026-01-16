@@ -1,14 +1,14 @@
-import { PrismaClient } from '../../apps/backend/generated/prisma';
+import { PrismaClient } from '../../generated/prisma';
 import { faker } from '@faker-js/faker';
 
 export async function seedCategories(prisma: PrismaClient) {
   const categories = [
-    'Books',
-    'Bags',
-    'Uniforms',
-    'Calculators',
-    'Geometry',
-    'Other',
+    'books',
+    'bags',
+    'uniform',
+    'calculator',
+    'geometry',
+    'other',
   ];
 
   for (const name of categories) {

@@ -11,7 +11,7 @@ export interface User {
 
 export interface Message {
   id: string;
-  chatId: string;
+  chatId: number;
   senderId: string;
   receiverId: string;
   content: string;
@@ -23,6 +23,7 @@ export interface Message {
 }
 
 export interface Conversation {
+  lastMessageTime(lastMessageTime: any): import("react").ReactNode;
   id: string;
   participant: User;
   lastMessage: string;
@@ -30,6 +31,7 @@ export interface Conversation {
   unreadCount: number;
   item?: {
     id: string;
+    sellerId: string;
     title: string;
     price: number;
     image: string;

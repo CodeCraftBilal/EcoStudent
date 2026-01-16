@@ -15,6 +15,7 @@ export const mockItems: Item[] = [
     distance: 1.2,
     rating: 4.8,
     seller: {
+      id: '3',
       name: "Ali Ahmed",
       rating: 4.9,
       verified: true,
@@ -32,6 +33,7 @@ export const mockItems: Item[] = [
     distance: 2.5,
     rating: 4.5,
     seller: {
+      id: '3',
       name: "Sara Khan",
       rating: 4.7,
       verified: true,
@@ -50,6 +52,7 @@ export const mockItems: Item[] = [
     distance: 0.8,
     rating: 4.9,
     seller: {
+      id: '3',
       name: "Bilal Raza",
       rating: 5.0,
       verified: false,
@@ -67,6 +70,7 @@ export const mockItems: Item[] = [
     distance: 3.1,
     rating: 4.3,
     seller: {
+      id: '3',
       name: "Fatima Noor",
       rating: 4.4,
       verified: true,
@@ -78,12 +82,12 @@ export const mockItems: Item[] = [
     title: "School Bag Backpack",
     description: "Waterproof school backpack with laptop compartment.",
     price: 1200,
-    category: "bag",
+    category: "bags",
     condition: "fair",
     image: "/imgshop/bag.png",
-    distance: 1.8,
-    rating: 4.2,
+    distance: 1.8, 
     seller: {
+      id: '3',
       name: "Usman Ali",
       rating: 4.6,
       verified: true,
@@ -99,8 +103,8 @@ export const mockItems: Item[] = [
     condition: "good",
     image: "/imgshop/phybook.png",
     distance: 4.2,
-    rating: 4.6,
     seller: {
+      id: '3',
       name: "Ayesha Malik",
       rating: 4.8,
       verified: true,
@@ -120,6 +124,7 @@ export const mockItems: Item[] = [
     distance: 2.5,
     rating: 4.8,
     seller: {
+      id: '3',
       name: "Ali Raza",
       rating: 4.9,
       verified: true,
@@ -138,6 +143,7 @@ export const mockItems: Item[] = [
     distance: 4.2,
     rating: 4.6,
     seller: {
+      id: '3',
       name: "Hassan Ahmad",
       rating: 4.7,
       verified: false,
@@ -157,6 +163,7 @@ export const mockItems: Item[] = [
     distance: 1.8,
     rating: 4.5,
     seller: {
+      id: '3',
       name: "Fatima Noor",
       rating: 4.8,
       verified: true,
@@ -176,6 +183,7 @@ export const mockItems: Item[] = [
     distance: 3.1,
     rating: 4.9,
     seller: {
+      id: '3',
       name: "Muhammad Bilal",
       rating: 4.9,
       verified: true,
@@ -194,6 +202,7 @@ export const mockItems: Item[] = [
     distance: 5.4,
     rating: 4.4,
     seller: {
+      id: '3',
       name: "Sara Khan",
       rating: 4.6,
       verified: false,
@@ -212,6 +221,7 @@ export const mockItems: Item[] = [
     distance: 6.0,
     rating: 4.3,
     seller: {
+      id: '3',
       name: "Aqeel Rehman",
       rating: 4.7,
       verified: true,
@@ -231,6 +241,7 @@ export const mockItems: Item[] = [
     distance: 2.0,
     rating: 4.9,
     seller: {
+      id: '3',
       name: "Zain Malik",
       rating: 4.8,
       verified: true,
@@ -249,6 +260,7 @@ export const mockItems: Item[] = [
     distance: 1.2,
     rating: 4.2,
     seller: {
+      id: '3',
       name: "Anam Javed",
       rating: 4.4,
       verified: false,
@@ -267,6 +279,8 @@ export const mockItems: Item[] = [
     distance: 3.7,
     rating: 4.8,
     seller: {
+      id: '3',
+      id: '2',
       name: "Hamza Tariq",
       rating: 4.9,
       verified: true,
@@ -279,12 +293,13 @@ export const mockItems: Item[] = [
     description:
       "Well-maintained handwritten notes covering Python basics to advanced topics.",
     price: 700,
-    category: "Notes",
+    category: "other",
     condition: "fair",
     image: "/images/python-notes.jpg",
     distance: 4.8,
-    rating: 4.1,
     seller: {
+      id: '3',
+      id: '1',
       name: "Nimra Aslam",
       rating: 4.3,
       verified: false,
@@ -350,7 +365,8 @@ export const mockReviews = [
       verified: true
     },
     rating: 5,
-    comment: "Amazing experience! The seller kept me updated and the quality was superb. Would buy again.",
+    comment: "Amazing experience! The seller ke
+    id: '3',pt me updated and the quality was superb. Would buy again.",
     date: "2024-05-21",
     helpful: 22
   },
@@ -410,7 +426,8 @@ export const mockReviews = [
       verified: true
     },
     rating: 5,
-    comment: "Perfectly described and delivered. This seller knows how to maintain trust!",
+    comment: "Perfectly described and delivered. This seller kn
+    id: '3',ows how to maintain trust!",
     date: "2024-10-11",
     helpful: 14
   },

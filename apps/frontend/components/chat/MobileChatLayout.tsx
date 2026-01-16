@@ -27,6 +27,8 @@ interface MobileChatLayoutProps {
   fetchNextMsgPage: () => void;
   isFetchingNextMsgPage: boolean;
   isLoadingMessages: boolean;
+  // input props
+  onMsgSend: (content: string) => void;
 }
 
 type View = "conversations" | "chat";
@@ -46,6 +48,7 @@ export default function MobileChatLayout({
   isFetchingNextMsgPage,
   isLoadingMessages,
   onConversationSelect,
+  onMsgSend
 }: MobileChatLayoutProps) {
   console.log('msgs ', msgs)
   const [selectedConversationId, setSelectedConversationId] = useState<
@@ -78,21 +81,6 @@ export default function MobileChatLayout({
   const handleConversationSelect = (conversationId: string) => {
     onConversationSelect(conversationId);
     setSelectedConversationId(conversationId);
-  };
-
-  const handleSendMessage = (content: string) => {
-    if (!selectedConversation) return;
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      senderId: currentUser.id,
-      receiverId: selectedConversation.participant.id,
-      content,
-      timestamp: new Date().toISOString(),
-      type: "text",
-      status: "sent",
-    };
-    setMessages((prev) => [...prev, newMessage]);
   };
 
   const handleEditMessage = (messageId: string, newContent: string) => {
@@ -183,7 +171,7 @@ export default function MobileChatLayout({
           )}
 
           <MessageInput
-            onSendMessage={handleSendMessage}
+            onSendMessage={onMsgSend}
             placeholder={`Message ${selectedConversation.participant.name}...`}
           />
         </div>

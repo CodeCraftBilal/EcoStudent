@@ -5,8 +5,9 @@ import { DashboardLoader } from "@/components/Loading";
 import { useSession } from "@/context/useSession";
 import { DashboardStats, Listing, Activity } from "@/lib/types/dashboard/types";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { mockListings, mockActivities } from "@/data/dashboard/dashboard";
+import { authFetch } from "@/lib/authFetch";
 
 // Mock data
 const mockStats: DashboardStats = {
@@ -17,7 +18,6 @@ const mockStats: DashboardStats = {
   itemsBought: 8,
   positiveReviews: 15,
 };
-
 
 export default function DashboardPage() {
   const params = useSearchParams();
@@ -30,21 +30,48 @@ export default function DashboardPage() {
 
   const router = useRouter();
   const { session, isLoading } = useSession();
-  
+  const [stats, setStats] = useState<DashboardStats>({
+    itemsForSale: 0,
+    itemsSold: 0,
+    totalEarnings: 0,
+    unreadMessages: 0,
+    itemsBought: 0,
+    positiveReviews: 0,
+  });
 
   useEffect(() => {
-    console.log('dashboard ')
+    console.log("dashboard ");
     if (!session && !isLoading) {
       router.push("/auth/signin");
     }
   }, [isLoading, session, router]);
 
-  if (isLoading) return <DashboardLoader />
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await authFetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/dashboard/stats`
+        );
+        if (!res.ok) throw new Error("Unable to dashbaord stats");
+
+        const result = await res.json();
+        setStats(result);
+        console.log(result);
+      } catch (err) {
+        console.error("Dashboard Stats Error ", err);
+      }
+    };
+
+    fetchStats();
+    return () => {};
+  }, []);
+
+  if (isLoading) return <DashboardLoader />;
   if (!session) return null;
   return (
     <DashboardLayout
       userName="Ali Student"
-      stats={mockStats}
+      stats={stats}
       listings={mockListings}
       activities={mockActivities}
     />

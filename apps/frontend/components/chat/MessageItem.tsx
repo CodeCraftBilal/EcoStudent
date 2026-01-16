@@ -108,8 +108,8 @@ export default function MessageItem({
             </div>
 
             {/* Message Actions */}
-            {isHovered && !isEditing && (
-              <div className={`absolute -top-8 ${isOwnMessage ? 'right-2' : 'left-2'} flex space-x-1 bg-white border border-gray-200 rounded-lg p-1 shadow-lg`}>
+            {isHovered && false && !isEditing && ( // Temporarily disabled
+              <div className={`absolute z-10 -top-8 ${isOwnMessage ? 'right-2' : 'left-2'} flex space-x-1 bg-white border border-gray-200 rounded-lg p-1 shadow-lg`}>
                 <button
                   onClick={() => onReply(message.id)}
                   className="p-1 text-gray-600 hover:text-green-600 rounded hover:bg-gray-50"

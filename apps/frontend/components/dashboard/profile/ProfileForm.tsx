@@ -22,20 +22,12 @@ export default function ProfileForm({ profile, onSave, onCancel }: ProfileFormPr
       const prefKey = name.split('.')[1];
       setFormData(prev => ({
         ...prev,
-        preferences: {
-          ...prev.preferences,
-          [prefKey]: type === 'checkbox' ? checked : value
-        }
       }));
-    } else if (name.startsWith('socialLinks.')) {
-      const socialKey = name.split('.')[1];
+    } else if(name.startsWith('location')) {
       setFormData(prev => ({
         ...prev,
-        socialLinks: {
-          ...prev.socialLinks,
-          [socialKey]: value
-        }
-      }));
+        location: value
+      }))
     } else {
       setFormData(prev => ({
         ...prev,
@@ -66,7 +58,7 @@ export default function ProfileForm({ profile, onSave, onCancel }: ProfileFormPr
       newErrors.location = 'Location is required';
     }
 
-    if (!formData.institution.trim()) {
+    if (!formData.institution) {
       newErrors.institution = 'Institution is required';
     }
 
@@ -242,9 +234,26 @@ export default function ProfileForm({ profile, onSave, onCancel }: ProfileFormPr
           />
         </div>
       </ProfileSection>
+      
+      {/* address */}
+      <ProfileSection title="Address" description="Give the City name in which you live">
+        <div>
+          <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+            Bio
+          </label>
+          <input
+            id="address"
+            name="address"
+            value={formData.location}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500 resize-none"
+            placeholder="Tell other students about yourself, your interests, or what you're studying..."
+          />
+        </div>
+      </ProfileSection>
 
       {/* Notification Preferences */}
-      <ProfileSection title="Notification Preferences" description="Choose how you want to receive notifications">
+      {/* <ProfileSection title="Notification Preferences" description="Choose how you want to receive notifications">
         <div className="space-y-4">
           <label className="flex items-center space-x-3">
             <input
@@ -290,10 +299,10 @@ export default function ProfileForm({ profile, onSave, onCancel }: ProfileFormPr
             <span className="text-sm font-medium text-gray-700">Nearby Item Alerts</span>
           </label>
         </div>
-      </ProfileSection>
+      </ProfileSection> */}
 
       {/* Social Links */}
-      <ProfileSection title="Social Links" description="Connect your social media profiles (optional)">
+      {/* <ProfileSection title="Social Links" description="Connect your social media profiles (optional)">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="socialLinks.facebook" className="block text-sm font-medium text-gray-700 mb-2">
@@ -355,7 +364,7 @@ export default function ProfileForm({ profile, onSave, onCancel }: ProfileFormPr
             />
           </div>
         </div>
-      </ProfileSection>
+      </ProfileSection> */}
 
       {/* Form Actions */}
       <div className="flex space-x-4 pt-6">

@@ -53,7 +53,6 @@ export class ProductController {
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     
-    
     const imageUrls = await Promise.all(
       files.map((file) => {
         return useGCS
@@ -64,9 +63,8 @@ export class ProductController {
 
     return this.productService.create({
       ...createProductDto,
-      userId: req.user.id,
       images: imageUrls,
-    });
+    }, req.user.id);
   }
 
   @Get('mylisting')

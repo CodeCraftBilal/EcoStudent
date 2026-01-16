@@ -1,9 +1,20 @@
 "use client";
 
+import { desc } from "framer-motion/client";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
-export default function EmptyPurchases() {
+type PageProps = {
+  title?: string,
+  description?: string,
+  tagLine?: string
+}
+
+export default function EmptyPurchases({
+  title,
+  description,
+  tagLine
+}: PageProps) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
       <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -11,15 +22,16 @@ export default function EmptyPurchases() {
       </div>
       
       <h3 className="text-2xl font-bold text-gray-900 mb-3">
-        No Purchases Yet
+        {title ? title : "No Purchases Yet"}
       </h3>
       
       <p className="text-gray-600 max-w-md mx-auto mb-2">
-        You haven't made any purchases yet. Start exploring our marketplace to find amazing deals on books, uniforms, and educational supplies from students near you.
+        {description ? description : "You haven't made any purchases yet. Start exploring our marketplace to find amazing deals on books, uniforms, and educational supplies from students near you."}
       </p>
       
       <p className="text-gray-500 text-sm mb-8">
-        Save money and help the environment by buying from fellow students.
+        {tagLine ? tagLine : "Save money and help the environment by buying from fellow students."}
+        
       </p>
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center">

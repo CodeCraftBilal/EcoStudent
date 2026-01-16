@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../apps/backend/generated/prisma';
+import { PrismaClient } from '../../generated/prisma';
 import { faker } from '@faker-js/faker';
 
 export async function seedReviews(prisma: PrismaClient) {

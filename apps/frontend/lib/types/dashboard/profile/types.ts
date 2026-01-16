@@ -11,23 +11,11 @@ export interface UserProfile {
   latitude?: number;
   longitude?: number;
   userType: 'student' | 'teacher' | 'alumni' | 'other';
-  institution: string;
+  institution?: string;
   course?: string;
   semester?: string;
   joinDate: string;
   isVerified: boolean;
-  preferences: {
-    emailNotifications: boolean;
-    smsNotifications: boolean;
-    priceDropAlerts: boolean;
-    nearbyItemAlerts: boolean;
-  };
-  socialLinks?: {
-    facebook?: string;
-    twitter?: string;
-    instagram?: string;
-    linkedin?: string;
-  };
 }
 
 export interface ProfileStats {
@@ -37,6 +25,4 @@ export interface ProfileStats {
   totalEarnings: number;
   rating: number;
   reviewsCount: number;
-  responseRate: number;
-  completionRate: number;
 }

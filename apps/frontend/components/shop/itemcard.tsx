@@ -16,6 +16,8 @@ import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { useSnackbar } from "../ui/dialogBoxes/SnackBarManager";
 import { getUserLocation } from "@/lib/location";
+import { ErrorDialog } from "../ui/dialogBoxes/Pre-configuredDialog";
+import { useSession } from "@/context/useSession";
 
 interface ItemCardProps {
   item: Item;
@@ -29,11 +31,8 @@ interface ItemCardProps {
 const ItemCard = React.memo(
   ({
     item,
-    index,
     isFavorite,
-    isInCart,
     onToggleFavorite,
-    onToggleCart,
   }: ItemCardProps) => {
     // from filter
     const pathName = usePathname();
@@ -41,6 +40,9 @@ const ItemCard = React.memo(
     console.log(pathName);
 
     const [isCreatingChat, setIsCreatingChat] = useState(false);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const {session, isLoading} = useSession();
+    const [isAuthRedirecting, setIsAuthRedirecting] = useState(false);
 
     const formatTimeAgo = (dateString: string) => {
       const date = new Date(dateString);
@@ -65,9 +67,14 @@ const ItemCard = React.memo(
     // const [loadingChat, setLoadingChat] = useState(null)
     const handleMessageSeller = async (sellerId: string, productId: string) => {
       console.log(`sellerId: ${sellerId}, productId: ${productId}`);
-      setIsCreatingChat(true);
-      await getUserLocation(true)
+      if(isLoading || !session) {
+        setIsDialogOpen(true);
+        return
+      }
+      
       try {
+        setIsCreatingChat(true);
+        await getUserLocation(true)
         const response = await authFetch(`${BACKEND_URL}/chat`, {
           method: "POST",
           headers: {
@@ -98,6 +105,17 @@ const ItemCard = React.memo(
       }
     };
 
+    const handleDialogClose = () => {
+      setIsDialogOpen(false);
+    }
+    
+    const handleDialogSignUpClick = () => {
+      setIsAuthRedirecting(true);
+      router.push('/auth/signin?from=/shop');
+      // setIsDialogOpen(false);
+    }
+
+
     return (
       <div className="bg-white cursor-default rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
         {/* Image Section */}
@@ -109,7 +127,7 @@ const ItemCard = React.memo(
             <img
               src={item.image}
               alt={item.title}
-              className="w-full h-28 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-28 sm:h-48 object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </Link>
           <div className="absolute top-2 right-2 flex space-x-1">
@@ -185,7 +203,7 @@ const ItemCard = React.memo(
             className="sm:hidden"
           >
             <h3
-              className={`font-semibold text-gray-900 text-sm max-md:h-10 line-clamp-2 ${item.title.length < 25 ? "min-h-[2rem]" : ""}`}
+              className={`font-semibold text-gray-900 text-sm max-md:h-10 line-clamp-2 ${item.title.length < 25 ? "min-h-8" : ""}`}
             >
               {item.title}
             </h3>
@@ -312,6 +330,20 @@ const ItemCard = React.memo(
             </div>
           )}
         </div>
+
+        <ErrorDialog 
+        title="Sign Up"
+        description="sign up to message seller"
+        isOpen={isDialogOpen}
+        onClose={handleDialogClose}
+        buttons={[
+          {
+            text: 'Sign In',
+            onClick: handleDialogSignUpClick,
+            isLoading: isAuthRedirecting
+          }
+        ]}
+         />
       </div>
     );
   }

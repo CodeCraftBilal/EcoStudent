@@ -35,3 +35,13 @@ export interface FilterState {
   exchangeType: string[];
   distance: number;
 }
+
+export interface Notification {
+    id: string;
+    type: "message" | "sale" | "review" | 'purchase' | 'listing' | "other";
+    title: string;
+    message: string;
+    time: string;
+    read: boolean;
+    link: string;
+}

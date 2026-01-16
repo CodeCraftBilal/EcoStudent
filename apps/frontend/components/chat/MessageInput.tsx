@@ -45,10 +45,10 @@ export default function MessageInput({
   };
 
   return (
-    <div className="bg-white border-t border-gray-200 p-4">
+    <div className="bg-white border-t border-gray-200 p-4 max-md:sticky bottom-0 z-10">
       <div className="flex items-end space-x-2">
         {/* Attachment Buttons */}
-        <div className="flex space-x-1 mb-3">
+        {/* <div className="flex space-x-1 mb-3">
           <button className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
             <Paperclip className="w-5 h-5" />
           </button>
@@ -58,7 +58,7 @@ export default function MessageInput({
           <button className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
             <Smile className="w-5 h-5" />
           </button>
-        </div>
+        </div> */}
 
         {/* Message Input */}
         <div className="flex-1 relative">
@@ -86,7 +86,7 @@ export default function MessageInput({
           </button>
         ) : (
           <button className="bg-gray-500 mb-3 text-white p-3 rounded-full hover:bg-gray-600 transition-colors flex-shrink-0">
-            <Mic className="w-5 h-5" />
+            <Send className="w-5 h-5" />
           </button>
         )}
       </div>
