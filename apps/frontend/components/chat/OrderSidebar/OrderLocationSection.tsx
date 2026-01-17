@@ -86,7 +86,7 @@ export default function OrderLocationSection({
             <button
               onClick={handleSave}
               disabled={isSaving || !editedLocation}
-              className="w-full px-4 py-3 bg-gradient-to-r from-eco-500 to-eco-blue-500 text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-linear-to-r from-eco-500 to-eco-blue-500 text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? "Saving..." : "Save Location"}
             </button>

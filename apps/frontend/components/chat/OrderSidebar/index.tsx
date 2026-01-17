@@ -301,7 +301,7 @@ export default function OrderSidebar({
 
   if (loading) {
     return (
-      <div className="w-full h-full border-l border-gray-200 bg-gradient-to-br from-eco-50 to-eco-blue-50 flex items-center justify-center">
+      <div className="w-full h-full border-l border-gray-200 bg-linear-to-br from-eco-50 to-eco-blue-50 flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner size="small" />
           <p className="text-gray-400 text-sm mt-2">Loading order details...</p>
@@ -315,7 +315,7 @@ export default function OrderSidebar({
   }
 
   return (
-    <div className="w-full lg:w-full h-full border-l border-gray-200 bg-gradient-to-br from-eco-50 to-eco-blue-50 overflow-y-auto">
+    <div className="w-full lg:w-full h-full border-l border-gray-200 bg-linear-to-br from-eco-50 to-eco-blue-50 overflow-y-auto">
       <div className="p-6">
         <OrderHeader order={order} />
         

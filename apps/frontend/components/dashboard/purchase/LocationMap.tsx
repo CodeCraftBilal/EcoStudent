@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { X, MapPin, Navigation, ExternalLink, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Map } from "@/components/ui/map";
+import { Map, MapControls, MapMarker } from "@/components/ui/map";
 
 interface LocationMapProps {
   isOpen: boolean;
@@ -125,8 +125,14 @@ export default function LocationMap({
                     onClick={handleMapClick}
                   >
                     {/* latitude: 32.4799, longitude: 74.34 */}
-                    <Map center={[latitude, longitude]} zoom={12}>
-
+                    <Map center={[latitude, longitude]} zoom={4}>
+                      <MapControls
+                        position="bottom-right"
+                        showFullscreen
+                        showCompass
+                        showLocate={true}
+                      >
+                      </MapControls>
                     </Map>
                     
                     {/* Selection Marker */}
