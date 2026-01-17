@@ -13,7 +13,7 @@ const prisma = new PrismaClient();
 async function main() {
   // await seedCategories(prisma);
   // await seedUsers(prisma, 20);
-  await updateLocation(prisma, 31.45, 74.3);
+  await updateLocation(prisma, 31.44, 73.13);
   // await seedProducts(prisma);
   // await seedCustomProducts(prisma);
   // await seedChats(prisma);
