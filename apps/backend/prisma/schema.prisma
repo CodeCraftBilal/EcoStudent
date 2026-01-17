@@ -42,19 +42,19 @@ model Users {
 }
 
 model Message {
-  messageId    Int          @id @default(autoincrement()) @map("messageid")
-  chatId       Int          @map("chatid")
-  senderId     Int          @map("senderid")
-  receiverId   Int          @map("receiverid")
-  messageType  message_type @map("messagetype")
-  content      String       @db.VarChar(1000)
-  voiceNoteUrl String?      @map("voicenoteurl") @db.VarChar(255)
-  status  MESSAGE_STATUS  @default(sent)
-  isRead       Boolean      @default(false) @map("isread")
-  createdAt    DateTime?    @default(now()) @map("created_at") @db.Timestamp(6)
-  chat         chat?        @relation(fields: [chatId], references: [chatId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_chat")
-  receiver     Users?       @relation("Message_receiveridTousers", fields: [receiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_receiver")
-  sender       Users?       @relation("Message_senderidTousers", fields: [senderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_sender")
+  messageId    Int            @id @default(autoincrement()) @map("messageid")
+  chatId       Int            @map("chatid")
+  senderId     Int            @map("senderid")
+  receiverId   Int            @map("receiverid")
+  messageType  message_type   @map("messagetype")
+  content      String         @db.VarChar(1000)
+  voiceNoteUrl String?        @map("voicenoteurl") @db.VarChar(255)
+  isRead       Boolean        @default(false) @map("isread")
+  createdAt    DateTime?      @default(now()) @map("created_at") @db.Timestamp(6)
+  status       MESSAGE_STATUS @default(sent)
+  chat         chat           @relation(fields: [chatId], references: [chatId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_chat")
+  receiver     Users          @relation("Message_receiveridTousers", fields: [receiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_receiver")
+  sender       Users          @relation("Message_senderidTousers", fields: [senderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_sender")
 
   @@map("Message")
 }
@@ -84,9 +84,9 @@ model chat {
   lastMessageAt                DateTime? @map("lastmessage_at") @db.Timestamp(6)
   createdAt                    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
   messages                     Message[]
-  product                      product?  @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_product")
-  users_chat_receiveridTousers Users?    @relation("chat_receiveridTousers", fields: [receiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_receiver")
-  users_chat_senderidTousers   Users?    @relation("chat_senderidTousers", fields: [senderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_sender")
+  product                      product   @relation(fields: [productId], references: [productId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_product")
+  users_chat_receiveridTousers Users     @relation("chat_receiveridTousers", fields: [receiverId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_receiver")
+  users_chat_senderidTousers   Users     @relation("chat_senderidTousers", fields: [senderId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_sender")
 
   @@unique([senderId, receiverId, productId], name: "senderid_receiverid_productid_unique", map: "chat_senderid_receiverid_unique")
 }
@@ -110,16 +110,16 @@ model exchanges {
 }
 
 model notifications {
-  notificationId    Int       @id @default(autoincrement()) @map("notificationid")
+  notificationId    Int               @id @default(autoincrement()) @map("notificationid")
+  title             String            @db.VarChar(255)
+  message           String            @db.VarChar(255)
+  isRead            Boolean?          @default(false) @map("isread")
+  relatedEntityType String?           @map("relatedentitytype") @db.VarChar(50)
+  relatedEntityId   Int?              @map("relatedentityid")
+  createdAt         DateTime?         @default(now()) @map("created_at") @db.Timestamp(6)
+  userId            Int               @map("userid")
   type              NOTIFICATION_TYPE
-  title             String    @db.VarChar(255)
-  message           String    @db.VarChar(255)
-  isRead            Boolean?  @default(false) @map("isread")
-  relatedEntityType String?   @map("relatedentitytype") @db.VarChar(50)
-  relatedEntityId   Int?      @map("relatedentityid")
-  createdAt         DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
-  userId            Int       @map("userid")
-  users             Users?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_notifications_users")
+  users             Users             @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_notifications_users")
 }
 
 model product {
@@ -141,8 +141,8 @@ model product {
   status           PRODUCT_STATUS    @default(active)
   chat             chat[]
   exchanges        exchanges[]
-  category         category?         @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
-  users            Users?            @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
+  category         category          @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
+  users            Users             @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
   userFavorites    user_favorites[]
 }
 

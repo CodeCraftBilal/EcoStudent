@@ -1,5 +1,5 @@
 {
-  "name": "EcoStudentSourceCode",
+  "name": "eco_student_source",
   "private": true,
   "scripts": {
     "build": "turbo run build",
@@ -18,7 +18,7 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "npm@11.6.1",
+  "packageManager": "yarn@1.22.22",
   "workspaces": [
     "apps/*",
     "packages/*"
