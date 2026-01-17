@@ -113,7 +113,7 @@ export default function MessageList({
 
   return (
     <div
-      className="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col-reverse bg-gradient-to-br from-eco-100 to-eco-blue-100"
+      className="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col-reverse bg-linear-to-br from-eco-100 to-eco-blue-100"
       onScroll={handleScroll}
     >
       {/* Invisible div at the bottom for scrolling */}
@@ -127,6 +127,7 @@ export default function MessageList({
             ? new Date(sortedMessages[index + 1].timestamp).toDateString()
             : null;
         const showDateSeparator = messageDate !== nextMessageDate;
+        if(showDateSeparator) console.log('separator: ', showDateSeparator);
         const isLast = index === sortedMessages.length - 1;
 
         const isLatestMessage = message.id === sortedMessages[0]?.id;
@@ -143,17 +144,8 @@ export default function MessageList({
                 </span>
               </div>
             )}
-            <div
-              ref={isLatestMessage ? firstItemRef : isLast ? lastItemRef : null}
-            >
-              <MessageItem
-                message={message}
-                isOwnMessage={message.senderId === currentUserId}
-                onEdit={onEditMessage}
-                onDelete={onDeleteMessage}
-                onReply={onReplyToMessage}
-              />
-            </div>
+
+            
 
             {/* Date Separator - appears above the oldest message of that date */}
             {showDateSeparator && (
@@ -168,6 +160,19 @@ export default function MessageList({
                 </span>
               </div>
             )}
+
+            <div
+              ref={isLatestMessage ? firstItemRef : isLast ? lastItemRef : null}
+            >
+              <MessageItem
+                message={message}
+                isOwnMessage={message.senderId === currentUserId}
+                onEdit={onEditMessage}
+                onDelete={onDeleteMessage}
+                onReply={onReplyToMessage}
+              />
+            </div>
+
           </div>
         );
       })}
