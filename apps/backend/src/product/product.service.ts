@@ -3,7 +3,6 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FindByUIDParams } from './types/types';
-import { Prisma } from '@prisma/client';
 import { PRODUCT_STATUS } from 'generated/prisma';
 
 @Injectable()
