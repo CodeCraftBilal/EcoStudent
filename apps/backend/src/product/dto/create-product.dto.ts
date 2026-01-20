@@ -16,8 +16,8 @@ export class CreateProductDto {
   title: string;
 
   @IsString()
-  @MinLength(90)
-  @MaxLength(200)
+  @IsOptional()
+  @MaxLength(500)
   description: string;
 
   @IsEnum(product_condition)

@@ -52,7 +52,7 @@ export class ProductController {
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    
+    console.log('createProductDto: ', createProductDto)
     const imageUrls = await Promise.all(
       files.map((file) => {
         return useGCS
