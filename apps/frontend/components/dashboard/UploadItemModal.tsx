@@ -85,6 +85,10 @@ export default function UploadItemModal({
 
       const result = await response.json();
 
+      if(!result.success) {
+        throw new Error(result.message);
+      }
+
       console.log("Item uploaded successfully:", result);
 
       // Show success message
@@ -255,7 +259,7 @@ export default function UploadItemModal({
     }
 
     console.log(typeof data.price, typeof data.originalPrice);
-    if (parseFloat(data.price) > parseFloat(data.originalPrice)) {
+    if (data.originalPrice != '0' && parseFloat(data.price) > parseFloat(data.originalPrice)) {
       setError("price", {
         message: "sale price should be less than orignal price",
       });
@@ -410,8 +414,8 @@ export default function UploadItemModal({
               {...register("title", {
                 required: "Title is required",
                 minLength: {
-                  value: 3,
-                  message: "Title must be at least 3 characters",
+                  value: 10,
+                  message: "Title must be at least 10 characters",
                 },
                 maxLength: {
                   value: 100,

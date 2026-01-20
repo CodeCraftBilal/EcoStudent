@@ -34,6 +34,7 @@ export class ProductService {
         productId: product.productId,
       };
     } catch (err) {
+      console.error('Product Upload Error: ', err)
       return { success: false, message: 'something went wrong!' };
     }
   }
