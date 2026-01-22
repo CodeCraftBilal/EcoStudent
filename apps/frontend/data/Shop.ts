@@ -83,6 +83,7 @@ export const mockItems: Item[] = [
     description: "Waterproof school backpack with laptop compartment.",
     price: 1200,
     category: "bags",
+    rating: 4.5,
     condition: "fair",
     image: "/imgshop/bag.png",
     distance: 1.8, 
@@ -102,6 +103,7 @@ export const mockItems: Item[] = [
     category: "books",
     condition: "good",
     image: "/imgshop/phybook.png",
+    rating: 4.5,
     distance: 4.2,
     seller: {
       id: '3',
@@ -279,7 +281,6 @@ export const mockItems: Item[] = [
     distance: 3.7,
     rating: 4.8,
     seller: {
-      id: '3',
       id: '2',
       name: "Hamza Tariq",
       rating: 4.9,
@@ -294,11 +295,11 @@ export const mockItems: Item[] = [
       "Well-maintained handwritten notes covering Python basics to advanced topics.",
     price: 700,
     category: "other",
+    rating: 4.5,
     condition: "fair",
     image: "/images/python-notes.jpg",
     distance: 4.8,
     seller: {
-      id: '3',
       id: '1',
       name: "Nimra Aslam",
       rating: 4.3,
@@ -365,8 +366,7 @@ export const mockReviews = [
       verified: true
     },
     rating: 5,
-    comment: "Amazing experience! The seller ke
-    id: '3',pt me updated and the quality was superb. Would buy again.",
+    comment: "Amazing experience! The seller kept me updated and the quality was superb. Would buy again.",
     date: "2024-05-21",
     helpful: 22
   },
@@ -426,8 +426,7 @@ export const mockReviews = [
       verified: true
     },
     rating: 5,
-    comment: "Perfectly described and delivered. This seller kn
-    id: '3',ows how to maintain trust!",
+    comment: "Perfectly described and delivered. This seller knows how to maintain trust!",
     date: "2024-10-11",
     helpful: 14
   },

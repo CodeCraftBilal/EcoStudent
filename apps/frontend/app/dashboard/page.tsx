@@ -5,7 +5,7 @@ import { DashboardLoader } from "@/components/Loading";
 import { useSession } from "@/context/useSession";
 import { DashboardStats, Listing, Activity } from "@/lib/types/dashboard/types";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { mockListings, mockActivities } from "@/data/dashboard/dashboard";
 import { authFetch } from "@/lib/authFetch";
 
@@ -19,7 +19,7 @@ const mockStats: DashboardStats = {
   positiveReviews: 15,
 };
 
-export default function DashboardPage() {
+function DashboardPageContent() {
   const params = useSearchParams();
   //
   const userId = params.get("userId");
@@ -75,5 +75,13 @@ export default function DashboardPage() {
       listings={mockListings}
       activities={mockActivities}
     />
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardLoader />}>
+      <DashboardPageContent />
+    </Suspense>
   );
 }

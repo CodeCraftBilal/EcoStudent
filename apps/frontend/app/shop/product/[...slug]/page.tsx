@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { useSearchParams } from "next/navigation";
@@ -66,7 +66,7 @@ export type Review = {
   helpful: number;
 };
 
-export default function ProductDetailPage({
+function ProductDetailPageContent({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -367,3 +367,18 @@ export default function ProductDetailPage({
   );
 }
 
+export default function ProductDetailPage(props: {
+  params: Promise<{ slug: string }>;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full h-[500px] flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      }
+    >
+      <ProductDetailPageContent {...props} />
+    </Suspense>
+  );
+}

@@ -29,6 +29,7 @@ interface MobileChatLayoutProps {
   isLoadingMessages: boolean;
   // input props
   onMsgSend: (content: string) => void;
+  markAllAsRead: () => void;
 }
 
 type View = "conversations" | "chat";
@@ -48,7 +49,8 @@ export default function MobileChatLayout({
   isFetchingNextMsgPage,
   isLoadingMessages,
   onConversationSelect,
-  onMsgSend
+  onMsgSend,
+  markAllAsRead,
 }: MobileChatLayoutProps) {
   console.log('msgs ', msgs)
   const [selectedConversationId, setSelectedConversationId] = useState<
@@ -167,6 +169,7 @@ export default function MobileChatLayout({
               hasNextMsgPage={hasNextMsgPage}
               fetchNextMsgPage={fetchNextMsgPage}
               isFetchingNextMsgPage={isFetchingNextMsgPage}
+              markAllAsRead={markAllAsRead}
             />
           )}
 

@@ -23,9 +23,10 @@ export const mockConversations: Conversation[] = [
       rating: 4.8
     },
     lastMessage: "Hi, I'm interested in the Calculus book. Is it still available?",
-    lastMessageTime: new Date().toISOString(),
+    lastMessageAt: new Date().toISOString(),
     unreadCount: 2,
     item: {
+      sellerId: "seller_1",
       id: "item1",
       title: "Calculus Early Transcendentals",
       price: 2500,
@@ -44,9 +45,10 @@ export const mockConversations: Conversation[] = [
       rating: 4.9
     },
     lastMessage: "Thanks for the uniform! It fits perfectly.",
-    lastMessageTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    lastMessageAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     unreadCount: 0,
     item: {
+      sellerId: "seller_1",
       id: "item2",
       title: "Oxford University Uniform",
       price: 1500,
@@ -64,9 +66,10 @@ export const mockConversations: Conversation[] = [
       rating: 4.5
     },
     lastMessage: "Can we meet tomorrow at the library?",
-    lastMessageTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    lastMessageAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     unreadCount: 1,
     item: {
+      sellerId: "seller_1",
       id: "item3",
       title: "Scientific Calculator FX-991ES",
       price: 800,
@@ -77,6 +80,7 @@ export const mockConversations: Conversation[] = [
 
 export const mockMessages: Message[] = [
   {
+    chatId: 1,
     id: "m1",
     senderId: "u1",
     receiverId: "user1",
@@ -86,6 +90,7 @@ export const mockMessages: Message[] = [
     status: "read",
   },
   {
+    chatId: 1,
     id: "m2",
     senderId: "user1",
     receiverId: "u1",
@@ -95,6 +100,7 @@ export const mockMessages: Message[] = [
     status: "read",
   },
   {
+    chatId: 1,
     id: "m3",
     senderId: "u1",
     receiverId: "user1",
@@ -104,6 +110,7 @@ export const mockMessages: Message[] = [
     status: "delivered",
   },
   {
+    chatId: 1,
     id: "m4",
     senderId: "user1",
     receiverId: "u1",
@@ -113,6 +120,7 @@ export const mockMessages: Message[] = [
     status: "sent",
   },
   {
+    chatId: 1,
     id: "m5",
     senderId: "u1",
     receiverId: "user1",
@@ -122,6 +130,7 @@ export const mockMessages: Message[] = [
     status: "sent",
   },
   {
+    chatId: 1,
     id: "m6",
     senderId: "user1",
     receiverId: "u1",

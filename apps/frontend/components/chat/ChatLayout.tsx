@@ -340,6 +340,7 @@ export default function ChatLayout({
         isLoadingMessages={isMessagesLoading}
         // input props
         onMsgSend={handleSendMessage}
+        markAllAsRead={handleMarkAllAsRead}
       />
     );
   }

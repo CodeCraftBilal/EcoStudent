@@ -23,7 +23,7 @@ export interface Message {
 }
 
 export interface Conversation {
-  lastMessageTime(lastMessageTime: any): import("react").ReactNode;
+
   id: string;
   participant: User;
   lastMessage: string;

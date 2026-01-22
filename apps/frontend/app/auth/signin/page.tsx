@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Eye, EyeOff, Leaf, BookOpen, User, Lock, Smartphone, Frown, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -21,7 +21,7 @@ interface LoginResponse {
   statusCode?: number;
 }
 
-export default function LoginPage() {
+function LoginPageContent() {
   const params = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -404,5 +404,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

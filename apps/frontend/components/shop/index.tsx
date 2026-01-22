@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FilterState, Item } from "@/lib/types/types";
 import { ShopNavBar } from "@/components/shop/header";
 import { Categories } from "@/components/shop/categories";
-import { ItemCard } from "@/components/shop/itemcard";
+import ItemCard from "@/components/shop/itemcard";
 import { Chat } from "@/components/shop/chat";
 
 
@@ -24,6 +24,7 @@ const mockItems: Item[] = [
     distance: 1.2,
     rating: 4.8,
     seller: {
+      id: "seller_1",
       name: "Ali Ahmed",
       rating: 4.9,
       verified: true
@@ -41,6 +42,7 @@ const mockItems: Item[] = [
     distance: 2.5,
     rating: 4.5,
     seller: {
+      id: "seller_1",
       name: "Sara Khan",
       rating: 4.7,
       verified: true
@@ -58,6 +60,7 @@ const mockItems: Item[] = [
     distance: 0.8,
     rating: 4.9,
     seller: {
+      id: "seller_1",
       name: "Bilal Raza",
       rating: 5.0,
       verified: false
@@ -75,6 +78,7 @@ const mockItems: Item[] = [
     distance: 3.1,
     rating: 4.3,
     seller: {
+      id: "seller_1",
       name: "Fatima Noor",
       rating: 4.4,
       verified: true
@@ -86,12 +90,13 @@ const mockItems: Item[] = [
     title: "School Bag Backpack",
     description: "Waterproof school backpack with laptop compartment.",
     price: 1200,
-    category: "bag",
+    category: "bags",
     condition: "fair",
     image: "/imgshop/bag.png",
     distance: 1.8,
     rating: 4.2,
     seller: {
+      id: "seller_1",
       name: "Usman Ali",
       rating: 4.6,
       verified: true
@@ -109,6 +114,7 @@ const mockItems: Item[] = [
     distance: 4.2,
     rating: 4.6,
     seller: {
+      id: "seller_1",
       name: "Ayesha Malik",
       rating: 4.8,
       verified: true
@@ -127,6 +133,7 @@ const mockItems: Item[] = [
     distance: 2.5,
     rating: 4.8,
     seller: {
+      id: "seller_1",
       name: "Ali Raza",
       rating: 4.9,
       verified: true,
@@ -144,6 +151,7 @@ const mockItems: Item[] = [
     distance: 4.2,
     rating: 4.6,
     seller: {
+      id: "seller_1",
       name: "Hassan Ahmad",
       rating: 4.7,
       verified: false,
@@ -162,6 +170,7 @@ const mockItems: Item[] = [
     distance: 1.8,
     rating: 4.5,
     seller: {
+      id: "seller_1",
       name: "Fatima Noor",
       rating: 4.8,
       verified: true,
@@ -180,6 +189,7 @@ const mockItems: Item[] = [
     distance: 3.1,
     rating: 4.9,
     seller: {
+      id: "seller_1",
       name: "Muhammad Bilal",
       rating: 4.9,
       verified: true,
@@ -197,6 +207,7 @@ const mockItems: Item[] = [
     distance: 5.4,
     rating: 4.4,
     seller: {
+      id: "seller_1",
       name: "Sara Khan",
       rating: 4.6,
       verified: false,
@@ -214,6 +225,7 @@ const mockItems: Item[] = [
     distance: 6.0,
     rating: 4.3,
     seller: {
+      id: "seller_1",
       name: "Aqeel Rehman",
       rating: 4.7,
       verified: true,
@@ -232,6 +244,7 @@ const mockItems: Item[] = [
     distance: 2.0,
     rating: 4.9,
     seller: {
+      id: "seller_1",
       name: "Zain Malik",
       rating: 4.8,
       verified: true,
@@ -249,6 +262,7 @@ const mockItems: Item[] = [
     distance: 1.2,
     rating: 4.2,
     seller: {
+      id: "seller_1",
       name: "Anam Javed",
       rating: 4.4,
       verified: false,
@@ -266,6 +280,7 @@ const mockItems: Item[] = [
     distance: 3.7,
     rating: 4.8,
     seller: {
+      id: "seller_1",
       name: "Hamza Tariq",
       rating: 4.9,
       verified: true,
@@ -283,6 +298,7 @@ const mockItems: Item[] = [
     distance: 4.8,
     rating: 4.1,
     seller: {
+      id: "seller_1",
       name: "Nimra Aslam",
       rating: 4.3,
       verified: false,

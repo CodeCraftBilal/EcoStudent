@@ -333,7 +333,7 @@ export default function PurchaseItem({
           {/* canceled order */}
           {purchase.status === "pending" && (
             <div className="mt-4 pt-4 border-t border-green-100">
-              <p className="text-sm font-bold text-center text-green-600">{getHoursLeft(purchase.deliveredDate)}</p>
+              <p className="text-sm font-bold text-center text-green-600">{purchase.deliveredDate && getHoursLeft(purchase.deliveredDate)}</p>
               {/* <button
                 onClick={() => setShowReviewForm(true)}
                 className="flex items-center space-x-1 text-green-600 hover:text-green-700 transition-colors text-sm font-medium"

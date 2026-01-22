@@ -19,7 +19,7 @@ export interface Purchase {
   };
   status: 'completed' | 'cancelled' | 'disputed' | 'pending';
   purchaseDate: string;
-  deliveredDate: string;
+  deliveredDate?: string;
   quantity: number;
   totalAmount: number;
   paymentMethod: 'jazzcash' | 'easypaisa' | 'cash';

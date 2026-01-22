@@ -40,6 +40,7 @@ export default function PurchaseList({ purchases, onRatePurchase }: PurchaseList
             <PurchaseItem
               purchase={purchase}
               onRatePurchase={onRatePurchase}
+              isPurchase={true}
             />
           </motion.div>
         ))}

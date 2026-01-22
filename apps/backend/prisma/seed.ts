@@ -7,8 +7,13 @@ import { seedChats } from './seeds/chats.seed';
 import { seedMessages, seedOneChat } from './seeds/messages.seed';
 import { seedExchanges } from './seeds/exchanges.seed';
 import { seedReviews } from './seeds/reviews.seed';
+import {PrismaPg} from '@prisma/adapter-pg'
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL
+});
+
+const prisma = new PrismaClient({adapter});
 
 async function main() {
   await seedCategories(prisma);

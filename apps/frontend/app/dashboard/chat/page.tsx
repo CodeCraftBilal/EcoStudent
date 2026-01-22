@@ -5,7 +5,7 @@ import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { Conversation, User } from "@/lib/types/messages/types";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, Suspense } from "react";
 
 type ApiResponse = {
   conversations: Conversation[];
@@ -14,7 +14,7 @@ type ApiResponse = {
 
 const PAGE_SIZE = 30;
 
-export default function ChatPage() {
+function ChatPageContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -95,5 +95,13 @@ export default function ChatPage() {
         isConversationLoading={isLoading}
       />
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div>Loading chat...</div>}>
+      <ChatPageContent />
+    </Suspense>
   );
 }

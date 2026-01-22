@@ -11,10 +11,11 @@ export interface Item {
   description: string;
   price: number;
   originalPrice?: number;
-  category: "books" | "bags" | "uniform" | "calculator" | "geomatry" | "other";
+  category: "books" | "bags" | "uniform" | "calculator" | "geometry" | "other" | "Electronics" | "Laptops" | "Posters" | "Notes" | "Stationery" | "Accessories" | "Study Material" | "Books";
   condition: "excellent" | "good" | "fair";
   image: string;
   distance: number;
+  rating: number;
   seller: {
     id: string;
     name: string;
