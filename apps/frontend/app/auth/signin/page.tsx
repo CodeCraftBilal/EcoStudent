@@ -60,9 +60,10 @@ function LoginPageContent() {
     // Password validation
     if (!formData.password) {
       errors.password = "Password is required";
-    } else if (formData.password.length < 5) {
-      errors.password = "Password must be at least 5 characters";
-    }
+    } 
+    // else if (formData.password.length < 5) {
+    //   errors.password = "Password must be at least 5 characters";
+    // }
 
     setFormErrors(errors);
     return !errors.email && !errors.password;
@@ -111,7 +112,7 @@ function LoginPageContent() {
         // Login failed
         setServerMessage({
           type: 'error',
-          text: data.message || 'Login failed. Please try again.'
+          text: 'Login failed. Please try again.'
         });
       }
     } catch (err) {
@@ -154,11 +155,11 @@ function LoginPageContent() {
   }, [formData.email, formData.password]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full grid grid-cols-1 lg:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden">
         
         {/* Left Side - Brand & Information */}
-        <div className="bg-gradient-to-br from-green-500 to-blue-500 p-8 lg:p-12 text-white hidden lg:flex flex-col justify-between">
+        <div className="bg-linear-to-br from-green-500 to-blue-500 p-8 lg:p-12 text-white hidden lg:flex flex-col justify-between">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -233,9 +234,9 @@ function LoginPageContent() {
                 }`}
               >
                 {serverMessage.type === 'success' ? (
-                  <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                  <CheckCircle className="w-5 h-5 shrink-0" />
                 ) : (
-                  <XCircle className="w-5 h-5 flex-shrink-0" />
+                  <XCircle className="w-5 h-5 shrink-0" />
                 )}
                 <span className="text-sm font-medium">{serverMessage.text}</span>
               </motion.div>
@@ -349,9 +350,9 @@ function LoginPageContent() {
 
               {/* Divider */}
               <div className="relative flex items-center py-2">
-                <div className="flex-grow border-t border-gray-300"></div>
-                <span className="flex-shrink mx-4 text-gray-500 text-sm">or continue with</span>
-                <div className="flex-grow border-t border-gray-300"></div>
+                <div className="grow border-t border-gray-300"></div>
+                <span className="shrink mx-4 text-gray-500 text-sm">or continue with</span>
+                <div className="grow border-t border-gray-300"></div>
               </div>
 
               {/* Social Login */}
