@@ -92,7 +92,7 @@ export const Snackbar: React.FC<SnackbarProps> = ({
       <div
         className={`${config.bgColor} border ${config.borderColor} rounded-xl shadow-lg min-w-80 max-w-md p-4 flex items-start gap-3`}
       >
-        <div className={`flex-shrink-0 ${config.iconColor}`}>{config.icon}</div>
+        <div className={`shrink-0 ${config.iconColor}`}>{config.icon}</div>
 
         <div className="flex-1 min-w-0">
           <p className={`text-sm font-medium ${config.textColor}`}>{message}</p>
@@ -107,7 +107,7 @@ export const Snackbar: React.FC<SnackbarProps> = ({
           )}
         </div>
 
-        <button onClick={onClose} className="flex-shrink-0 text-gray-400 hover:text-gray-500">
+        <button onClick={onClose} className="shrink-0 text-gray-400 hover:text-gray-500">
           <X className="w-4 h-4" />
         </button>
       </div>
