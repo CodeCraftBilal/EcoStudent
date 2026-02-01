@@ -1,5 +1,5 @@
 import { IsEnum, IsNumber, isNumber, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-import { product_condition, product_type } from 'generated/prisma';
+import { exchange_type, product_condition, product_type } from 'generated/prisma';
 
 export class CreateProductDto {
 
@@ -34,6 +34,10 @@ export class CreateProductDto {
   @IsString()
   @MaxLength(30)
   productType: product_type;
+
+  @IsString()
+  @MaxLength(30)
+  exchangeType: exchange_type;
 
   images?: string[];
 }

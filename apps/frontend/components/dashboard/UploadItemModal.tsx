@@ -20,8 +20,8 @@ interface UploadItemModalProps {
 interface FormData {
   title: string;
   description: string;
-  price: string;
-  originalPrice: string;
+  price: number;
+  originalPrice: number;
   category: string;
   subCategory: string;
   condition: string;
@@ -39,15 +39,9 @@ export default function UploadItemModal({
   const [serverError, setServerError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleUploadItem = async (data: UploadItemData): Promise<void> => {
-    setIsLoading(true);
-    setUploadError(null);
-
+  const handleUploadItem = async (data: FormData): Promise<void> => {
     try {
       // Create FormData for file upload
       const formData = new FormData();
@@ -56,7 +50,7 @@ export default function UploadItemModal({
       formData.append("title", data.title);
       formData.append("description", data.description || "");
       formData.append("price", data.price.toString());
-      formData.append("originalPrice", data.originalPrice?.toString() || "0");
+      formData.append("originalPrice", data.originalPrice.toString() || "0");
       formData.append("productType", data.category);
       formData.append("subCategory", data.subCategory || "");
       formData.append("productCondition", data.condition);
@@ -79,13 +73,13 @@ export default function UploadItemModal({
         const errorData = await response.json();
         throw new Error(
           `${JSON.stringify(errorData.message)}` ||
-            `Upload failed with status: ${response.status}`
+            `Upload failed with status: ${response.status}`,
         );
       }
 
       const result = await response.json();
 
-      if(!result.success) {
+      if (!result.success) {
         throw new Error(result.message);
       }
 
@@ -101,14 +95,8 @@ export default function UploadItemModal({
       // refreshListings();
     } catch (error: any) {
       console.error("Error uploading item:", error);
-      setUploadError(
-        error.message || "Failed to upload item. Please try again."
-      );
-
       // Re-throw the error so the modal can handle it too
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -125,8 +113,8 @@ export default function UploadItemModal({
     defaultValues: {
       title: "",
       description: "",
-      price: "0",
-      originalPrice: "0",
+      price: 0,
+      originalPrice: 0,
       category: "books",
       subCategory: "",
       condition: "good",
@@ -137,6 +125,7 @@ export default function UploadItemModal({
 
   const watchedImages = watch("images");
   const watchCategory = watch("category");
+  const watchExchangeType = watch("exchangeType");
 
   // Image compression options
   const compressionOptions = {
@@ -259,22 +248,27 @@ export default function UploadItemModal({
     }
 
     console.log(typeof data.price, typeof data.originalPrice);
-    if (data.originalPrice != '0' && parseFloat(data.price) > parseFloat(data.originalPrice)) {
+    if (data.originalPrice != 0 && data.price > data.originalPrice) {
       setError("price", {
         message: "sale price should be less than orignal price",
       });
     }
 
+    if(data.exchangeType === 'donation') {
+      data.price = 0
+      data.originalPrice = 0
+    }
+
     try {
       console.log("data: ", data);
-      await handleUploadItem(data as UploadItemData);
+      await handleUploadItem(data);
       // onClose();
       reset();
       setSelectedImages([]);
     } catch (error: any) {
       console.error("Upload error:", error);
       setServerError(
-        error.message || "Failed to upload item. Please try again."
+        error.message || "Failed to upload item. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -303,448 +297,463 @@ export default function UploadItemModal({
             exit={{ opacity: 0, scale: 0.95 }}
             className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
           >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">Sell an Item</h2>
-          <button
-            onClick={handleClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-            disabled={isSubmitting}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">Sell an Item</h2>
+              <button
+                onClick={handleClose}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                disabled={isSubmitting}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-        {/* Server Error */}
-        {serverError && (
-          <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">{serverError}</p>
-          </div>
-        )}
+            {/* Server Error */}
+            {serverError && (
+              <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{serverError}</p>
+              </div>
+            )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-          {/* Image Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Item Photos * (Max 3 images, 4MB each)
-            </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-eco-500 transition-colors">
-              {selectedImages.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    {selectedImages.map((preview, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={preview}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
+            {/* Form */}
+            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+              {/* Image Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Item Photos * (Max 3 images, 4MB each)
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-eco-500 transition-colors">
+                  {selectedImages.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        {selectedImages.map((preview, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={preview}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      {selectedImages.length < 3 && (
                         <button
                           type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-green-600 hover:text-green-700 font-medium text-sm"
                         >
-                          <X className="w-4 h-4" />
+                          Add More Photos ({selectedImages.length}/3)
                         </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <Camera className="w-12 h-12 text-gray-400 mx-auto" />
+                      <div>
+                        <p className="text-sm text-gray-600">
+                          Drag and drop or click to upload
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          PNG, JPG, GIF up to 4MB each
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                  {selectedImages.length < 3 && (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="text-green-600 hover:text-green-700 font-medium text-sm"
-                    >
-                      Add More Photos ({selectedImages.length}/3)
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                      >
+                        <Upload className="w-4 h-4 inline mr-2" />
+                        Upload Photo
+                      </button>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    disabled={isSubmitting}
+                  />
+                  {errors.images && (
+                    <p className="text-red-500 text-xs mt-2">
+                      {errors.images.message}
+                    </p>
                   )}
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  <Camera className="w-12 h-12 text-gray-400 mx-auto" />
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      Drag and drop or click to upload
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      PNG, JPG, GIF up to 4MB each
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
-                  >
-                    <Upload className="w-4 h-4 inline mr-2" />
-                    Upload Photo
-                  </button>
-                </div>
-              )}
-              <input
-                ref={fileInputRef}
-                id="image-upload"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                className="hidden"
-                disabled={isSubmitting}
-              />
-              {errors.images && (
-                <p className="text-red-500 text-xs mt-2">
-                  {errors.images.message}
-                </p>
-              )}
-            </div>
-          </div>
+              </div>
 
-          {/* Title */}
-          <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Item Title *
-            </label>
-            <input
-              type="text"
-              id="title"
-              disabled={isSubmitting}
-              {...register("title", {
-                required: "Title is required",
-                minLength: {
-                  value: 10,
-                  message: "Title must be at least 10 characters",
-                },
-                maxLength: {
-                  value: 100,
-                  message: "Title must be less than 100 characters",
-                },
-              })}
-              placeholder="e.g., Calculus Textbook 2nd Edition"
-              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
-            />
-            {errors.title && (
-              <p className="text-red-500 text-xs mt-2">
-                {errors.title.message}
-              </p>
-            )}
-          </div>
-
-          {/* Description */}
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Description
-            </label>
-            <textarea
-              id="description"
-              rows={4}
-              disabled={isSubmitting}
-              {...register("description", {
-                required: false,
-                minLength: {
-                  value: 10,
-                  message: "Description must be at least 10 characters",
-                },
-                maxLength: {
-                  value: 1000,
-                  message: "Description must be less than 1000 characters",
-                },
-              })}
-              placeholder="Describe your item's condition, features, and any important details..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
-            />
-            {errors.description && (
-              <p className="text-red-500 text-xs mt-2">
-                {errors.description.message}
-              </p>
-            )}
-          </div>
-
-          {/* Price and Category */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="price"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Price (Rs) *
-              </label>
-              <input
-                type="number"
-                id="price"
-                min="0"
-                step="1"
-                disabled={isSubmitting}
-                {...register("price", {
-                  required: "Price is required",
-                  min: {
-                    value: 0,
-                    message: "Price must be positive",
-                  },
-                  max: {
-                    value: 1000000,
-                    message: "Price must be reasonable",
-                  },
-                })}
-                placeholder="0"
-                className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
-              />
-              {errors.price && (
-                <p className="text-red-500 text-xs mt-2">
-                  {errors.price.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="price"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Orignal Price (Rs)
-              </label>
-              <input
-                type="number"
-                id="price"
-                min="0"
-                step="1"
-                disabled={isSubmitting}
-                {...register("originalPrice", {
-                  required: false,
-                  min: {
-                    value: 0,
-                    message: "Price must be positive",
-                  },
-                  max: {
-                    value: 1000000,
-                    message: "Price must be reasonable",
-                  },
-                })}
-                placeholder="0"
-                className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
-              />
-              {errors.originalPrice && (
-                <p className="text-red-500 text-xs mt-2">
-                  {errors.originalPrice?.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="category"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Category *
-              </label>
-              <select
-                id="category"
-                disabled={isSubmitting}
-                {...register("category", {
-                  required: "Category is required",
-                })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
-              >
-                <option value="books">Books</option>
-                <option value="uniform">Uniforms</option>
-                <option value="calculator">Calculators</option>
-                <option value="geometry">Geometry Sets</option>
-                <option value="bag">Bags</option>
-                <option value="other">Other</option>
-              </select>
-              {errors.category && (
-                <p className="text-red-500 text-xs mt-2">
-                  {errors.category.message}
-                </p>
-              )}
-            </div>
-
-            {/* sub category */}
-            {watchCategory === "other" && (
+              {/* Title */}
               <div>
                 <label
-                  htmlFor="subcategory"
+                  htmlFor="title"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Sub Category *
+                  Item Title *
                 </label>
                 <input
                   type="text"
-                  id="subcategory"
+                  id="title"
                   disabled={isSubmitting}
-                  {...register("subCategory", {
-                    required: "Sub Category is required",
-                    min: {
-                      value: 3,
-                      message: "min length is 3",
+                  {...register("title", {
+                    required: "Title is required",
+                    minLength: {
+                      value: 10,
+                      message: "Title must be at least 10 characters",
                     },
-                    max: {
-                      value: 30,
-                      message: "max value is 30",
+                    maxLength: {
+                      value: 100,
+                      message: "Title must be less than 100 characters",
                     },
                   })}
+                  placeholder="e.g., Calculus Textbook 2nd Edition"
                   className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
-                ></input>
-                {errors.subCategory && (
+                />
+                {errors.title && (
                   <p className="text-red-500 text-xs mt-2">
-                    {errors.subCategory?.message}
+                    {errors.title.message}
                   </p>
                 )}
               </div>
-            )}
-          </div>
 
-          {/* Condition and Exchange Type */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Condition *
-              </label>
-              <div className="space-y-2">
-                {[
-                  {
-                    value: "excellent",
-                    label: "Excellent",
-                    description: "Like new",
-                  },
-                  { value: "good", label: "Good", description: "Minor wear" },
-                  { value: "fair", label: "Fair", description: "Visible use" },
-                ].map((condition) => (
-                  <label
-                    key={condition.value}
-                    className="flex items-center space-x-3"
-                  >
-                    <input
-                      type="radio"
-                      value={condition.value}
-                      disabled={isSubmitting}
-                      {...register("condition", {
-                        required: "Condition is required",
-                      })}
-                      className="text-green-600 focus:ring-eco-500 disabled:cursor-not-allowed"
-                    />
-                    <div>
-                      <span className="text-sm font-medium text-gray-900">
-                        {condition.label}
-                      </span>
-                      <p className="text-xs text-gray-500">
-                        {condition.description}
-                      </p>
-                    </div>
-                  </label>
-                ))}
+              {/* Description */}
+              <div>
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  rows={4}
+                  disabled={isSubmitting}
+                  {...register("description", {
+                    required: false,
+                    minLength: {
+                      value: 10,
+                      message: "Description must be at least 10 characters",
+                    },
+                    maxLength: {
+                      value: 1000,
+                      message: "Description must be less than 1000 characters",
+                    },
+                  })}
+                  placeholder="Describe your item's condition, features, and any important details..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
+                />
+                {errors.description && (
+                  <p className="text-red-500 text-xs mt-2">
+                    {errors.description.message}
+                  </p>
+                )}
               </div>
-              {errors.condition && (
-                <p className="text-red-500 text-xs mt-2">
-                  {errors.condition.message}
-                </p>
-              )}
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Exchange Type *
-              </label>
-              <div className="space-y-2">
-                {[
-                  {
-                    value: "sale",
-                    label: "For Sale",
-                    description: "Sell for money",
-                  },
-                  {
-                    value: "exchange",
-                    label: "For Exchange",
-                    description: "Trade for other items",
-                  },
-                  {
-                    value: "donation",
-                    label: "Free Donation",
-                    description: "Give away for free",
-                  },
-                ].map((type) => (
-                  <label
-                    key={type.value}
-                    className="flex items-center space-x-3"
-                  >
-                    <input
-                      type="radio"
-                      value={type.value}
-                      disabled={isSubmitting}
-                      {...register("exchangeType", {
-                        required: "Exchange type is required",
-                      })}
-                      className="text-green-600 focus:ring-eco-500 disabled:cursor-not-allowed"
-                    />
-                    <div>
-                      <span className="text-sm font-medium text-gray-900">
-                        {type.label}
-                      </span>
-                      <p className="text-xs text-gray-500">
-                        {type.description}
-                      </p>
+              {/* Price */}
+              <div className="flex flex-col gap-4">
+                {watchExchangeType != "donation" && (
+                  <div className="flex justify-between gap-4">
+                    <div className="flex-1">
+                      <label
+                        htmlFor="price"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Price (Rs) *
+                      </label>
+                      <input
+                        type="number"
+                        id="price"
+                        min="0"
+                        step="5"
+                        disabled={isSubmitting}
+                        {...register("price", {
+                          required: "Price is required",
+                          min: {
+                            value: 0,
+                            message: "Price must be positive",
+                          },
+                          max: {
+                            value: 1000000,
+                            message: "Price must be reasonable",
+                          },
+                        })}
+                        placeholder="0"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
+                      />
+                      {errors.price && (
+                        <p className="text-red-500 text-xs mt-2">
+                          {errors.price.message}
+                        </p>
+                      )}
                     </div>
-                  </label>
-                ))}
+
+                    <div className="flex-1">
+                      <label
+                        htmlFor="originalPrice"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Orignal Price (Rs)
+                      </label>
+                      <input
+                        type="number"
+                        id="originalPrice"
+                        min="0"
+                        step="1"
+                        disabled={isSubmitting}
+                        {...register("originalPrice", {
+                          required: false,
+                          min: {
+                            value: 0,
+                            message: "Price must be positive",
+                          },
+                          max: {
+                            value: 1000000,
+                            message: "Price must be reasonable",
+                          },
+                        })}
+                        placeholder="0"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
+                      />
+                      {errors.originalPrice && (
+                        <p className="text-red-500 text-xs mt-2">
+                          {errors.originalPrice?.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Category */}
+                <div className="flex justify-between gap-4">
+                  <div className="flex-1">
+                    <label
+                      htmlFor="category"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Category *
+                    </label>
+                    <select
+                      id="category"
+                      disabled={isSubmitting}
+                      {...register("category", {
+                        required: "Category is required",
+                      })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="books">Books</option>
+                      <option value="uniform">Uniforms</option>
+                      <option value="calculator">Calculators</option>
+                      <option value="geometry">Geometry Sets</option>
+                      <option value="bag">Bags</option>
+                      <option value="other">Other</option>
+                    </select>
+                    {errors.category && (
+                      <p className="text-red-500 text-xs mt-2">
+                        {errors.category.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* sub category */}
+                  {watchCategory === "other" && (
+                    <div className="flex-1">
+                      <label
+                        htmlFor="subcategory"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Sub Category *
+                      </label>
+                      <input
+                        type="text"
+                        id="subcategory"
+                        disabled={isSubmitting}
+                        {...register("subCategory", {
+                          required: "Sub Category is required",
+                          min: {
+                            value: 3,
+                            message: "min length is 3",
+                          },
+                          max: {
+                            value: 30,
+                            message: "max value is 30",
+                          },
+                        })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-eco-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
+                      ></input>
+                      {errors.subCategory && (
+                        <p className="text-red-500 text-xs mt-2">
+                          {errors.subCategory?.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-              {errors.exchangeType && (
-                <p className="text-red-500 text-xs mt-2">
-                  {errors.exchangeType.message}
-                </p>
-              )}
-            </div>
-          </div>
 
-          {/* Submit Buttons */}
-          <div className="flex space-x-4 pt-4">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={isSubmitting}
-              className="flex-1 border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-2xl font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 bg-green-500 text-white py-3 px-6 rounded-2xl font-semibold hover:bg-green-600 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Uploading...
-                </>
-              ) : (
-                "List Item"
-              )}
-            </button>
-          </div>
-        </form>
+              {/* Condition and Exchange Type */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Condition *
+                  </label>
+                  <div className="space-y-2">
+                    {[
+                      {
+                        value: "excellent",
+                        label: "Excellent",
+                        description: "Like new",
+                      },
+                      {
+                        value: "good",
+                        label: "Good",
+                        description: "Minor wear",
+                      },
+                      {
+                        value: "fair",
+                        label: "Fair",
+                        description: "Visible use",
+                      },
+                    ].map((condition) => (
+                      <label
+                        key={condition.value}
+                        className="flex items-center space-x-3"
+                      >
+                        <input
+                          type="radio"
+                          value={condition.value}
+                          disabled={isSubmitting}
+                          {...register("condition", {
+                            required: "Condition is required",
+                          })}
+                          className="text-green-600 focus:ring-eco-500 disabled:cursor-not-allowed"
+                        />
+                        <div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {condition.label}
+                          </span>
+                          <p className="text-xs text-gray-500">
+                            {condition.description}
+                          </p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  {errors.condition && (
+                    <p className="text-red-500 text-xs mt-2">
+                      {errors.condition.message}
+                    </p>
+                  )}
+                </div>
 
-        <SuccessDialog 
-          title="Item Uploaded"
-          description="Item Uploaded Successfuly"
-          isOpen={isDialogOpen}
-          onClose={() => {
-            setIsDialogOpen(false);
-            setIsUploadModalOpen(false);
-          }}
-          buttons={[
-            {
-              text: 'OK',
-              onClick() {
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Exchange Type *
+                  </label>
+                  <div className="space-y-2">
+                    {[
+                      {
+                        value: "sale",
+                        label: "For Sale",
+                        description: "Sell for money",
+                      },
+                      {
+                        value: "exchange",
+                        label: "For Exchange",
+                        description: "Trade for other items",
+                      },
+                      {
+                        value: "donation",
+                        label: "Free Donation",
+                        description: "Give away for free",
+                      },
+                    ].map((type) => (
+                      <label
+                        key={type.value}
+                        className="flex items-center space-x-3"
+                      >
+                        <input
+                          type="radio"
+                          value={type.value}
+                          disabled={isSubmitting}
+                          {...register("exchangeType", {
+                            required: "Exchange type is required",
+                          })}
+                          className="text-green-600 focus:ring-eco-500 disabled:cursor-not-allowed"
+                        />
+                        <div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {type.label}
+                          </span>
+                          <p className="text-xs text-gray-500">
+                            {type.description}
+                          </p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  {errors.exchangeType && (
+                    <p className="text-red-500 text-xs mt-2">
+                      {errors.exchangeType.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex space-x-4 pt-4">
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  disabled={isSubmitting}
+                  className="flex-1 border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-2xl font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 bg-green-500 text-white py-3 px-6 rounded-2xl font-semibold hover:bg-green-600 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Uploading...
+                    </>
+                  ) : (
+                    "List Item"
+                  )}
+                </button>
+              </div>
+            </form>
+
+            <SuccessDialog
+              title="Item Uploaded"
+              description="Item Uploaded Successfuly"
+              isOpen={isDialogOpen}
+              onClose={() => {
                 setIsDialogOpen(false);
                 setIsUploadModalOpen(false);
-              }
-            }
-          ]}
-         />
+              }}
+              buttons={[
+                {
+                  text: "OK",
+                  onClick() {
+                    setIsDialogOpen(false);
+                    setIsUploadModalOpen(false);
+                  },
+                },
+              ]}
+            />
           </motion.div>
         </motion.div>
       )}
