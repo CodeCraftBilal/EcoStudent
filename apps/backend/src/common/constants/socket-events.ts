@@ -3,6 +3,11 @@ export const SOCKET_EVENTS = {
   JOIN: 'chat:join',
   LEAVE: 'chat:leave',
 
+  USER: {
+    USER_ONLINE: 'user:online',
+    USER_OFFLINE: 'user:offline'
+  },
+
   MESSAGE: {
     MESSAGE_SEND: 'message:send',
     MESSAGE_RECEIVE: 'message:receive',

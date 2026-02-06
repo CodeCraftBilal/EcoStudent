@@ -8,6 +8,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 import jwtConfig from 'src/auth/config/jwt.config';
+import { SOCKET_EVENTS } from 'src/common/constants/socket-events';
 import { UsersService } from 'src/users/users.service';
 @WebSocketGateway({
   cors: {
@@ -46,7 +47,7 @@ export class AppGateway {
       );
 
       await this.userService.update(user.id, { isOnline: true });
-
+      client.broadcast.emit(SOCKET_EVENTS.USER.USER_ONLINE, {userId: user.id})
       client.data.userId = user.id;
       client.data.role = user.role;
 
@@ -72,6 +73,7 @@ export class AppGateway {
   }
 
   async handleDisconnect(client: Socket) {
+    client.broadcast.emit(SOCKET_EVENTS.USER.USER_OFFLINE, {userId: client.data.userId})
     await this.userService.update(client.data.userId, { isOnline: false });
     console.log(`Client disconnected: ${client.id}`);
   }

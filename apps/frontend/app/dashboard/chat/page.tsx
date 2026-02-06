@@ -1,10 +1,12 @@
 "use client";
 
 import { ChatLayout } from "@/components/chat";
+import { useSocket } from "@/context/useSocket";
 import { authFetch } from "@/lib/authFetch";
+import { SOCKET_EVENTS } from "@/lib/socket-events";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { Conversation, User } from "@/lib/types/messages/types";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState, Suspense } from "react";
 
 type ApiResponse = {
@@ -17,7 +19,8 @@ const PAGE_SIZE = 30;
 function ChatPageContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-
+  const { socket, isConnected } = useSocket();
+  const queryClient = useQueryClient();
   const fetchConversations = useCallback(
     async ({ pageParam = 0 }): Promise<ApiResponse> => {
       const params = new URLSearchParams({
@@ -26,7 +29,7 @@ function ChatPageContent() {
       });
       params.append(`searchQuery`, debouncedSearch);
 
-      console.log('params ', params.toString())
+      console.log("params ", params.toString());
       try {
         const response = await authFetch(
           `${BACKEND_URL}/chat/conversations?${params.toString()}`,
@@ -35,7 +38,7 @@ function ChatPageContent() {
             headers: {
               "Content-Type": "application/json",
             },
-          }
+          },
         );
         if (!response.ok) {
           throw new Error("Failed to fetch conversations");
@@ -48,7 +51,7 @@ function ChatPageContent() {
         return { conversations: [], currentUser: null };
       }
     },
-    [debouncedSearch]
+    [debouncedSearch],
   );
 
   useEffect(() => {
@@ -73,14 +76,78 @@ function ChatPageContent() {
     });
 
   const allConversations = useMemo(
-    () =>
-      data
-        ? data.pages.flatMap((page) => page.conversations)
-        : [],
-    [data]
+    () => (data ? data.pages.flatMap((page) => page.conversations) : []),
+    [data],
   );
 
   const currentUser = data?.pages[0]?.currentUser as User;
+
+  useEffect(() => {
+    if (!isConnected || !socket) return;
+    socket.on(SOCKET_EVENTS.USER.USER_ONLINE, markUserOnline);
+    socket.on(SOCKET_EVENTS.USER.USER_OFFLINE, markUserOffline);
+
+    return () => {
+      socket.off(SOCKET_EVENTS.USER.USER_ONLINE, markUserOnline);
+      socket.off(SOCKET_EVENTS.USER.USER_OFFLINE, markUserOffline);
+    };
+  }, [socket, isConnected]);
+
+  const markUserOnline = (payload: any) => {
+    console.log("marking user online ", typeof payload.userId);
+    queryClient.setQueryData(
+      ["conversations", debouncedSearch],
+      (oldData: any) => {
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            conversations: page.conversations.map((con: Conversation) =>
+              con.participant.id === payload.userId
+                ? {
+                    ...con,
+                    participant: {
+                      ...con.participant,
+                      isOnline: true,
+                    },
+                  }
+                : con,
+            ),
+          })),
+        };
+      },
+    );
+  };
+
+  const markUserOffline = (payload: any) => {
+    console.log("marking user offline ", typeof payload);
+    queryClient.setQueryData(
+      ["conversations", debouncedSearch],
+      (oldData: any) => {
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            conversations: page.conversations.map((con: Conversation) =>
+              con.participant.id === payload.userId
+                ? {
+                    ...con,
+                    participant: {
+                      ...con.participant,
+                      isOnline: false,
+                    },
+                  }
+                : con,
+            ),
+          })),
+        };
+      },
+    );
+  };
 
   return (
     <div className="h-[calc(100vh-64px)] bg-white">

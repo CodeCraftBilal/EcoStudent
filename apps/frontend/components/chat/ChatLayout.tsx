@@ -314,6 +314,11 @@ export default function ChatLayout({
     };
   }, [socket, selectedConversationId]);
 
+  useEffect(() => {
+    console.log('conversations in layout: ', conversations)
+  }, [conversations])
+  
+
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
   // Use MobileChatLayout for mobile devices
