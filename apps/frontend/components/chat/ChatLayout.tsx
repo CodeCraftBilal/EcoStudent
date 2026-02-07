@@ -67,6 +67,10 @@ export default function ChatLayout({
   useEffect(() => {
     setConversations(conversationProp);
   }, [conversationProp]);
+  
+  useEffect(() => {
+    console.log('conversation changed ', conversations)
+  }, [conversations]);
 
   // Fetch the newly created chat when redirected with newChat flag
   useEffect(() => {
@@ -219,6 +223,15 @@ export default function ChatLayout({
     socket.emit(SOCKET_EVENTS.MESSAGE.READ, {
       chatId: selectedConversation.id,
     });
+
+    // console.log('making unread messages of chat: ', selectedConversation.id , ' to 0');
+    // setConversations(prev => 
+    //   prev.map((con) => 
+    //     con.id == selectedConversation.id
+    //     ? {...con, unreadCount: 0}
+    //     : con
+    //   )
+    // );
   };
 
   const handleSendMessage = (content: string) => {
@@ -259,6 +272,14 @@ export default function ChatLayout({
 
       setMessages((prev) => [...prev, optimisticMessage]);
 
+      setConversations((prev) => 
+        prev.map((con) => 
+          con.id === selectedConversation.id 
+          ? {...selectedConversation, lastMessage: content}
+          : con
+        )
+      )
+
       moveConversationToTop(selectedConversation.id);
     } catch (err) {
       console.log("Socket not initialized: ", err);
@@ -293,6 +314,14 @@ export default function ChatLayout({
     console.log("Received message via socket:", message);
     // move conversation to top
     moveConversationToTop(message.chatId.toString());
+
+    setConversations((prev) => 
+        prev.map((con) => 
+          con.id === message.chatId.toString()
+        ? {...con, lastMessage: message.content, unreadCount: con.unreadCount+1}
+        : con
+        )
+      )
 
     // ignore messages from other conversations
     if (message.chatId.toString() !== selectedConversationId) {
