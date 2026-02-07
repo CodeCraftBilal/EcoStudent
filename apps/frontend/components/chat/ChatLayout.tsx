@@ -14,7 +14,6 @@ import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/types/constants";
 import { LoadingSpinner } from "../Loading";
 import {
-  useParams,
   usePathname,
   useRouter,
   useSearchParams,
@@ -23,6 +22,7 @@ import { useSocket } from "@/context/useSocket";
 import OrderSidebar from "./OrderSidebar";
 import { useSession } from "@/context/useSession";
 import { SOCKET_EVENTS } from "@/lib/socket-events";
+import { typeOf } from "maplibre-gl";
 
 interface ChatLayoutProps {
   conversations: Conversation[];
@@ -272,53 +272,70 @@ export default function ChatLayout({
       };
 
       setMessages((prev) => [...prev, optimisticMessage]);
+
+      moveConversationToTop(selectedConversation.id);
+      
     } catch (err) {
       console.log("Socket not initialized: ", err);
     }
   };
 
+  const moveConversationToTop = (convId: string) => {
+
+    console.log('moving conversation to top: ', convId, ' type of id: ', typeof convId)
+    const conversation = allConversations.filter(prev => 
+      prev.id === convId
+    )[0]
+    const index = allConversations.indexOf(conversation)
+
+      if(index !== -1) {
+        const [item] = allConversations.splice(index, 1);
+
+        allConversations.unshift(item)
+  }
+}
+
   useEffect(() => {
     if (!socket) return;
 
-    const handleIncomingMessage = (message: Message) => {
-      console.log("Received message via socket:", message);
-      // ignore messages from other conversations
-      if (message.chatId.toString() !== selectedConversationId) {
-        console.log("Ignored message for chatId:", typeof message.chatId);
-        console.log(
-          "Current selected conversationId:",
-          typeof selectedConversationId
-        );
-        return;
-      }
-
-      setMessages((prev) => [...prev, message]);
-    };
-
-    const handleRead = (data: { chatId: string }) => {
-      console.log('marking all read from socket ', data)
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.chatId === Number(data.chatId) && msg.status !== "read"
-            ? { ...msg, status: "read" }
-            : msg
-        )
-      );
-    };
-
+    
     socket.on("message:receive", handleIncomingMessage);
-
+    
     socket.on(SOCKET_EVENTS.MESSAGE.READ, handleRead);
     return () => {
       socket.off("message:receive", handleIncomingMessage);
     };
   }, [socket, selectedConversationId]);
-
-  useEffect(() => {
-    console.log('conversations in layout: ', conversations)
-  }, [conversations])
   
+  const handleIncomingMessage = (message: Message) => {
+    console.log("Received message via socket:", message);
+    // move conversation to top
+    moveConversationToTop(message.chatId.toString())
 
+    // ignore messages from other conversations
+    if (message.chatId.toString() !== selectedConversationId) {
+      console.log("Ignored message for chatId:", typeof message.chatId);
+      console.log(
+        "Current selected conversationId:",
+        typeof selectedConversationId
+      );
+      return;
+    }
+
+    setMessages((prev) => [...prev, message]);
+  };
+
+  const handleRead = (data: { chatId: string }) => {
+    console.log('marking all read from socket ', data)
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.chatId === Number(data.chatId) && msg.status !== "read"
+          ? { ...msg, status: "read" }
+          : msg
+      )
+    );
+  };
+  
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
   // Use MobileChatLayout for mobile devices
