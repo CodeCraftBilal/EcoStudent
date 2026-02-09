@@ -18,7 +18,6 @@ import { useSocket } from "@/context/useSocket";
 import OrderSidebar from "./OrderSidebar";
 import { useSession } from "@/context/useSession";
 import { SOCKET_EVENTS } from "@/lib/socket-events";
-import { typeOf } from "maplibre-gl";
 
 interface ChatLayoutProps {
   conversations: Conversation[];
@@ -119,28 +118,29 @@ export default function ChatLayout({
 
   // Handle URL parameter to select conversation
   useEffect(() => {
-    if (conversationIdFromUrl && conversations.length > 0) {
-      console.log("Looking for conversation with ID:", conversationIdFromUrl);
-      console.log(
-        "Available conversations:",
-        conversations.map((c) => c.id),
-      );
+  if (!conversationIdFromUrl || conversations.length === 0) return;
 
-      const foundConversation = conversations.find(
-        (conv) =>
-          conv.id.toString() === conversationIdFromUrl ||
-          Number(conv.id) === Number(conversationIdFromUrl),
-      );
+  const foundConversation = conversations.find(
+    (conv) =>
+      conv.id.toString() === conversationIdFromUrl ||
+      Number(conv.id) === Number(conversationIdFromUrl)
+  );
 
-      if (foundConversation) {
-        console.log("Found! Setting conversation ID:", foundConversation.id);
-        setSelectedConversationId(foundConversation.id.toString());
-      } else {
-        console.warn("Conversation not found");
-        setSelectedConversationId(null);
-      }
+  if (!foundConversation) {
+    if (selectedConversationId !== null) {
+      setSelectedConversationId(null);
     }
-  }, [conversationIdFromUrl, conversations]);
+    return;
+  }
+
+  const nextId = foundConversation.id.toString();
+
+  // 🔥 THIS LINE PREVENTS THE LOOP
+  if (selectedConversationId !== nextId) {
+    setSelectedConversationId(nextId);
+  }
+}, [conversationIdFromUrl, conversations, selectedConversationId]);
+
 
   // Handle manual conversation selection (update URL)
   const handleConversationSelect = (conversationId: string) => {
@@ -224,14 +224,14 @@ export default function ChatLayout({
       chatId: selectedConversation.id,
     });
 
-    // console.log('making unread messages of chat: ', selectedConversation.id , ' to 0');
-    // setConversations(prev => 
-    //   prev.map((con) => 
-    //     con.id == selectedConversation.id
-    //     ? {...con, unreadCount: 0}
-    //     : con
-    //   )
-    // );
+    console.log('making unread messages of chat: ', selectedConversation.id , ' to 0');
+    setConversations(prev => 
+      prev.map((con) => 
+        con.id == selectedConversation.id
+        ? {...con, unreadCount: 0}
+        : con
+      )
+    );
   };
 
   const handleSendMessage = (content: string) => {
