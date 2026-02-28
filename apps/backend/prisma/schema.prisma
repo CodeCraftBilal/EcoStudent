@@ -12,6 +12,7 @@ model Users {
   userName                              String           @map("username") @db.VarChar(255)
   email                                 String           @unique @db.VarChar(255)
   role                                  ROLE?
+  status                                USER_STATUS      @default(ACTIVE)
   hashedPassword                        String?          @map("hashedpassword") @db.VarChar(255)
   hashedRefreshToken                    String?          @map("hashedrefreshtoken") @db.VarChar(255)
   phoneNumber                           String?          @map("phonenumber") @db.VarChar(25)
@@ -122,27 +123,30 @@ model notifications {
 }
 
 model product {
-  productId        Int               @id @default(autoincrement()) @map("productid")
-  userId           Int               @map("userid")
-  categoryId       Int               @map("categoryid")
-  title            String            @db.VarChar(255)
+  productId        Int                      @id @default(autoincrement()) @map("productid")
+  userId           Int                      @map("userid")
+  categoryId       Int                      @map("categoryid")
+  title            String                   @db.VarChar(255)
   description      String?
-  price            Decimal           @db.Decimal(10, 2)
+  price            Decimal                  @db.Decimal(10, 2)
   views            Int?
-  images           Json?             @db.Json
-  viewCount        Int?              @map("viewcount")
-  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt        DateTime          @default(now()) @map("updated_at") @db.Timestamp(6)
-  originalPrice    Int?              @map("originalprice")
-  productCondition product_condition @map("productcondition")
-  productType      product_type      @map("producttype")
-  exchangeType     exchange_type     @default(sale) @map("exchangetype")
-  status           PRODUCT_STATUS    @default(active)
+  images           Json?                    @db.Json
+  viewCount        Int?                     @map("viewcount")
+  createdAt        DateTime                 @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt        DateTime                 @default(now()) @map("updated_at") @db.Timestamp(6)
+  originalPrice    Int?                     @map("originalprice")
+  productCondition product_condition        @map("productcondition")
+  productType      product_type             @map("producttype")
+  exchangeType     exchange_type            @default(sale) @map("exchangetype")
+  status           PRODUCT_STATUS           @default(active)
+  search_vector    Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, (((COALESCE(title, ''::character varying))::text || ' '::text) || COALESCE(description, ''::text)))"))
   chat             chat[]
   exchanges        exchanges[]
-  category         category          @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
-  users            Users             @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
+  category         category                 @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
+  users            Users                    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
   userFavorites    user_favorites[]
+
+  @@index([search_vector], map: "product_search_idx", type: Gin)
 }
 
 model reviews {
@@ -246,4 +250,10 @@ enum MESSAGE_STATUS {
   sent
   delivered
   read
+}
+
+enum USER_STATUS {
+  ACTIVE
+  SUSPENDED
+  DELETED
 }
