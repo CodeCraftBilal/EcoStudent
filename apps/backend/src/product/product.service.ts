@@ -7,7 +7,6 @@ import { PRODUCT_STATUS } from 'generated/prisma';
 
 @Injectable()
 export class ProductService {
-  
   constructor(private readonly prisma: PrismaService) {}
   async create(createProductDto: CreateProductDto, userId: number) {
     try {
@@ -34,13 +33,13 @@ export class ProductService {
         productId: product.productId,
       };
     } catch (err) {
-      console.error('Product Upload Error: ', err)
+      console.error('Product Upload Error: ', err);
       return { success: false, message: 'something went wrong!' };
     }
   }
 
   async findAll(filters: any) {
-    console.log('filters: ', filters)
+    console.log('filters: ', filters);
     const conditions: string[] = [];
     const params: any[] = [];
 
@@ -89,13 +88,10 @@ export class ProductService {
 
     // Search filter (title + description)
     if (filters.searchQuery) {
-      const searchTerm = `%${filters.searchQuery}%`;
-
       conditions.push(
-        `(p.title ILIKE $${params.length + 1} OR p.description ILIKE $${params.length + 1})`,
+        `p.search_vector @@ plainto_tsquery('english', $${params.length + 1})`,
       );
-
-      params.push(searchTerm);
+      params.push(filters.searchQuery);
     }
 
     // Min price filter
@@ -123,7 +119,7 @@ export class ProductService {
       ? Number(filters.maxDistance)
       : null;
 
-      console.log('whereSql: ', whereSQL)
+    console.log('whereSql: ', whereSQL);
     try {
       const rawProducts: any[] = await this.prisma.$queryRawUnsafe(
         `
@@ -491,8 +487,7 @@ export class ProductService {
   async updateProductStatus(productId: number, status: string) {
     await this.prisma.product.update({
       where: { productId: productId },
-      data: {status: status as PRODUCT_STATUS},
-    })
+      data: { status: status as PRODUCT_STATUS },
+    });
   }
-  
 }
