@@ -63,7 +63,7 @@ export async function updateLocation(
   const DELTA = 0.05; // small change, not far
 
   console.log('seeding update locaton with lat:', latitude, ' lng:', longitude);
-  users.forEach(async (user) => {
+  await Promise.all(users.map(async (user) => {
 
     const lng = faker.number.float({
           min: longitude - DELTA,
@@ -85,6 +85,6 @@ export async function updateLocation(
         longitude: lng,
       },
     });
-  });
+  }));
   console.log('update seeding completed');
 }
