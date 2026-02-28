@@ -53,35 +53,38 @@ export async function seedUsers(prisma: PrismaClient, count = 20) {
 //     "speed": null
 // }
 
-export async function updateLocation(prisma:PrismaClient, latitude = 33.54, longitude = 73.14) {
+export async function updateLocation(
+  prisma: PrismaClient,
+  latitude: number,
+  longitude: number,
+) {
   const users = await prisma.users.findMany();
-  const baseLat = latitude;
-  const baseLng = longitude;
-
+  console.log('found users to update location:', users.length);
   const DELTA = 0.05; // small change, not far
-  
-    console.log('seeding update locaton')
-  users.forEach( async (user) => {
-    console.log('updating user')
+
+  console.log('seeding update locaton with lat:', latitude, ' lng:', longitude);
+  await Promise.all(users.map(async (user) => {
+
+    const lng = faker.number.float({
+          min: longitude - DELTA,
+          max: longitude + DELTA,
+          fractionDigits: 6,
+        });
+    const lat = faker.number.float({
+          min: latitude - DELTA,
+          max: latitude + DELTA,
+          fractionDigits: 6,
+        });
+    console.log('updating user with lat:', lat, ' lng:', lng);
     await prisma.users.update({
       where: {
         userId: user.userId,
       },
       data: {
-        latitude: faker.number.float({
-            min: baseLat - DELTA,
-            max: baseLat + DELTA,
-            fractionDigits: 6,
-          }),
-
-          longitude: faker.number.float({
-            min: baseLng - DELTA,
-            max: baseLng + DELTA,
-            fractionDigits: 6,
-          }),
-      }
-    })
-  })
-  console.log('update seeding completed')
-
+        latitude: lat,
+        longitude: lng,
+      },
+    });
+  }));
+  console.log('update seeding completed');
 }
