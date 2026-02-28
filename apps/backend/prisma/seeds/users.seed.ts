@@ -55,8 +55,11 @@ export async function seedUsers(prisma: PrismaClient, count = 20) {
 
 export async function updateLocation(prisma:PrismaClient, latitude = 33.54, longitude = 73.14) {
   const users = await prisma.users.findMany();
-    const DELTA = 0.05; // small change, not far
+  const baseLat = latitude;
+  const baseLng = longitude;
 
+  const DELTA = 0.05; // small change, not far
+  
     console.log('seeding update locaton')
   users.forEach( async (user) => {
     console.log('updating user')
@@ -66,14 +69,14 @@ export async function updateLocation(prisma:PrismaClient, latitude = 33.54, long
       },
       data: {
         latitude: faker.number.float({
-            min: latitude - DELTA,
-            max: latitude + DELTA,
+            min: baseLat - DELTA,
+            max: baseLat + DELTA,
             fractionDigits: 6,
           }),
 
           longitude: faker.number.float({
-            min: longitude - DELTA,
-            max: longitude + DELTA,
+            min: baseLng - DELTA,
+            max: baseLng + DELTA,
             fractionDigits: 6,
           }),
       }
