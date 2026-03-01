@@ -20,8 +20,18 @@ export const getUserLocation = async (
     const getPosition = () =>
       new Promise<GeoLocation>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
-          (pos) => resolve(pos.coords),
-          (err) => reject(err)
+          (pos) => {
+            console.log('coords: ', pos.coords)
+            resolve(pos.coords)
+          },
+          (err) => {
+            reject(err)
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          }
         );
       });
 
