@@ -59,7 +59,7 @@ export default function OrderActions({
           <button
             onClick={onAccept}
             disabled={isUpdating || !isOrderSocketConnected}
-            className="w-full px-4 py-3 bg-gradient-to-r from-eco-500 to-eco-blue-500 text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full px-4 py-3 bg-linear-to-r from-eco-500 to-eco-blue-500 text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isUpdating ? (
               <>
@@ -112,7 +112,7 @@ export default function OrderActions({
               className={`w-full px-4 py-3 font-medium rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
                 isBuyer 
                   ? 'bg-yellow-500 text-white hover:bg-yellow-600'
-                  : 'bg-gradient-to-r from-eco-coral to-red-500 text-white hover:opacity-90'
+                  : 'bg-linear-to-r from-eco-coral to-red-500 text-white hover:opacity-90'
               }`}
             >
               {isUpdating ? (

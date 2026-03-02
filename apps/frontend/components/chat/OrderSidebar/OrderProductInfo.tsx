@@ -13,7 +13,6 @@ interface OrderProductInfoProps {
 }
 
 export default function OrderProductInfo({ product, orderId }: OrderProductInfoProps) {
-  const router = useRouter();
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-5 border border-eco-200 mb-6">
@@ -25,7 +24,7 @@ export default function OrderProductInfo({ product, orderId }: OrderProductInfoP
             className="w-16 h-16 rounded-lg object-cover"
           />
         ) : (
-          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-eco-100 to-eco-blue-100 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-lg bg-linear-to-br from-eco-100 to-eco-blue-100 flex items-center justify-center">
             <Package className="w-8 h-8 text-eco-400" />
           </div>
         )}

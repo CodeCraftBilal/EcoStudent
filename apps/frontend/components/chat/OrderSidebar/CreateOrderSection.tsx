@@ -4,6 +4,8 @@
 import { DollarSign, MapPin, Calendar } from "lucide-react";
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import BuyerOrderPriorInfo from "./BuyerPriorOrder";
+import { Conversation } from "@/lib/types/messages/types";
 
 const LocationMap = dynamic(
   () => import("@/components/dashboard/purchase/LocationMap"),
@@ -13,6 +15,7 @@ const LocationMap = dynamic(
 interface CreateOrderSectionProps {
   onCreateOrder: (orderData: any) => Promise<void>;
   isOwner: boolean;
+  conversation: Conversation
 }
 
 type FieldErrors = {
@@ -63,6 +66,7 @@ function useFormValidation() {
 
 /* ==================== COMPONENT ==================== */
 export default function CreateOrderSection({
+  conversation,
   onCreateOrder,
   isOwner,
 }: CreateOrderSectionProps) {
@@ -112,9 +116,10 @@ export default function CreateOrderSection({
   if (!isOwner) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-5 border border-eco-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <BuyerOrderPriorInfo conversation={conversation} />
+        {/* <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Order Details
-        </h3>
+        </h3> */}
         <p className="text-gray-600 text-center py-8">
           The seller will create an order for this product.
         </p>

@@ -324,6 +324,7 @@ export default function OrderSidebar({
             <CreateOrderSection 
               onCreateOrder={handleCreateOrder}
               isOwner={isOwner}
+              conversation={selectedConversation}
             />
             <OrderGuidelines />
           </>
