@@ -2,9 +2,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, MapPin, Navigation, ExternalLink, Check } from "lucide-react";
+import { X, MapPin, Navigation, ExternalLink, Check, Home } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Map, MapControls, MapMarker } from "@/components/ui/map";
+import {
+  Map,
+  MapControls,
+  MapMarker,
+  MarkerContent,
+  MarkerPopup,
+  MarkerTooltip,
+  useMap,
+} from "@/components/ui/map";
+import { getUserLocation } from "@/lib/location";
+import { GeoLocation } from "@/lib/location";
+import MapCN from './Map'
 
 interface LocationMapProps {
   isOpen: boolean;
@@ -29,7 +40,29 @@ export default function LocationMap({
 }: LocationMapProps) {
   const [mapUrl, setMapUrl] = useState("");
   const [googleMapsUrl, setGoogleMapsUrl] = useState("");
-  const [selectedCoords, setSelectedCoords] = useState({ lat: latitude, lng: longitude });
+  const [currentLocation, setCurrentLocation] = useState<GeoLocation | null>(
+    null,
+  );
+  const [selectedCoords, setSelectedCoords] = useState({
+    lat: latitude,
+    lng: longitude,
+  });
+  // const { map, isLoaded } = useMap();
+
+  // useEffect(() => {
+  //   if(!map || !isLoaded) return;
+
+  //   const handleClick = (e: any) => {
+  //     console.log('Clicked at : ', e)
+  //   }
+
+  //   map.on("click", handleClick);
+  
+  //   return () => {
+  //     map.off("click", handleClick)
+  //   }
+  // }, [isOpen, isLoaded])
+  
 
   useEffect(() => {
     if (isOpen) {
@@ -41,26 +74,22 @@ export default function LocationMap({
       const gMapsUrl = `https://www.google.com/maps/search/?api=1&query=${selectedCoords.lat},${selectedCoords.lng}`;
       setGoogleMapsUrl(gMapsUrl);
     }
-  }, [isOpen, selectedCoords]);
 
-  const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!selectable) return;
-    
-    // Simple mock for coordinates - in real app, use actual map library like leaflet/google maps
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    // Calculate approximate coordinates (this is simplified)
-    const newLat = latitude + (y / rect.height - 0.5) * 0.01;
-    const newLng = longitude + (x / rect.width - 0.5) * 0.01;
-    
-    setSelectedCoords({ lat: newLat, lng: newLng });
-  };
+    const getCurrentLocation = async () => {
+      const currentLocation = await getUserLocation();
+      setCurrentLocation(currentLocation);
+    };
+
+    getCurrentLocation();
+  }, [isOpen, selectedCoords]);
 
   const handleConfirmLocation = () => {
     if (onLocationSelect) {
-      onLocationSelect(selectedCoords.lat, selectedCoords.lng, address || "Selected Location");
+      onLocationSelect(
+        selectedCoords.lat,
+        selectedCoords.lng,
+        address || "Selected Location",
+      );
     }
     onClose();
   };
@@ -93,7 +122,9 @@ export default function LocationMap({
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {selectable ? "Select Meetup Location" : "Meetup Location"}
+                      {selectable
+                        ? "Select Meetup Location"
+                        : "Meetup Location"}
                     </h3>
                     <p className="text-sm text-gray-600 mt-1 line-clamp-1">
                       {locationName}
@@ -119,45 +150,65 @@ export default function LocationMap({
                 )}
 
                 {/* Map */}
-                <div className="mb-6 rounded-lg overflow-hidden border border-eco-200">
-                  <div 
-                    className="relative w-full h-64 cursor-pointer"
-                    onClick={handleMapClick}
-                  >
-                    {/* latitude: 32.4799, longitude: 74.34 */}
-                    <Map center={[latitude, longitude]} zoom={4}>
-                      <MapControls
-                        position="bottom-right"
-                        showFullscreen
-                        showCompass
-                        showLocate={true}
+                {currentLocation && (
+                  <div className="mb-6 rounded-lg overflow-hidden border border-eco-200">
+                    <div
+                      className="relative w-full h-64 cursor-pointer"
+                    >
+                      {/* latitude: 32.4799, longitude: 74.34 */}
+                      {/* <Map center={[latitude, longitude]} zoom={4}
+                        
                       >
-                      </MapControls>
-                    </Map>
-                    
-                    {/* Selection Marker */}
-                    {selectable && (
-                      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                        <div className="w-8 h-8 bg-eco-coral rounded-full border-4 border-white shadow-lg flex items-center justify-center">
-                          <MapPin className="w-4 h-4 text-white" />
+                        <MapMarker
+                          key={1}
+                          latitude={currentLocation?.latitude}
+                          longitude={currentLocation.longitude}
+                        >
+                          <MarkerContent>
+                            <div className="w-6 h-6 text-blue-400 bg-eco-100 rounded-full flex items-center justify-center">
+                              <Home className="p-1" />
+                            </div>
+                          </MarkerContent>
+                          <MarkerTooltip>Current Location</MarkerTooltip>
+                          <MarkerPopup>
+                            <div className="space-y-1">
+                              <p className="font-medium text-foreground">
+                                {locationName}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                              </p>
+                            </div>
+                          </MarkerPopup>
+                        </MapMarker>
+                        <MapControls
+                          position="bottom-right"
+                          showFullscreen
+                          showCompass
+                          showLocate={true}
+                        ></MapControls>
+                      </Map> */}
+                      <MapCN isOpen={isOpen} />
+                      {/* Selection Marker */}
+                      {selectable && (
+                        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                      )}
+                    </div>
+
+                    <div className="p-3 bg-white border-t border-eco-100">
+                      <div className="flex items-center justify-between text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-eco-coral rounded-full"></div>
+                          <span>Meetup Point</span>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="p-3 bg-white border-t border-eco-100">
-                    <div className="flex items-center justify-between text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-eco-coral rounded-full"></div>
-                        <span>Meetup Point</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-eco-600 rounded-full"></div>
-                        <span>Your Location</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-eco-600 rounded-full"></div>
+                          <span>Your Location</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Coordinates */}
                 <div className="mb-6 grid grid-cols-2 gap-4">
@@ -170,7 +221,7 @@ export default function LocationMap({
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-xs text-gray-500 mb-1">Longitude</p>
                     <p className="font-mono text-sm text-gray-900">
-                      {selectedCoords.lng }
+                      {selectedCoords.lng}
                     </p>
                   </div>
                 </div>
@@ -199,7 +250,7 @@ export default function LocationMap({
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(
-                        `${selectedCoords.lat.toFixed(6)}, ${selectedCoords.lng.toFixed(6)}`
+                        `${selectedCoords.lat.toFixed(6)}, ${selectedCoords.lng.toFixed(6)}`,
                       );
                       // Add toast notification here
                     }}
@@ -212,7 +263,9 @@ export default function LocationMap({
                 {/* Additional Information */}
                 <div className="mt-6 pt-6 border-t border-eco-100">
                   <h4 className="text-sm font-medium text-gray-900 mb-3">
-                    {selectable ? "Selection Instructions" : "Meeting Instructions"}
+                    {selectable
+                      ? "Selection Instructions"
+                      : "Meeting Instructions"}
                   </h4>
                   <ul className="space-y-2 text-sm text-gray-600">
                     {selectable ? (
@@ -240,7 +293,9 @@ export default function LocationMap({
                     )}
                     <li className="flex items-start gap-2">
                       <div className="w-2 h-2 bg-eco-500 rounded-full mt-1.5"></div>
-                      <span>Verify the item before completing the purchase</span>
+                      <span>
+                        Verify the item before completing the purchase
+                      </span>
                     </li>
                   </ul>
                 </div>

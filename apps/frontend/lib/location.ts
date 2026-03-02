@@ -1,4 +1,4 @@
-type GeoLocation = {
+export type GeoLocation = {
   accuracy: number;
   latitude: number;
   longitude: number;

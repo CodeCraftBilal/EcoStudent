@@ -4,11 +4,15 @@
 import { MapPin, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import { Map } from "@/components/ui/map";
 
 // Dynamically import the LocationMap component to avoid SSR issues
-const LocationMap = dynamic(() => import("@/components/dashboard/purchase/LocationMap"), {
-  ssr: false,
-});
+const LocationMap = dynamic(
+  () => import("@/components/dashboard/purchase/LocationMap"),
+  {
+    ssr: false,
+  },
+);
 
 interface OrderLocationSectionProps {
   location: string;
@@ -25,11 +29,14 @@ export default function OrderLocationSection({
   longitude,
   isOwner,
   isEditing,
-  onUpdate
+  onUpdate,
 }: OrderLocationSectionProps) {
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [editedLocation, setEditedLocation] = useState(location);
-  const [tempCoordinates, setTempCoordinates] = useState({ lat: latitude, lng: longitude });
+  const [tempCoordinates, setTempCoordinates] = useState({
+    lat: latitude,
+    lng: longitude,
+  });
   const [isSaving, setIsSaving] = useState(false);
 
   const handleLocationSelect = (lat: number, lng: number, address: string) => {
@@ -43,7 +50,7 @@ export default function OrderLocationSection({
       await onUpdate({
         meetupLocation: editedLocation,
         meetupLatitude: tempCoordinates.lat,
-        meetupLongitude: tempCoordinates.lng
+        meetupLongitude: tempCoordinates.lng,
       });
     } finally {
       setIsSaving(false);
