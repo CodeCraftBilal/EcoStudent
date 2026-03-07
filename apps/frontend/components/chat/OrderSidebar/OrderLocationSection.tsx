@@ -2,9 +2,8 @@
 "use client";
 
 import { MapPin, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Map } from "@/components/ui/map";
 
 // Dynamically import the LocationMap component to avoid SSR issues
 const LocationMap = dynamic(
@@ -38,6 +37,11 @@ export default function OrderLocationSection({
     lng: longitude,
   });
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setTempCoordinates({ lat: latitude, lng: longitude });
+    setEditedLocation(location);
+  }, [latitude, longitude, location]);
 
   const handleLocationSelect = (lat: number, lng: number, address: string) => {
     setTempCoordinates({ lat, lng });

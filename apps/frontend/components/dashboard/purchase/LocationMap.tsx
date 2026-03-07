@@ -15,7 +15,12 @@ import {
 } from "@/components/ui/map";
 import { getUserLocation } from "@/lib/location";
 import { GeoLocation } from "@/lib/location";
-import MapCN from './Map'
+import MapCN from "./Map";
+
+export type Coords = {
+  lat: number;
+  lng: number;
+};
 
 interface LocationMapProps {
   isOpen: boolean;
@@ -38,43 +43,20 @@ export default function LocationMap({
   address,
   selectable = false,
 }: LocationMapProps) {
-  const [mapUrl, setMapUrl] = useState("");
   const [googleMapsUrl, setGoogleMapsUrl] = useState("");
   const [currentLocation, setCurrentLocation] = useState<GeoLocation | null>(
     null,
   );
-  const [selectedCoords, setSelectedCoords] = useState({
+  const [selectedCoords, setSelectedCoords] = useState<Coords>({
     lat: latitude,
     lng: longitude,
   });
-  // const { map, isLoaded } = useMap();
-
-  // useEffect(() => {
-  //   if(!map || !isLoaded) return;
-
-  //   const handleClick = (e: any) => {
-  //     console.log('Clicked at : ', e)
-  //   }
-
-  //   map.on("click", handleClick);
-  
-  //   return () => {
-  //     map.off("click", handleClick)
-  //   }
-  // }, [isOpen, isLoaded])
-  
 
   useEffect(() => {
-    if (isOpen) {
-      // Generate OpenStreetMap static image URL
-      const osmUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${selectedCoords.lat},${selectedCoords.lng}&zoom=16&size=600x400&markers=${selectedCoords.lat},${selectedCoords.lng},red&layer=mapnik`;
-      setMapUrl(osmUrl);
+    setSelectedCoords({ lat: latitude, lng: longitude });
+  }, [latitude, longitude]);
 
-      // Generate Google Maps URL for directions
-      const gMapsUrl = `https://www.google.com/maps/search/?api=1&query=${selectedCoords.lat},${selectedCoords.lng}`;
-      setGoogleMapsUrl(gMapsUrl);
-    }
-
+  useEffect(() => {
     const getCurrentLocation = async () => {
       const currentLocation = await getUserLocation();
       setCurrentLocation(currentLocation);
@@ -152,46 +134,19 @@ export default function LocationMap({
                 {/* Map */}
                 {currentLocation && (
                   <div className="mb-6 rounded-lg overflow-hidden border border-eco-200">
-                    <div
-                      className="relative w-full h-64 cursor-pointer"
-                    >
-                      {/* latitude: 32.4799, longitude: 74.34 */}
-                      {/* <Map center={[latitude, longitude]} zoom={4}
-                        
-                      >
-                        <MapMarker
-                          key={1}
-                          latitude={currentLocation?.latitude}
-                          longitude={currentLocation.longitude}
-                        >
-                          <MarkerContent>
-                            <div className="w-6 h-6 text-blue-400 bg-eco-100 rounded-full flex items-center justify-center">
-                              <Home className="p-1" />
-                            </div>
-                          </MarkerContent>
-                          <MarkerTooltip>Current Location</MarkerTooltip>
-                          <MarkerPopup>
-                            <div className="space-y-1">
-                              <p className="font-medium text-foreground">
-                                {locationName}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {latitude.toFixed(4)}, {longitude.toFixed(4)}
-                              </p>
-                            </div>
-                          </MarkerPopup>
-                        </MapMarker>
-                        <MapControls
-                          position="bottom-right"
-                          showFullscreen
-                          showCompass
-                          showLocate={true}
-                        ></MapControls>
-                      </Map> */}
-                      <MapCN isOpen={isOpen} />
+                    <div className="relative w-full h-64 cursor-pointer">
+                      <MapCN
+                        selectedCoords={selectedCoords}
+                        setSelectedCoords={setSelectedCoords}
+                      />
                       {/* Selection Marker */}
                       {selectable && (
-                        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                          <MapCN
+                            selectedCoords={selectedCoords}
+                            setSelectedCoords={setSelectedCoords}
+                          />
+                        </div>
                       )}
                     </div>
 
