@@ -72,6 +72,30 @@ export class ProductController {
     return this.productService.findProductByUserId(req.user.id, query);
   }
 
+  @Post('analyze-image')
+  @UseInterceptors(
+    FilesInterceptor('image', 1, {
+      storage: multer.memoryStorage(),
+      limits: { fileSize: 4 * 1024 * 1024 },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
+          return callback(
+            new BadRequestException('Only images allowed'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  async analyzeImage(@UploadedFiles() files: Express.Multer.File[]) {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No image provided');
+    }
+    return this.productService.analyzeImage(files[0]);
+  }
+
+
   @Public()
   @Get()
   findAll(@Query() query: any) {

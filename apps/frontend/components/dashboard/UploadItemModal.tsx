@@ -40,6 +40,56 @@ export default function UploadItemModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const analyzeFirstImage = async (file: File) => {
+    setIsAnalyzing(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await authFetch(`${BACKEND_URL}/product/analyze-image`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to analyze image");
+      }
+
+      const result = await response.json();
+      if (result.success && result.data) {
+        const data = result.data;
+        const currentValues = getValues();
+
+        if (!currentValues.title && data.title) {
+          setValue("title", data.title, { shouldValidate: true });
+        }
+        if (!currentValues.description && data.description) {
+          setValue("description", data.description, { shouldValidate: true });
+        }
+        if ((!currentValues.price || currentValues.price === 0) && data.price) {
+          setValue("price", data.price, { shouldValidate: true });
+        }
+        if ((!currentValues.originalPrice || currentValues.originalPrice === 0) && data.originalPrice) {
+          setValue("originalPrice", data.originalPrice, { shouldValidate: true });
+        }
+        if (data.category && ["books", "uniform", "calculator", "geometry", "bag", "other"].includes(data.category)) {
+          setValue("category", data.category, { shouldValidate: true });
+        }
+        if (data.subCategory && data.category === "other") {
+          setValue("subCategory", data.subCategory, { shouldValidate: true });
+        }
+        if (data.condition && ["excellent", "good", "fair"].includes(data.condition)) {
+          setValue("condition", data.condition, { shouldValidate: true });
+        }
+      }
+    } catch (err) {
+      console.error("Image analysis error:", err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const handleUploadItem = async (data: FormData): Promise<void> => {
     try {
@@ -73,7 +123,7 @@ export default function UploadItemModal({
         const errorData = await response.json();
         throw new Error(
           `${JSON.stringify(errorData.message)}` ||
-            `Upload failed with status: ${response.status}`,
+          `Upload failed with status: ${response.status}`,
         );
       }
 
@@ -105,6 +155,7 @@ export default function UploadItemModal({
     handleSubmit,
     formState: { errors },
     setValue,
+    getValues,
     watch,
     reset,
     trigger,
@@ -207,6 +258,10 @@ export default function UploadItemModal({
         const updatedFiles = [...currentFiles, ...newFiles];
         setValue("images", updatedFiles);
         await trigger("images");
+
+        if (currentFiles.length === 0 && newFiles.length > 0) {
+          analyzeFirstImage(newFiles[0]);
+        }
       }
     } catch (error) {
       console.error("Error processing images:", error);
@@ -254,7 +309,7 @@ export default function UploadItemModal({
       });
     }
 
-    if(data.exchangeType === 'donation') {
+    if (data.exchangeType === 'donation') {
       data.price = 0
       data.originalPrice = 0
     }
@@ -303,7 +358,7 @@ export default function UploadItemModal({
               <button
                 onClick={handleClose}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isAnalyzing}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -320,8 +375,14 @@ export default function UploadItemModal({
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
               {/* Image Upload */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Item Photos * (Max 3 images, 4MB each)
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-between">
+                  <span>Item Photos * (Max 3 images, 4MB each)</span>
+                  {isAnalyzing && (
+                    <span className="text-xs text-eco-600 flex items-center">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-eco-600 mr-2"></div>
+                      AI is auto-filling form details...
+                    </span>
+                  )}
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-eco-500 transition-colors">
                   {selectedImages.length > 0 ? (
@@ -383,7 +444,7 @@ export default function UploadItemModal({
                     multiple
                     onChange={handleImageUpload}
                     className="hidden"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isAnalyzing}
                   />
                   {errors.images && (
                     <p className="text-red-500 text-xs mt-2">
@@ -404,7 +465,7 @@ export default function UploadItemModal({
                 <input
                   type="text"
                   id="title"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isAnalyzing}
                   {...register("title", {
                     required: "Title is required",
                     minLength: {
@@ -437,7 +498,7 @@ export default function UploadItemModal({
                 <textarea
                   id="description"
                   rows={4}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isAnalyzing}
                   {...register("description", {
                     required: false,
                     minLength: {
@@ -475,7 +536,7 @@ export default function UploadItemModal({
                         id="price"
                         min="0"
                         step="5"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isAnalyzing}
                         {...register("price", {
                           required: "Price is required",
                           min: {
@@ -509,7 +570,7 @@ export default function UploadItemModal({
                         id="originalPrice"
                         min="0"
                         step="1"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isAnalyzing}
                         {...register("originalPrice", {
                           required: false,
                           min: {
@@ -544,7 +605,7 @@ export default function UploadItemModal({
                     </label>
                     <select
                       id="category"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isAnalyzing}
                       {...register("category", {
                         required: "Category is required",
                       })}
@@ -576,7 +637,7 @@ export default function UploadItemModal({
                       <input
                         type="text"
                         id="subcategory"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isAnalyzing}
                         {...register("subCategory", {
                           required: "Sub Category is required",
                           min: {
@@ -631,7 +692,7 @@ export default function UploadItemModal({
                         <input
                           type="radio"
                           value={condition.value}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isAnalyzing}
                           {...register("condition", {
                             required: "Condition is required",
                           })}
@@ -684,7 +745,7 @@ export default function UploadItemModal({
                         <input
                           type="radio"
                           value={type.value}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isAnalyzing}
                           {...register("exchangeType", {
                             required: "Exchange type is required",
                           })}
@@ -714,14 +775,14 @@ export default function UploadItemModal({
                 <button
                   type="button"
                   onClick={handleClose}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isAnalyzing}
                   className="flex-1 border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-2xl font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isAnalyzing}
                   className="flex-1 bg-green-500 text-white py-3 px-6 rounded-2xl font-semibold hover:bg-green-600 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {isSubmitting ? (

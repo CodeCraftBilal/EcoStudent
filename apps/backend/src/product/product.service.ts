@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { GoogleGenAI } from '@google/genai';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -489,5 +490,52 @@ export class ProductService {
       where: { productId: productId },
       data: { status: status as PRODUCT_STATUS },
     });
+  }
+
+  async analyzeImage(file: Express.Multer.File) {
+    try {
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error('GEMINI_API_KEY is not set');
+      }
+
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+      const prompt = `Analyze this product image and extract the following details in JSON format.
+      Fields to extract:
+      - title: A descriptive title for the product (min 10 max 100 characters).
+      - description: A detailed description of the product condition and features.
+      - price: Estimated selling price in numbers.
+      - originalPrice: Estimated original price in numbers.
+      - category: Choose exactly one from ["books", "uniform", "calculator", "geometry", "bag", "other"].
+      - subCategory: If category is "other", provide a subcategory (3 to 30 characters), else empty string.
+      - condition: Choose exactly one from ["excellent", "good", "fair"].
+
+      Respond with ONLY the raw JSON object, without markdown formatting or backticks.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [
+          prompt,
+          {
+            inlineData: {
+              data: file.buffer.toString('base64'),
+              mimeType: file.mimetype,
+            },
+          },
+        ],
+      });
+
+      const text = response.text || '';
+      const cleanedText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const result = JSON.parse(cleanedText);
+
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (err) {
+      console.error('Image Analysis Error: ', err);
+      return { success: false, message: 'Failed to analyze image' };
+    }
   }
 }
