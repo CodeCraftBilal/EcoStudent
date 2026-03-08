@@ -375,7 +375,7 @@ export default function UploadItemModal({
             <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
               {/* Image Upload */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700 mb-2 items-center justify-between">
                   <span>Item Photos * (Max 3 images, 4MB each)</span>
                   {isAnalyzing && (
                     <span className="text-xs text-eco-600 flex items-center">
