@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Lottie from "lottie-react";
 import LoadingAnim from '@/public/lotieAnim/Loading.json'
 import { useSession } from "@/context/useSession";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 
 interface LoginResponse {
   id?: number;

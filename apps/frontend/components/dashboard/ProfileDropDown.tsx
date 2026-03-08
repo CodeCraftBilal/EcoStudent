@@ -1,7 +1,7 @@
 "use client";
 import { Session, useSession } from "@/context/useSession";
 import { authFetch } from "@/lib/authFetch";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { User, Settings, Home, LogOut, LayoutDashboard } from "lucide-react";
 import Link from "next/link"; // Add this import
 import { redirect } from "next/navigation";

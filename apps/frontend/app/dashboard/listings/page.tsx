@@ -10,7 +10,7 @@ import SearchAndFilters from "@/components/dashboard/listings/SearchAndFilters";
 import ListingCard from "@/components/dashboard/listings/ListingCard";
 import EmptyState from "@/components/dashboard/listings/EmptyState";
 
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { authFetch } from "@/lib/authFetch";
 import { useSession } from "@/context/useSession";
 import { ContentLoader } from "@/components/Loading";

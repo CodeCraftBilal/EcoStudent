@@ -1,6 +1,6 @@
 "use client";
 import { authFetch } from "@/lib/authFetch";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import React, { useContext, useEffect, useState } from "react";
 import { createContext } from "react";
 

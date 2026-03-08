@@ -17,7 +17,7 @@ import ItemCard from "@/components/shop/itemcard";
 import { LoadingSpinner } from "@/components/Loading";
 import { ProductNotFound } from "@/components/shop/product/NotFound";
 
-import { BACKEND_URL, FRONTEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL, FRONTEND_URL } from "@/lib/constants";
 import { authFetch } from "@/lib/authFetch";
 import { getUserLocation } from "@/lib/location";
 import { addToFavorite, removeFromFavorite } from "@/lib/utils/favorite";
@@ -271,7 +271,7 @@ function ProductDetailPageContent({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-linear-to-br from-green-50 to-blue-50">
       {/* Navigation */}
       <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center">

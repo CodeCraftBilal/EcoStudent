@@ -7,7 +7,7 @@ import { X, Upload, Camera } from "lucide-react";
 import { UploadItemData } from "@/lib/types/dashboard/types";
 import imageCompression from "browser-image-compression";
 import { authFetch } from "@/lib/authFetch";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { SuccessDialog } from "../ui/dialogBoxes/Pre-configuredDialog";
 
 interface UploadItemModalProps {

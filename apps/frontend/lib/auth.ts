@@ -1,6 +1,6 @@
 import { Session, useSession } from "@/context/useSession";
 import { authFetch } from "./authFetch";
-import { BACKEND_URL } from "./types/constants";
+import { BACKEND_URL } from "./constants";
 
 export async function getSession(): Promise<Session | null> {
     const res = await authFetch(`${BACKEND_URL}/auth/session`, {

@@ -11,7 +11,7 @@ import ChatEmptyState from "./ChatEmptyState";
 import { Conversation, Message, User } from "@/lib/types/messages/types";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { authFetch } from "@/lib/authFetch";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { LoadingSpinner } from "../Loading";
 import {
   useParams,

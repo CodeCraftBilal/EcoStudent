@@ -20,6 +20,7 @@ import {
   SuccessDialog,
 } from "@/components/ui/dialogBoxes/Pre-configuredDialog";
 import { authFetch } from "@/lib/authFetch";
+import { BACKEND_URL } from "@/lib/constants";
 
 type ProfileAPIResponse = {
   user: UserProfileType;
@@ -66,7 +67,7 @@ export default function ProfilePage() {
       if (isLoading && !session) return;
       try {
         const res = await authFetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/profile`
+          `${BACKEND_URL}/users/profile`
         );
 
         if (!res.ok) {
@@ -90,7 +91,7 @@ export default function ProfilePage() {
     console.log('saving profile')
     try {
       const res = await authFetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/profile/update/${session?.userId}`,
+        `${BACKEND_URL}/users/profile/update/${session?.userId}`,
         {
           method: "PATCH",
           headers: {
@@ -129,7 +130,7 @@ export default function ProfilePage() {
       const formData = new FormData();
       formData.append('profilePicture', file);
       const res = await authFetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/updateprofile`,
+        `${BACKEND_URL}/users/updateprofile`,
         {
           method: "POST",
           body: formData,
@@ -160,9 +161,9 @@ export default function ProfilePage() {
     }
 
     try {
-      console.log("bu ", process.env.NEXT_PUBLIC_BACKEND_URL);
+      console.log("bu ", BACKEND_URL);
       const res = await authFetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/updatelocation`,
+        `${BACKEND_URL}/users/updatelocation`,
         {
           method: "POST",
           headers: {

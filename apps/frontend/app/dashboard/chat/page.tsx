@@ -2,7 +2,7 @@
 
 import { ChatLayout } from "@/components/chat";
 import { authFetch } from "@/lib/authFetch";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { Conversation, User } from "@/lib/types/messages/types";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState, Suspense } from "react";

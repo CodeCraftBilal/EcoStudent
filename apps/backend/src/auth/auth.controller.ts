@@ -66,7 +66,7 @@ export class AuthController {
       
       res.cookie('access_token', tokens.access_token, {
         httpOnly: true,
-        secure: true,
+        secure: false, // for development only
         sameSite: 'lax',
         maxAge: 1000 * 60 * 15,
         path: '/'
@@ -74,7 +74,7 @@ export class AuthController {
 
       res.cookie('refresh_token', tokens.refresh_token, {
         httpOnly: true,
-        secure: true,
+        secure: false,  // for development only
         sameSite: 'lax',
         maxAge: 1000 * 60 * 24 * 7,
         path: '/'

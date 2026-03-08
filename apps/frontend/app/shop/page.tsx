@@ -9,7 +9,7 @@ import { ShopNavBar } from "@/components/shop/header";
 import { Categories } from "@/components/shop/categories";
 import ItemCard from "@/components/shop/itemcard";
 import { authFetch } from "@/lib/authFetch";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { getUserLocation } from "@/lib/location";
 import { ContentLoader } from "@/components/Loading";
 import { addToFavorite, removeFromFavorite } from "@/lib/utils/favorite";

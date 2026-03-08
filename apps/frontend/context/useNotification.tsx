@@ -11,7 +11,7 @@ import { useSession } from "./useSession";
 import { useSocket } from "./useSocket";
 import { Notification } from "@/lib/types/types";
 import { SOCKET_EVENTS } from "@/lib/socket-events";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { authFetch } from "@/lib/authFetch";
 
 

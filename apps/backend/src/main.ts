@@ -9,7 +9,7 @@ async function bootstrap() {
   const port = process.env.PORT ?? 8000;
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'http://192.168.1.100:3000'],
     credentials: true,
   });
   app.use('/uploads', express.static(join(__dirname, '..', 'uploads')))

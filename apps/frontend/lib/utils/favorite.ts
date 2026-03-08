@@ -1,5 +1,5 @@
 import { authFetch } from "../authFetch";
-import { BACKEND_URL } from "../types/constants";
+import { BACKEND_URL } from "../constants";
 
 type AddToFavorite = {
   error: boolean;

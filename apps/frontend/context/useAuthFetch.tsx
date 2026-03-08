@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext } from "react";
 import { useSession } from "./useSession";
+import { BACKEND_URL } from "../lib/constants";
 
 type AuthFetchFn = (
   url: string,
@@ -30,7 +31,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // refresh token
     const refreshRes = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh`,
+      `${BACKEND_URL}/auth/refresh`,
       {
         method: "POST",
         credentials: "include",

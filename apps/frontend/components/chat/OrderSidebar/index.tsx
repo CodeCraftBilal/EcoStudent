@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Order } from "@/lib/types/dashboard/order/type";
 import { authFetch } from "@/lib/authFetch";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { useSocket } from "@/context/useSocket";
 import { SOCKET_EVENTS } from "@/lib/socket-events";
 import LoadingSpinner from "../../Loading/LoadingSpinner";

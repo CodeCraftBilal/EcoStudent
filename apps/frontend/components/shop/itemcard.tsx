@@ -13,7 +13,7 @@ import Image from "next/image";
 import React, { MouseEvent, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { authFetch } from "@/lib/authFetch";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { useSnackbar } from "../ui/dialogBoxes/SnackBarManager";
 import { getUserLocation } from "@/lib/location";
 import { ErrorDialog } from "../ui/dialogBoxes/Pre-configuredDialog";

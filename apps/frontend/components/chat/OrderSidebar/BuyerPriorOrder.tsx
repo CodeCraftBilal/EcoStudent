@@ -1,6 +1,6 @@
 "use client";
 
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { Conversation } from "@/lib/types/messages/types";
 import {
   Package,

@@ -7,7 +7,7 @@ import {
   EmptyFavorites,
 } from "@/components/dashboard/favourites";
 import { authFetch } from "@/lib/authFetch";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { useSession } from "@/context/useSession";
 import { useRouter } from "next/navigation";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";

@@ -16,7 +16,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useSession } from "@/context/useSession";
 import { redirect, useRouter } from "next/navigation";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { getUserLocation } from "@/lib/location";
 

@@ -2,7 +2,7 @@
 import { useSnackbar } from "@/components/ui/dialogBoxes/SnackBarManager";
 import { authFetch } from "@/lib/authFetch";
 import { getUserLocation } from "@/lib/location";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { MapPin, Star, Shield, Verified } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";

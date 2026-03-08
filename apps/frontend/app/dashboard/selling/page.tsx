@@ -14,7 +14,7 @@ import {
 import { useSession } from "@/context/useSession";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { authFetch } from "@/lib/authFetch";
-import { BACKEND_URL } from "@/lib/types/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import { ContentLoader } from "@/components/Loading";
 import React from "react";
 

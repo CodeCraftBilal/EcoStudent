@@ -1,3 +1,5 @@
+import { BACKEND_URL } from "./constants";
+
 export async function authFetch(
   url: string,
   options: RequestInit = {}
@@ -19,7 +21,7 @@ export async function authFetch(
 
   // Try refreshing the token
   const refreshRes = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh`,
+    `${BACKEND_URL}/auth/refresh`,
     {
       method: "POST",
       credentials: "include",

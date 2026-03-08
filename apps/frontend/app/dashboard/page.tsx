@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, Suspense } from "react";
 import { mockListings, mockActivities } from "@/data/dashboard/dashboard";
 import { authFetch } from "@/lib/authFetch";
+import { BACKEND_URL } from "@/lib/constants";
 
 // Mock data
 const mockStats: DashboardStats = {
@@ -50,7 +51,7 @@ function DashboardPageContent() {
     const fetchStats = async () => {
       try {
         const res = await authFetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/dashboard/stats`
+          `${BACKEND_URL}/users/dashboard/stats`
         );
         if (!res.ok) throw new Error("Unable to dashbaord stats");
 
@@ -63,7 +64,7 @@ function DashboardPageContent() {
     };
 
     fetchStats();
-    return () => {};
+    return () => { };
   }, []);
 
   if (isLoading) return <DashboardLoader />;
