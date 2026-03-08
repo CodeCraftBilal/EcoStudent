@@ -16,6 +16,7 @@ import {
 import { getUserLocation } from "@/lib/location";
 import { GeoLocation } from "@/lib/location";
 import MapCN from "./Map";
+import LoadingSpinner from "@/components/Loading/LoadingSpinner";
 
 export type Coords = {
   lat: number;
@@ -51,6 +52,8 @@ export default function LocationMap({
     lat: latitude,
     lng: longitude,
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setSelectedCoords({ lat: latitude, lng: longitude });
@@ -58,12 +61,25 @@ export default function LocationMap({
 
   useEffect(() => {
     const getCurrentLocation = async () => {
-      const currentLocation = await getUserLocation();
-      setCurrentLocation(currentLocation);
+      if (!isOpen) return;
+      try {
+        setIsLoading(true);
+        setError(null);
+        const currentLocation = await getUserLocation();
+        setCurrentLocation(currentLocation);
+
+        if (!currentLocation) {
+          setError("Location access denied or unavailable.");
+        }
+      } catch (err) {
+        setError("Failed to get location.");
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     getCurrentLocation();
-  }, [isOpen, selectedCoords]);
+  }, [isOpen]);
 
   const handleConfirmLocation = () => {
     if (onLocationSelect) {
@@ -132,7 +148,26 @@ export default function LocationMap({
                 )}
 
                 {/* Map */}
-                {currentLocation && (
+                {isLoading ? (
+                  <div className="mb-6 h-64 w-full flex flex-col items-center justify-center border border-eco-200 rounded-lg bg-gray-50/80">
+                    <LoadingSpinner size="medium" />
+                    <p className="text-gray-500 mt-2 font-medium">Getting your location...</p>
+                  </div>
+                ) : error ? (
+                  <div className="mb-6 h-64 w-full flex flex-col items-center justify-center border border-red-200 rounded-lg bg-red-50 p-6 text-center">
+                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-2">
+                      <span className="text-xl">📍</span>
+                    </div>
+                    <p className="text-red-700 font-medium mb-1">Location Unavailable</p>
+                    <p className="text-red-600 text-sm mb-4">{error}</p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="px-4 py-2 bg-red-100 text-red-700 text-sm rounded-lg hover:bg-red-200 transition-colors"
+                    >
+                      Allow Permissions & Retry
+                    </button>
+                  </div>
+                ) : currentLocation && (
                   <div className="mb-6 rounded-lg overflow-hidden border border-eco-200">
                     <div className="relative w-full h-64 cursor-pointer">
                       <MapCN
@@ -141,7 +176,7 @@ export default function LocationMap({
                       />
                       {/* Selection Marker */}
                       {selectable && (
-                        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                           <MapCN
                             selectedCoords={selectedCoords}
                             setSelectedCoords={setSelectedCoords}

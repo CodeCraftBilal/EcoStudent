@@ -66,16 +66,16 @@ export class AuthController {
       
       res.cookie('access_token', tokens.access_token, {
         httpOnly: true,
-        secure: false, // for development only
-        sameSite: 'lax',
+        secure: true, // for development only
+        sameSite: 'none',
         maxAge: 1000 * 60 * 15,
         path: '/'
       })
 
       res.cookie('refresh_token', tokens.refresh_token, {
         httpOnly: true,
-        secure: false,  // for development only
-        sameSite: 'lax',
+        secure: true,  // for development only
+        sameSite: 'none',
         maxAge: 1000 * 60 * 24 * 7,
         path: '/'
       })
