@@ -27,6 +27,7 @@ export const config = {
     return getFrontendUrl();
   },
   get backendUrl() {
+    console.log('backend url : ', getBackendUrl());
     return getBackendUrl();
   }
 };

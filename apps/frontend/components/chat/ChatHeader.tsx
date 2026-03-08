@@ -1,6 +1,6 @@
 "use client";
 
-import { Phone, Video, MoreVertical, Star, ChevronLeft, Home } from "lucide-react";
+import { Phone, Video, MoreVertical, Star, ChevronLeft, Home, Info } from "lucide-react";
 import Link from "next/link";
 import { User } from "@/lib/types/messages/types";
 
@@ -12,6 +12,8 @@ interface ChatHeaderProps {
   onBack?: () => void;
   showBackButton?: boolean;
   showReturnToWebsite?: boolean;
+  onSidebarOpen?: () => void;
+  showSidebarButton?: boolean;
 }
 
 export default function ChatHeader({
@@ -21,7 +23,9 @@ export default function ChatHeader({
   onMenuClick,
   onBack,
   showBackButton = false,
-  showReturnToWebsite = true
+  showReturnToWebsite = true,
+  onSidebarOpen,
+  showSidebarButton = false
 }: ChatHeaderProps) {
   return (
     <div className="bg-white/90 border-b border-gray-200 p-4 flex items-center justify-between max-md:sticky top-15 z-10">
@@ -35,7 +39,7 @@ export default function ChatHeader({
             <ChevronLeft className="w-5 h-5" />
           </button>
         )}
-        
+
         <div className="flex items-center space-x-3 flex-1 min-w-0">
           <div className="relative flex-shrink-0">
             <img
@@ -47,7 +51,7 @@ export default function ChatHeader({
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
             )}
           </div>
-          
+
           <div className="min-w-0 flex-1">
             <div className="flex items-center space-x-2">
               <h2 className="font-semibold text-gray-900 truncate">{user.name}</h2>
@@ -57,7 +61,7 @@ export default function ChatHeader({
                 </div>
               )}
             </div>
-            
+
             <div className="flex items-center space-x-2 text-xs text-gray-500">
               {user.isOnline ? (
                 <span className="text-green-500">Online</span>
@@ -79,21 +83,30 @@ export default function ChatHeader({
             <Home className="w-5 h-5" />
           </Link>
         )}
-        
+
         {/* <button
           onClick={onCall}
           className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"
         >
           <Phone className="w-5 h-5" />
         </button> */}
-        
+
         {/* <button
           onClick={onVideoCall}
           className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"
         >
           <Video className="w-5 h-5" />
         </button> */}
-        
+
+        {showSidebarButton && onSidebarOpen && (
+          <button
+            onClick={onSidebarOpen}
+            className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"
+          >
+            <Info className="w-5 h-5" />
+          </button>
+        )}
+
         <button
           onClick={onMenuClick}
           className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"

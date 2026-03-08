@@ -7,8 +7,10 @@ import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 import ChatEmptyState from "./ChatEmptyState";
 import { Conversation, Message, User } from "@/lib/types/messages/types";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 import LoadingSpinner from "../Loading/LoadingSpinner";
+import OrderSidebar from "./OrderSidebar";
+import { useSession } from "@/context/useSession";
 
 interface MobileChatLayoutProps {
   conversations: Conversation[];
@@ -58,11 +60,13 @@ export default function MobileChatLayout({
   >(null);
   const [currentView, setCurrentView] = useState<View>("conversations");
   const [messages, setMessages] = useState<Message[]>(msgs);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { session } = useSession();
 
   useEffect(() => {
-    setMessages(msgs)  
+    setMessages(msgs)
   }, [msgs])
-  
+
 
   const selectedConversation = conversations.find(
     (conv) => conv.id === selectedConversationId
@@ -145,6 +149,8 @@ export default function MobileChatLayout({
             onBack={handleBackToConversations}
             showBackButton={true}
             showReturnToWebsite={false}
+            showSidebarButton={true}
+            onSidebarOpen={() => setIsSidebarOpen(true)}
           />
 
           {isLoadingMessages ? (
@@ -196,6 +202,49 @@ export default function MobileChatLayout({
             title="No conversation selected"
             description="Please select a conversation to start chatting"
           />
+        </div>
+      )}
+
+      {/* Order Sidebar Overlay */}
+      {currentView === "chat" && selectedConversation && (
+        <div
+          className={`fixed inset-0 z-50 transition-opacity duration-300 ${isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+
+          {/* Sidebar Panel */}
+          <div
+            className={`absolute right-0 top-0 bottom-0 w-[85vw] sm:w-[350px] bg-white shadow-xl transition-transform duration-300 ease-in-out transform ${isSidebarOpen ? "translate-x-0" : "translate-x-full"
+              } flex flex-col`}
+          >
+            <div className="flex justify-between items-center p-4 border-b bg-white">
+              <h3 className="font-semibold text-lg text-gray-800">Order Info</h3>
+              <button
+                onClick={() => setIsSidebarOpen(false)}
+                className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto w-full">
+              <OrderSidebar
+                conversationId={selectedConversationId || undefined}
+                selectedConversation={selectedConversation}
+                productId={Number(selectedConversation.item?.id)}
+                currentUser={{ id: Number(session?.userId), role: session?.role }}
+                isOwner={
+                  Number(currentUser.id) ===
+                  Number(selectedConversation.item?.sellerId)
+                }
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>
