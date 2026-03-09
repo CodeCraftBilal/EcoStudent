@@ -12,6 +12,11 @@ export const SOCKET_EVENTS = {
     CANCELLED: 'order:cancelled',
   },
   
+  USER: {
+    USER_ONLINE: 'user:online',
+    USER_OFFLINE: 'user:offline'
+  },
+  
   MESSAGE: {
     SEND: 'message:send',
     RECEIVE: 'message:receive',

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { Message } from "@/lib/types/messages/types";
 import MessageItem from "./MessageItem";
 import { LoadingSpinner } from "../Loading";
@@ -32,9 +32,11 @@ export default function MessageList({
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
 
   // Sort messages by timestamp descending (newest first for display)
-  const sortedMessages = [...messages].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
+  const sortedMessages = useMemo(() => {
+    return [...messages].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [messages]);
 
   console.log('sorted messages: ', sortedMessages)
 
@@ -127,7 +129,7 @@ export default function MessageList({
             ? new Date(sortedMessages[index + 1].timestamp).toDateString()
             : null;
         const showDateSeparator = messageDate !== nextMessageDate;
-        if(showDateSeparator) console.log('separator: ', showDateSeparator);
+        if (showDateSeparator) console.log('separator: ', showDateSeparator);
         const isLast = index === sortedMessages.length - 1;
 
         const isLatestMessage = message.id === sortedMessages[0]?.id;
@@ -145,7 +147,7 @@ export default function MessageList({
               </div>
             )}
 
-            
+
 
             {/* Date Separator - appears above the oldest message of that date */}
             {showDateSeparator && (

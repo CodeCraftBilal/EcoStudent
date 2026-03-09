@@ -13,12 +13,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/constants";
 import { LoadingSpinner } from "../Loading";
-import {
-  useParams,
-  usePathname,
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSocket } from "@/context/useSocket";
 import OrderSidebar from "./OrderSidebar";
 import { useSession } from "@/context/useSession";
@@ -38,7 +33,7 @@ interface ChatLayoutProps {
 const Message_PAGE_SIZE = 50;
 
 export default function ChatLayout({
-  conversations,
+  conversations: conversationProp,
   currentUser,
   hasNextConversations,
   fetchNextConversationsPage,
@@ -61,9 +56,20 @@ export default function ChatLayout({
   >(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newlyCreatedChat, setNewlyCreatedChat] = useState<Conversation | null>(
-    null
+    null,
   );
   const [isFetchingNewChat, setIsFetchingNewChat] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>(
+    () => conversationProp,
+  );
+
+  useEffect(() => {
+    setConversations(conversationProp);
+  }, [conversationProp]);
+  
+  useEffect(() => {
+    console.log('conversation changed ', conversations)
+  }, [conversations]);
 
   // Fetch the newly created chat when redirected with newChat flag
   useEffect(() => {
@@ -72,7 +78,7 @@ export default function ChatLayout({
         try {
           setIsFetchingNewChat(true);
           const response = await authFetch(
-            `${BACKEND_URL}/chat/${conversationIdFromUrl}`
+            `${BACKEND_URL}/chat/${conversationIdFromUrl}`,
           );
 
           if (!response.ok) {
@@ -99,58 +105,42 @@ export default function ChatLayout({
   }, [conversationIdFromUrl, isNewChat, searchParams, pathname, router]);
 
   // Merge conversations with newly created chat and sort
-  const allConversations = useMemo(() => {
-    // Start with conversations from props
-    const merged = [...conversations];
+  useEffect(() => {
+    if (!newlyCreatedChat) return;
 
-    // Add newly created chat if it exists and isn't already in the list
-    if (
-      newlyCreatedChat &&
-      !merged.some((conv) => conv.id === newlyCreatedChat.id)
-    ) {
-      // Insert at the beginning since it's the newest
-      merged.unshift(newlyCreatedChat);
-    } else if (newlyCreatedChat) {
-      // If it's already in the list, move it to the top
-      const index = merged.findIndex((conv) => conv.id === newlyCreatedChat.id);
-      if (index > -1) {
-        const [existingChat] = merged.splice(index, 1);
-        merged.unshift(existingChat);
-      }
-    }
+    setConversations((prev) => {
+      const exists = prev.some((c) => c.id === newlyCreatedChat.id);
+      if (exists) return prev;
 
-    // Sort by lastMessageAt (newest first)
-    return merged.sort((a, b) => {
-      const dateA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
-      const dateB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
-      return dateB - dateA;
+      return [newlyCreatedChat, ...prev];
     });
-  }, [conversations, newlyCreatedChat]);
+  }, [newlyCreatedChat]);
 
   // Handle URL parameter to select conversation
   useEffect(() => {
-    if (conversationIdFromUrl && allConversations.length > 0) {
-      console.log("Looking for conversation with ID:", conversationIdFromUrl);
-      console.log(
-        "Available conversations:",
-        allConversations.map((c) => c.id)
-      );
+  if (!conversationIdFromUrl || conversations.length === 0) return;
 
-      const foundConversation = allConversations.find(
-        (conv) =>
-          conv.id.toString() === conversationIdFromUrl ||
-          Number(conv.id) === Number(conversationIdFromUrl)
-      );
+  const foundConversation = conversations.find(
+    (conv) =>
+      conv.id.toString() === conversationIdFromUrl ||
+      Number(conv.id) === Number(conversationIdFromUrl)
+  );
 
-      if (foundConversation) {
-        console.log("Found! Setting conversation ID:", foundConversation.id);
-        setSelectedConversationId(foundConversation.id.toString());
-      } else {
-        console.warn("Conversation not found");
-        setSelectedConversationId(null);
-      }
+  if (!foundConversation) {
+    if (selectedConversationId !== null) {
+      setSelectedConversationId(null);
     }
-  }, [conversationIdFromUrl, allConversations]);
+    return;
+  }
+
+  const nextId = foundConversation.id.toString();
+
+  // 🔥 THIS LINE PREVENTS THE LOOP
+  if (selectedConversationId !== nextId) {
+    setSelectedConversationId(nextId);
+  }
+}, [conversationIdFromUrl, conversations, selectedConversationId]);
+
 
   // Handle manual conversation selection (update URL)
   const handleConversationSelect = (conversationId: string) => {
@@ -162,8 +152,8 @@ export default function ChatLayout({
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const selectedConversation = allConversations.find(
-    (conv) => conv.id.toString() === selectedConversationId
+  const selectedConversation = conversations.find(
+    (conv) => conv.id.toString() === selectedConversationId,
   );
 
   //------------ Fetching Messages ------------------
@@ -184,20 +174,20 @@ export default function ChatLayout({
             headers: {
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (!res.ok) throw new Error("Failed to fetch messages");
 
         const result = await res.json();
-        console.log('unsorted messages: ', result);
+        console.log("unsorted messages: ", result);
         return result;
       } catch (err) {
         console.error(err);
         return [];
       }
     },
-    [selectedConversation]
+    [selectedConversation],
   );
 
   const {
@@ -233,6 +223,15 @@ export default function ChatLayout({
     socket.emit(SOCKET_EVENTS.MESSAGE.READ, {
       chatId: selectedConversation.id,
     });
+
+    console.log('making unread messages of chat: ', selectedConversation.id , ' to 0');
+    setConversations(prev => 
+      prev.map((con) => 
+        con.id == selectedConversation.id
+        ? {...con, unreadCount: 0}
+        : con
+      )
+    );
   };
 
   const handleSendMessage = (content: string) => {
@@ -272,39 +271,36 @@ export default function ChatLayout({
       };
 
       setMessages((prev) => [...prev, optimisticMessage]);
+
+      setConversations((prev) => 
+        prev.map((con) => 
+          con.id === selectedConversation.id 
+          ? {...selectedConversation, lastMessage: content}
+          : con
+        )
+      )
+
+      moveConversationToTop(selectedConversation.id);
     } catch (err) {
       console.log("Socket not initialized: ", err);
     }
   };
 
+  const moveConversationToTop = (convId: string) => {
+    setConversations((prev) => {
+      const index = prev.findIndex((c) => c.id.toString() === convId);
+      if (index === -1) return prev;
+
+      const updated = [...prev];
+      const [item] = updated.splice(index, 1);
+      updated.unshift(item);
+
+      return updated;
+    });
+  };
+
   useEffect(() => {
     if (!socket) return;
-
-    const handleIncomingMessage = (message: Message) => {
-      console.log("Received message via socket:", message);
-      // ignore messages from other conversations
-      if (message.chatId.toString() !== selectedConversationId) {
-        console.log("Ignored message for chatId:", typeof message.chatId);
-        console.log(
-          "Current selected conversationId:",
-          typeof selectedConversationId
-        );
-        return;
-      }
-
-      setMessages((prev) => [...prev, message]);
-    };
-
-    const handleRead = (data: { chatId: string }) => {
-      console.log('marking all read from socket ', data)
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.chatId === Number(data.chatId) && msg.status !== "read"
-            ? { ...msg, status: "read" }
-            : msg
-        )
-      );
-    };
 
     socket.on("message:receive", handleIncomingMessage);
 
@@ -314,13 +310,50 @@ export default function ChatLayout({
     };
   }, [socket, selectedConversationId]);
 
+  const handleIncomingMessage = (message: Message) => {
+    console.log("Received message via socket:", message);
+    // move conversation to top
+    moveConversationToTop(message.chatId.toString());
+
+    setConversations((prev) => 
+        prev.map((con) => 
+          con.id === message.chatId.toString()
+        ? {...con, lastMessage: message.content, unreadCount: con.unreadCount+1}
+        : con
+        )
+      )
+
+    // ignore messages from other conversations
+    if (message.chatId.toString() !== selectedConversationId) {
+      console.log("Ignored message for chatId:", typeof message.chatId);
+      console.log(
+        "Current selected conversationId:",
+        typeof selectedConversationId,
+      );
+      return;
+    }
+
+    setMessages((prev) => [...prev, message]);
+  };
+
+  const handleRead = (data: { chatId: string }) => {
+    console.log("marking all read from socket ", data);
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.chatId === Number(data.chatId) && msg.status !== "read"
+          ? { ...msg, status: "read" }
+          : msg,
+      ),
+    );
+  };
+
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
   // Use MobileChatLayout for mobile devices
   if (isMobile) {
     return (
       <MobileChatLayout
-        conversations={allConversations}
+        conversations={conversations}
         currentUser={currentUser}
         onConversationSelect={handleConversationSelect}
         // conversation props
@@ -352,8 +385,8 @@ export default function ChatLayout({
       prev.map((msg) =>
         msg.id === messageId
           ? { ...msg, content: newContent, isEdited: true }
-          : msg
-      )
+          : msg,
+      ),
     );
   };
 
@@ -382,7 +415,7 @@ export default function ChatLayout({
       {/* Conversation List Sidebar */}
       <div className="w-80 lg:w-96 border-r border-gray-200">
         <ConversationList
-          conversations={allConversations}
+          conversations={conversations}
           selectedConversationId={selectedConversationId}
           onConversationSelect={handleConversationSelect}
           showReturnToWebsite={true}
