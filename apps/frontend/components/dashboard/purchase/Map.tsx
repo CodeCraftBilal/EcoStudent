@@ -16,6 +16,7 @@ import { Coords } from "./LocationMap";
 interface MapCNProps {
   selectedCoords: Coords;
   setSelectedCoords: (coords: Coords) => void;
+  selectable?: boolean;
 }
 
 const styles = {
@@ -25,9 +26,9 @@ const styles = {
   openstreetmap3d: "https://tiles.openfreemap.org/styles/liberty",
 };
 
-const mapStyle = {light: styles.openstreetmap}
+const mapStyle = { light: styles.openstreetmap }
 
-const MapCN = ({ selectedCoords ,setSelectedCoords }: MapCNProps) => {
+const MapCN = ({ selectedCoords, setSelectedCoords, selectable = false }: MapCNProps) => {
   const [currentLocation, setCurrentLocation] = useState<GeoLocation | null>(
     null,
   );
@@ -35,15 +36,15 @@ const MapCN = ({ selectedCoords ,setSelectedCoords }: MapCNProps) => {
 
   // ---------for 3d map ------------------
   // useEffect(() => {
-    // if (!map || !isLoaded) return;
-    // map.easeTo({ pitch: 60, duration: 500 });
+  // if (!map || !isLoaded) return;
+  // map.easeTo({ pitch: 60, duration: 500 });
   // }, [map, isLoaded]);
 
   // markder
   const [markders, setMarkders] = useState([]);
 
   useEffect(() => {
-    if (!map || !isLoaded) return;
+    if (!map || !isLoaded || !selectable) return;
 
     const handleClick = (e: any) => {
       const { lng, lat } = e.lngLat;
@@ -56,7 +57,7 @@ const MapCN = ({ selectedCoords ,setSelectedCoords }: MapCNProps) => {
     return () => {
       map.off("click", handleClick);
     };
-  }, [isLoaded, map]);
+  }, [isLoaded, map, selectable]);
 
   useEffect(() => {
     const getCurrentLocation = async () => {
@@ -93,7 +94,7 @@ const MapCN = ({ selectedCoords ,setSelectedCoords }: MapCNProps) => {
               </div>
             </MarkerPopup>
           </MapMarker>
-          
+
           {selectedCoords && <MapMarker
             key={2}
             latitude={selectedCoords.lat}
@@ -131,6 +132,7 @@ const MapCN = ({ selectedCoords ,setSelectedCoords }: MapCNProps) => {
 export default function Page({
   selectedCoords,
   setSelectedCoords,
+  selectable = false,
 }: MapCNProps) {
   return (
     <Map
@@ -141,6 +143,7 @@ export default function Page({
       <MapCN
         selectedCoords={selectedCoords}
         setSelectedCoords={setSelectedCoords}
+        selectable={selectable}
       />
     </Map>
   );

@@ -173,16 +173,8 @@ export default function LocationMap({
                       <MapCN
                         selectedCoords={selectedCoords}
                         setSelectedCoords={setSelectedCoords}
+                        selectable={selectable}
                       />
-                      {/* Selection Marker */}
-                      {selectable && (
-                        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                          <MapCN
-                            selectedCoords={selectedCoords}
-                            setSelectedCoords={setSelectedCoords}
-                          />
-                        </div>
-                      )}
                     </div>
 
                     <div className="p-3 bg-white border-t border-eco-100">
