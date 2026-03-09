@@ -1,4 +1,3 @@
-// components/AboutUs/MissionSection.tsx
 import React from 'react';
 import { Target, Eye, Heart } from 'lucide-react';
 
@@ -62,24 +61,24 @@ const MissionSection: React.FC = () => {
               Today, we're proud to serve thousands of students across Pakistan, helping them save money while contributing to environmental sustainability.
             </p>
           </div>
-          <div className="bg-gradient-to-br from-green-500 to-blue-500 rounded-2xl p-8 text-gray-600">
+          <div className="bg-linear-to-br from-green-500 to-blue-500 rounded-2xl p-8 text-gray-600">
             <div className="bg-white bg-opacity-20 rounded-lg p-6 backdrop-blur-sm">
               <h4 className="text-xl font-bold mb-4">The Problem We Solve</h4>
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                  <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3 mt-1 shrink-0">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   </div>
                   <span>30% of students struggle to afford textbooks each semester</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                  <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3 mt-1 shrink-0">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   </div>
                   <span>Thousands of usable books go unused in storage every year</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                  <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3 mt-1 shrink-0">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   </div>
                   <span>Traditional book production has significant environmental costs</span>

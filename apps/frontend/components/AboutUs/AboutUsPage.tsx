@@ -1,17 +1,12 @@
-// components/AboutUs/AboutUsPage.tsx
 import React from 'react';
-// import MissionSection from './MissionSection';
-// import TeamSection from './TeamSection';
-// import StatsSection from './StatsSection';
-// import ValuesSection from './ValuesSection';
 
 import { MissionSection, TeamSection, StatsSection, ValuesSection } from './index'
 
 const AboutUsPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-linear-to-br from-green-50 to-blue-50">
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-green-500 to-blue-500 text-white">
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-linear-to-r from-green-500 to-blue-500 text-white">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
             About <span className="text-green-100">EcoStudent</span>

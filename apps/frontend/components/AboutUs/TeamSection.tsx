@@ -63,7 +63,7 @@ const TeamSection: React.FC = () => {
         <div className="mt-16 bg-white rounded-2xl p-8 shadow-lg max-w-2xl mx-auto">
           <div className="text-center">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Project Supervisor</h3>
-            <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-xl font-bold">
+            <div className="w-20 h-20 bg-linear-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-xl font-bold">
               DR
             </div>
             <h4 className="text-xl font-semibold text-gray-900 mb-2">Dr. Eid-ur-Rehman</h4>

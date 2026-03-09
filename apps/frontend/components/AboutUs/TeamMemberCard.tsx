@@ -1,4 +1,3 @@
-// components/AboutUs/TeamMemberCard.tsx
 import React from 'react';
 import { Code2, Palette, Cpu, Globe } from 'lucide-react';
 
@@ -34,7 +33,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
     <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100">
       {/* Header */}
       <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-lg">
+        <div className="w-16 h-16 bg-linear-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-lg">
           {name.split(' ').map(n => n[0]).join('')}
         </div>
         <h3 className="text-lg font-bold text-gray-900 mb-1">{name}</h3>
