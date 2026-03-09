@@ -44,7 +44,7 @@ export function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-linear-to-br from-green-50 to-blue-50">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -97,7 +97,7 @@ export function Home() {
             {/* Feature Showcase */}
             <div className="relative">
               <div className="bg-white rounded-3xl shadow-2xl p-8 space-y-6">
-                <div className="aspect-square bg-gradient-to-br from-green-100 to-blue-100 rounded-2xl flex items-center justify-center">
+                <div className="aspect-square bg-linear-to-br from-green-100 to-blue-100 rounded-2xl flex items-center justify-center">
                   <div className="text-center space-y-4">
                     {features[currentFeature].icon}
                     <h3 className="text-xl font-semibold text-gray-900">
@@ -144,7 +144,7 @@ export function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
-            <div className="bg-gradient-to-br from-green-50 to-blue-50 p-8 rounded-3xl space-y-4 hover:shadow-xl transition-shadow">
+            <div className="bg-linear-to-br from-green-50 to-blue-50 p-8 rounded-3xl space-y-4 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
                 <MapPin className="w-6 h-6 text-green-600" />
               </div>
@@ -157,7 +157,7 @@ export function Home() {
             </div>
 
             {/* Feature 2 */}
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-3xl space-y-4 hover:shadow-xl transition-shadow">
+            <div className="bg-linear-to-br from-blue-50 to-purple-50 p-8 rounded-3xl space-y-4 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
                 <MessageCircle className="w-6 h-6 text-blue-600" />
               </div>
@@ -170,7 +170,7 @@ export function Home() {
             </div>
 
             {/* Feature 3 */}
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-3xl space-y-4 hover:shadow-xl transition-shadow">
+            <div className="bg-linear-to-br from-purple-50 to-pink-50 p-8 rounded-3xl space-y-4 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">
                 <Search className="w-6 h-6 text-purple-600" />
               </div>
@@ -184,7 +184,7 @@ export function Home() {
             </div>
 
             {/* Feature 4 */}
-            <div className="bg-gradient-to-br from-pink-50 to-red-50 p-8 rounded-3xl space-y-4 hover:shadow-xl transition-shadow">
+            <div className="bg-linear-to-br from-pink-50 to-red-50 p-8 rounded-3xl space-y-4 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-pink-100 rounded-2xl flex items-center justify-center">
                 <Shield className="w-6 h-6 text-pink-600" />
               </div>
@@ -197,7 +197,7 @@ export function Home() {
             </div>
 
             {/* Feature 5 */}
-            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-8 rounded-3xl space-y-4 hover:shadow-xl transition-shadow">
+            <div className="bg-linear-to-br from-yellow-50 to-orange-50 p-8 rounded-3xl space-y-4 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center">
                 <BookOpen className="w-6 h-6 text-yellow-600" />
               </div>
@@ -210,7 +210,7 @@ export function Home() {
             </div>
 
             {/* Feature 6 */}
-            <div className="bg-gradient-to-br from-teal-50 to-green-50 p-8 rounded-3xl space-y-4 hover:shadow-xl transition-shadow">
+            <div className="bg-linear-to-br from-teal-50 to-green-50 p-8 rounded-3xl space-y-4 hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-teal-100 rounded-2xl flex items-center justify-center">
                 <Users className="w-6 h-6 text-teal-600" />
               </div>
@@ -226,7 +226,7 @@ export function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-green-600 to-blue-600">
+      <section className="py-20 bg-linear-to-r from-green-600 to-blue-600">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to Join the Sustainable Student Community?
