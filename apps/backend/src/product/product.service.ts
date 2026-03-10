@@ -44,6 +44,8 @@ export class ProductService {
     const conditions: string[] = [];
     const params: any[] = [];
 
+    conditions.push(`p.status = 'active'`);
+
     // Pagination values
     const limit = filters.limit ? Number(filters.limit) : 10;
     const offset = filters.offset ? Number(filters.offset) : 0;
