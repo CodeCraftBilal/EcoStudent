@@ -66,17 +66,17 @@ export function ShopNavBar({
   return (
     <div className="bg-white/80 backdrop-blur-md border-b border-green-200 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex flex-wrap md:flex-nowrap items-center justify-between py-3 md:py-0 md:h-16 gap-y-3">
           <Link
             href={"/"}
-            className="max-md:hidden flex items-center space-x-1"
+            className="flex items-center space-x-1 order-1"
           >
-            <Image src={"/logo.png"} alt="EcoStudent" width={50} height={50} />
-            <h1 className="text-2xl font-bold text-gray-900">EcoStudent</h1>
+            <Image src={"/logo.png"} alt="EcoStudent" width={40} height={40} className="md:w-[50px] md:h-[50px]" />
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">EcoStudent</h1>
           </Link>
 
           {/* Search Bar in Header */}
-          <div className="flex items-center justify-center gap-3 max-w-2xl mx-4 w-full">
+          <div className="flex items-center justify-center gap-3 w-full md:flex-1 md:max-w-2xl md:mx-4 order-3 md:order-2">
             <div className="relative w-full flex items-center">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
@@ -91,16 +91,16 @@ export function ShopNavBar({
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="bg-green-500 text-white p-3 rounded-full hover:bg-green-600 transition-colors shadow-lg"
+              className="bg-green-500 text-white p-3 rounded-full hover:bg-green-600 transition-colors shadow-lg shrink-0"
             >
               <Filter className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4 order-2 md:order-3">
             {/* show when user is login in */}
             <div
-              className={`${session && session.userName ? "flex" : "hidden"} gap-4 items-center justify-center`}
+              className={`${session && session.userName ? "flex" : "hidden"} gap-2 md:gap-4 items-center justify-center`}
             >
               <div className="relative">
                 <button
@@ -128,7 +128,7 @@ export function ShopNavBar({
                 />
               </div>
 
-              <div className="relative max-md:hidden">
+              <div className="relative">
                 <button
                   onClick={() =>
                     setIsMessagesDropDownOpen(!isMessagesDropDownOpen)
@@ -157,13 +157,13 @@ export function ShopNavBar({
 
             {/* show when user is not logged in */}
             {session && session.userName ? (
-              <div className={`md:flex items-center space-x-4`}>
+              <div className={`flex items-center space-x-4`}>
                 <div className="relative">
                   <button
                     onClick={toggleProfileDropdown}
                     className="flex items-center space-x-2 px-0 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm relative">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm relative">
                       {session.profile ? (
                         <Image
                           fill
@@ -195,17 +195,17 @@ export function ShopNavBar({
               </div>
             ) : (
               <div
-                className={`${session ? "" : "md:flex"} items-center space-x-4`}
+                className={`${session ? "" : "flex"} items-center space-x-2 md:space-x-4`}
               >
                 <Link
                   href={"/auth/signin"}
-                  className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors font-bold"
+                  className="text-gray-700 cursor-pointer hover:text-green-600 transition-colors font-bold text-sm md:text-base"
                 >
                   Signin
                 </Link>
                 <Link
                   href={"/auth/signup"}
-                  className={`${session ? "" : "max-md:hidden"} font-bold bg-green-600 cursor-pointer text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors shadow-lg`}
+                  className={`${session ? "" : "block"} font-bold bg-green-600 cursor-pointer text-white px-4 md:px-6 py-1.5 md:py-2 rounded-full hover:bg-green-700 transition-colors shadow-lg text-sm md:text-base whitespace-nowrap`}
                 >
                   Sign Up
                 </Link>
