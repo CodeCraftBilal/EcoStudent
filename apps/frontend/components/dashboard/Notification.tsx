@@ -21,7 +21,7 @@ interface NotificationDropdownProps {
   onClose: () => void;
   notifications: Notification[];
   onMarkAsRead: (notificationId: string) => void;
-  onMarkAllAsRead: () => void;
+  onMarkAllAsRead: (type?: "notification" | "message") => void;
   notificationCount: number;
 }
 
@@ -72,7 +72,7 @@ export default function NotificationDropdown({
     const date = new Date(timestamp);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
     return `${Math.floor(diffInMinutes / 1440)}d ago`;
@@ -93,7 +93,7 @@ export default function NotificationDropdown({
         <div className="flex items-center space-x-2">
           {notificationCount > 0 && (
             <button
-              onClick={onMarkAllAsRead}
+              onClick={() => onMarkAllAsRead(notificationType === 'Messages' ? 'message' : 'notification')}
               className="text-xs text-eco-600 hover:text-eco-700 font-medium"
             >
               Mark all as read
@@ -119,9 +119,8 @@ export default function NotificationDropdown({
           notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`border-b border-gray-100 last:border-0 ${
-                notification.read ? 'bg-white' : 'bg-eco-50'
-              }`}
+              className={`border-b border-gray-100 last:border-0 ${notification.read ? 'bg-white' : 'bg-eco-50'
+                }`}
             >
               {notification.link ? (
                 <Link
@@ -129,19 +128,19 @@ export default function NotificationDropdown({
                   onClick={() => onMarkAsRead(notification.id)}
                   className="block p-4 hover:bg-gray-50 transition-colors"
                 >
-                  <NotificationItem 
-                    notification={notification} 
+                  <NotificationItem
+                    notification={notification}
                     getNotificationIcon={getNotificationIcon}
                     formatTime={formatTime}
                   />
                 </Link>
               ) : (
-                <div 
+                <div
                   className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                   onClick={() => onMarkAsRead(notification.id)}
                 >
-                  <NotificationItem 
-                    notification={notification} 
+                  <NotificationItem
+                    notification={notification}
                     getNotificationIcon={getNotificationIcon}
                     formatTime={formatTime}
                   />
@@ -166,11 +165,11 @@ export default function NotificationDropdown({
 }
 
 // Separate component for notification item for better readability
-function NotificationItem({ 
-  notification, 
-  getNotificationIcon, 
-  formatTime 
-}: { 
+function NotificationItem({
+  notification,
+  getNotificationIcon,
+  formatTime
+}: {
   notification: Notification;
   getNotificationIcon: (type: string) => JSX.Element;
   formatTime: (timestamp: string) => string;
@@ -180,32 +179,31 @@ function NotificationItem({
       <div className="flex-shrink-0 mt-0.5">
         {getNotificationIcon(notification.type)}
       </div>
-      
+
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <p className={`text-sm font-medium ${
-              notification.read ? 'text-gray-700' : 'text-gray-900'
-            }`}>
+            <p className={`text-sm font-medium ${notification.read ? 'text-gray-700' : 'text-gray-900'
+              }`}>
               {notification.title}
             </p>
             <p className="text-sm text-gray-600 mt-1 line-clamp-2">
               {notification.message}
             </p>
           </div>
-          
+
           {!notification.read && (
             <div className="flex-shrink-0 ml-2">
               <div className="w-2 h-2 bg-eco-500 rounded-full"></div>
             </div>
           )}
         </div>
-        
+
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs text-gray-500">
             {formatTime(notification.time)}
           </span>
-          
+
           {!notification.read && (
             <button className="text-xs text-eco-600 hover:text-eco-700 font-medium">
               <Check className="w-3 h-3 inline mr-1" />

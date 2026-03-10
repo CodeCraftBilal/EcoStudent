@@ -36,10 +36,10 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType>({
   notifications: [],
   messageNotifications: [],
-  addNotification: () => {},
-  addMessageNotification: () => {},
-  markAsRead: () => {},
-  markAllAsRead: () => {},
+  addNotification: () => { },
+  addMessageNotification: () => { },
+  markAsRead: () => { },
+  markAllAsRead: () => { },
   unreadNotificationCount: 0,
   unreadMessageCount: 0,
 });
@@ -108,7 +108,7 @@ export const NotificationProvider = ({
 
     const handleNewNotification = (notification: Notification) => {
       console.log('recieved notification is ', notification)
-      if(notification.type != 'message') {
+      if (notification.type != 'message') {
         setUnreadNotificationCount((count) => count + 1);
       } else {
         setUnreadMessageCount(count => count + 1);
@@ -162,9 +162,17 @@ export const NotificationProvider = ({
         items.map((n) => (n.id === id ? { ...n, read: true } : n));
 
       if (type === "message") {
-        setMessageNotifications(updater);
+        setMessageNotifications(prev => {
+          const wasUnread = prev.some(n => n.id === id && !n.read);
+          if (wasUnread) setUnreadMessageCount(c => Math.max(0, c - 1));
+          return updater(prev);
+        });
       } else {
-        setNotifications(updater);
+        setNotifications(prev => {
+          const wasUnread = prev.some(n => n.id === id && !n.read);
+          if (wasUnread) setUnreadNotificationCount(c => Math.max(0, c - 1));
+          return updater(prev);
+        });
       }
     } catch (err) {
       console.error("Failed to mark notification as read:", err);
@@ -174,17 +182,19 @@ export const NotificationProvider = ({
 
   const markAllAsRead = async (type: "notification" | "message" = "notification") => {
 
-     const res = await authFetch(`${BACKEND_URL}/notification/markallasread`, {
+    const res = await authFetch(`${BACKEND_URL}/notification/markallasread`, {
       method: 'PATCH',
       credentials: 'include'
-     })
+    })
     const updater = (items: Notification[]) =>
       items.map((n) => ({ ...n, read: true }));
 
     if (type === "message") {
       setMessageNotifications(updater);
+      setUnreadMessageCount(0);
     } else {
       setNotifications(updater);
+      setUnreadNotificationCount(0);
     }
   };
 
