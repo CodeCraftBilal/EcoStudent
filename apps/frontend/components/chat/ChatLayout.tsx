@@ -9,7 +9,7 @@ import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
 import ChatEmptyState from "./ChatEmptyState";
 import { Conversation, Message, User } from "@/lib/types/messages/types";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/constants";
 import { LoadingSpinner } from "../Loading";
@@ -44,6 +44,7 @@ export default function ChatLayout({
 }: ChatLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const { session } = useSession();
   const { socket } = useSocket();
@@ -66,7 +67,7 @@ export default function ChatLayout({
   useEffect(() => {
     setConversations(conversationProp);
   }, [conversationProp]);
-  
+
   useEffect(() => {
     console.log('conversation changed ', conversations)
   }, [conversations]);
@@ -118,28 +119,28 @@ export default function ChatLayout({
 
   // Handle URL parameter to select conversation
   useEffect(() => {
-  if (!conversationIdFromUrl || conversations.length === 0) return;
+    if (!conversationIdFromUrl || conversations.length === 0) return;
 
-  const foundConversation = conversations.find(
-    (conv) =>
-      conv.id.toString() === conversationIdFromUrl ||
-      Number(conv.id) === Number(conversationIdFromUrl)
-  );
+    const foundConversation = conversations.find(
+      (conv) =>
+        conv.id.toString() === conversationIdFromUrl ||
+        Number(conv.id) === Number(conversationIdFromUrl)
+    );
 
-  if (!foundConversation) {
-    if (selectedConversationId !== null) {
-      setSelectedConversationId(null);
+    if (!foundConversation) {
+      if (selectedConversationId !== null) {
+        setSelectedConversationId(null);
+      }
+      return;
     }
-    return;
-  }
 
-  const nextId = foundConversation.id.toString();
+    const nextId = foundConversation.id.toString();
 
-  // 🔥 THIS LINE PREVENTS THE LOOP
-  if (selectedConversationId !== nextId) {
-    setSelectedConversationId(nextId);
-  }
-}, [conversationIdFromUrl, conversations, selectedConversationId]);
+    // 🔥 THIS LINE PREVENTS THE LOOP
+    if (selectedConversationId !== nextId) {
+      setSelectedConversationId(nextId);
+    }
+  }, [conversationIdFromUrl, conversations, selectedConversationId]);
 
 
   // Handle manual conversation selection (update URL)
@@ -224,12 +225,12 @@ export default function ChatLayout({
       chatId: selectedConversation.id,
     });
 
-    console.log('making unread messages of chat: ', selectedConversation.id , ' to 0');
-    setConversations(prev => 
-      prev.map((con) => 
+    console.log('making unread messages of chat: ', selectedConversation.id, ' to 0');
+    setConversations(prev =>
+      prev.map((con) =>
         con.id == selectedConversation.id
-        ? {...con, unreadCount: 0}
-        : con
+          ? { ...con, unreadCount: 0 }
+          : con
       )
     );
   };
@@ -272,11 +273,11 @@ export default function ChatLayout({
 
       setMessages((prev) => [...prev, optimisticMessage]);
 
-      setConversations((prev) => 
-        prev.map((con) => 
-          con.id === selectedConversation.id 
-          ? {...selectedConversation, lastMessage: content}
-          : con
+      setConversations((prev) =>
+        prev.map((con) =>
+          con.id === selectedConversation.id
+            ? { ...selectedConversation, lastMessage: content }
+            : con
         )
       )
 
@@ -310,18 +311,37 @@ export default function ChatLayout({
     };
   }, [socket, selectedConversationId]);
 
-  const handleIncomingMessage = (message: Message) => {
+  const handleIncomingMessage = async (message: Message) => {
     console.log("Received message via socket:", message);
-    // move conversation to top
-    moveConversationToTop(message.chatId.toString());
 
-    setConversations((prev) => 
-        prev.map((con) => 
-          con.id === message.chatId.toString()
-        ? {...con, lastMessage: message.content, unreadCount: con.unreadCount+1}
-        : con
+    const isExisting = conversations.some(c => c.id.toString() === message.chatId.toString());
+
+    if (!isExisting) {
+      try {
+        const response = await authFetch(`${BACKEND_URL}/chat/${message.chatId}`);
+        if (response.ok) {
+          const newChat = await response.json();
+          setConversations(prev => {
+            if (prev.some(c => c.id.toString() === message.chatId.toString())) return prev;
+            return [newChat, ...prev];
+          });
+          queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        }
+      } catch (err) {
+        console.error("Failed to fetch new conversation", err);
+      }
+    } else {
+      // move conversation to top
+      moveConversationToTop(message.chatId.toString());
+
+      setConversations((prev) =>
+        prev.map((con) =>
+          con.id.toString() === message.chatId.toString()
+            ? { ...con, lastMessage: message.content, unreadCount: Number(con.unreadCount || 0) + 1 }
+            : con
         )
       )
+    }
 
     // ignore messages from other conversations
     if (message.chatId.toString() !== selectedConversationId) {
