@@ -1,18 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef, Suspense } from "react";
-import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-
-import {
-    ProductImageGallery,
-    ProductInfo,
-    SellerInfo,
-    ProductTabs,
-} from "@/components/shop/product";
 import ItemCard from "@/components/shop/itemcard";
 import { LoadingSpinner } from "@/components/Loading";
 import { ProductNotFound } from "@/components/shop/product/NotFound";
@@ -238,64 +229,15 @@ function ProductClientContent({
 
     if (!product) return <ProductNotFound />;
 
-    function handleShare(): void {
-        console.log("Share clicked");
-    }
-
-    function handleReport(): void {
-        console.log("Report clicked");
-    }
-
     return (
         <div className="min-h-screen bg-linear-to-br from-green-50 to-blue-50">
             
 
-            <div className="max-w-7xl mx-auto px-6 py-8 red">
-                <div className="grid lg:grid-cols-2 gap-8 mb-12">
-                    <ProductImageGallery
-                        images={product.images}
-                        title={product.title}
-                        isFavorite={favorites.has(product.id)}
-                        onFavoriteToggle={() => toggleFavorite(product.id)}
-                    />
-
-                    <div className="space-y-6">
-                        <ProductInfo
-                            title={product.title}
-                            description={product.description}
-                            price={product.price}
-                            originalPrice={product.originalPrice}
-                            rating={product.seller.rating}
-                            reviewCount={product.seller.reviewCount}
-                            condition={product.condition}
-                            exchangeType={product.exchangeType}
-                            postedDate={product.postedDate}
-                            views={product.views}
-                            onShare={handleShare}
-                            onReport={handleReport}
-                        />
-
-                        <SellerInfo
-                            productId={product.id}
-                            seller={product.seller}
-                            distance={product.distance}
-                        />
-                    </div>
-                </div>
-
-                {reviews && (
-                    <ProductTabs
-                        description={product.description}
-                        specifications={product.specifications}
-                        reviews={reviews}
-                        location={product.location}
-                        distance={product.distance}
-                    />
-                )}
+            <div className="max-w-7xl mx-auto px-6 py-8">
 
                 <motion.div
                     layout
-                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-5 green"
+                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-5"
                 >
                     <AnimatePresence>
                         {relatedItems.map((item, idx) => {

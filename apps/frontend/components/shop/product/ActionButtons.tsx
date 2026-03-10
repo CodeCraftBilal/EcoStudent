@@ -1,3 +1,4 @@
+'use client'
 import { ShoppingCart, MessageCircle } from "lucide-react";
 import { useState } from "react";
 

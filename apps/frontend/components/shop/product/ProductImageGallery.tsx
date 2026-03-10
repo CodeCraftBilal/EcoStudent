@@ -7,8 +7,8 @@ import { motion } from "framer-motion";
 interface ProductImageGalleryProps {
   images: string[];
   title: string;
-  isFavorite: boolean;
-  onFavoriteToggle: () => void;
+  isFavorite?: boolean;
+  onFavoriteToggle?: () => void;
 }
 
 export default function ProductImageGallery({
@@ -90,7 +90,7 @@ export default function ProductImageGallery({
             <button
               key={index}
               onClick={() => setCurrentImageIndex(index)}
-              className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+              className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
                 index === currentImageIndex
                   ? "border-eco-500 shadow-md"
                   : "border-gray-200 hover:border-gray-300"

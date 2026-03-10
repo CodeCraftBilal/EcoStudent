@@ -1,4 +1,4 @@
-// components/shop/NotFound.tsx
+'use client'
 import { AlertCircle, RefreshCw, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -34,7 +34,7 @@ export function ProductNotFound({
       >
         {/* Icon Container */}
         <div className="relative mb-8">
-          <div className="w-32 h-32 mx-auto bg-gradient-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center">
+          <div className="w-32 h-32 mx-auto bg-linear-to-br from-green-100 to-blue-100 rounded-full flex items-center justify-center">
             <AlertCircle className="w-16 h-16 text-green-500" />
           </div>
           <div className="absolute -top-2 -right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
@@ -50,7 +50,7 @@ export function ProductNotFound({
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/shop"
-            className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white font-medium rounded-lg hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            className="inline-flex items-center justify-center px-6 py-3 bg-linear-to-r from-green-500 to-blue-500 text-white font-medium rounded-lg hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             <ShoppingBag className="w-5 h-5 mr-2" />
             Browse Shop

@@ -1,6 +1,5 @@
-import { desc } from "framer-motion/client";
 import { Star, Clock, Share2, Flag } from "lucide-react";
-import { useState } from "react";
+import ShareReportBtn from "./ShareReportBtn";
 
 interface ProductInfoProps {
   title: string;
@@ -27,11 +26,8 @@ export default function ProductInfo({
   condition,
   exchangeType,
   postedDate,
-  views,
-  onShare,
-  onReport,
+  views
 }: ProductInfoProps) {
-  const [showFullDescription, setShowFullDescription] = useState(false);
   console.log("description ", description);
   const getConditionColor = (condition: string) => {
     switch (condition) {
@@ -105,20 +101,7 @@ export default function ProductInfo({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={onShare}
-            className="p-2 text-gray-600 hover:text-green-600 transition-colors"
-          >
-            <Share2 className="w-5 h-5" />
-          </button>
-          <button
-            onClick={onReport}
-            className="p-2 text-gray-600 hover:text-green-600 transition-colors"
-          >
-            <Flag className="w-5 h-5" />
-          </button>
-        </div>
+        <ShareReportBtn />
       </div>
 
       {/* Price */}
@@ -142,15 +125,7 @@ export default function ProductInfo({
       <div className="bg-white rounded-2xl p-6 shadow-sm">
         {description ? (
           <p className="text-gray-700 leading-relaxed">
-            {description && showFullDescription
-              ? description
-              : `${description.slice(0, 200)}...`}
-            <button
-              onClick={() => setShowFullDescription(!showFullDescription)}
-              className="ml-2 text-green-600 hover:text-green-700 font-medium"
-            >
-              {showFullDescription ? "Show less" : "Read more"}
-            </button>
+            {description}
           </p>
         ) : (
           <p>No description available for this product.</p>
