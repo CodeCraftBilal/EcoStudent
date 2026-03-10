@@ -24,6 +24,21 @@ export const metadata: Metadata = {
   icons: {
     icon: "/logo.png",
   },
+  openGraph: {
+    title: "Ecosutdent - A platform for students to share and discover resources",
+    description: "A platform for students to share and discover resources.",
+    url: "https://ecostudent.bilalkhan.online",
+    images: [
+      {
+        url: "https://ecostudent.bilalkhan.online/ogimg.png", // link to OG image
+        width: 2816,
+        height: 1536,
+        alt: "Ecosutdent Logo",
+      },
+    ],
+    siteName: "Ecosutdent",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
