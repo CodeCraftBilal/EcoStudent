@@ -1,12 +1,18 @@
 import { Metadata } from "next";
-import { BACKEND_URL } from "@/lib/constants";
+import { BACKEND_URL, FRONTEND_URL } from "@/lib/constants";
 import ProductClientPage, { Product } from "./client-page";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
+import ProductNav from "../../../../components/shop/product/ProductNav";
+
 
 type Props = {
   params: Promise<{ slug: string | string[] }>;
 };
 
-async function getProduct(slugRaw: string | string[] | undefined): Promise<Product | null> {
+async function getProduct(
+  slugRaw: string | string[] | undefined,
+): Promise<Product | null> {
   if (!slugRaw) return null;
   const slug = Array.isArray(slugRaw) ? slugRaw.join("/") : slugRaw;
   try {
@@ -24,9 +30,7 @@ async function getProduct(slugRaw: string | string[] | undefined): Promise<Produ
   return null;
 }
 
-export async function generateMetadata({
-  params,
-}: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolvedParams = await params;
   const product = await getProduct(resolvedParams.slug);
 
@@ -48,7 +52,7 @@ export async function generateMetadata({
           url: product.images && product.images[0],
           width: 1200,
           height: 630,
-        }
+        },
       ],
     },
   };
@@ -57,9 +61,15 @@ export async function generateMetadata({
 export default async function ProductServerPage({ params }: Props) {
   const resolvedParams = await params;
   const slugRaw = resolvedParams.slug;
-  const slugStr = Array.isArray(slugRaw) ? slugRaw.join("/") : (slugRaw || "");
-  const product = await getProduct(slugRaw);
+  const slugStr = Array.isArray(slugRaw) ? slugRaw.join("/") : slugRaw || "";
+  const product = await getProduct(slugRaw); 
+  console.log('resolved params: ', resolvedParams) 
 
-  return <ProductClientPage slug={slugStr} initialProduct={product} />;
+
+  return (
+    <div>
+      <ProductNav />
+      <ProductClientPage slug={slugStr} initialProduct={product} />;
+    </div>
+  );
 }
-

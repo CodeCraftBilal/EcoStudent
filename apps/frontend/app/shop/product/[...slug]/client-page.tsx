@@ -248,19 +248,9 @@ function ProductClientContent({
 
     return (
         <div className="min-h-screen bg-linear-to-br from-green-50 to-blue-50">
-            <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center">
-                    <Link
-                        href={`${FRONTEND_URL}/${searchParams.get("from") || "shop"}`}
-                        className="flex items-center text-green-600"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                        <span>Back</span>
-                    </Link>
-                </div>
-            </nav>
+            
 
-            <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="max-w-7xl mx-auto px-6 py-8 red">
                 <div className="grid lg:grid-cols-2 gap-8 mb-12">
                     <ProductImageGallery
                         images={product.images}
@@ -305,7 +295,7 @@ function ProductClientContent({
 
                 <motion.div
                     layout
-                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-5"
+                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-5 green"
                 >
                     <AnimatePresence>
                         {relatedItems.map((item, idx) => {
