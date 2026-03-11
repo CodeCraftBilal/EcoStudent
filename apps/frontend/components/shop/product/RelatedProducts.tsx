@@ -60,9 +60,11 @@ export type Review = {
 function ProductClientContent({
     slug,
     initialProduct,
+    initialRelatedProducts = [],
 }: {
     slug: string;
     initialProduct?: Product | null;
+    initialRelatedProducts?: any[];
 }) {
     const [product, setProduct] = useState<Product | null>(initialProduct || null);
     const [reviews, setReviews] = useState<Review[] | null>(null);
@@ -179,7 +181,7 @@ function ProductClientContent({
             if (location)
                 query.push(`lat=${location.latitude}&lng=${location.longitude}`);
 
-            const category = searchParams.get("category");
+            const category = searchParams.get("category") || initialProduct?.category;
             if (category) query.push(`category=${category}`);
 
             query.push("minPrice=0", "maxPrice=5000");
@@ -194,9 +196,13 @@ function ProductClientContent({
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
         useInfiniteQuery({
-            queryKey: ["related-products"],
+            queryKey: ["related-products", slug],
             queryFn: fetchRelatedProducts,
             initialPageParam: 0,
+            initialData: {
+                pages: [initialRelatedProducts],
+                pageParams: [0]
+            },
             getNextPageParam: (lastPage, pages) =>
                 lastPage.length < 12 ? undefined : pages.length * 12,
         });
@@ -275,9 +281,11 @@ function ProductClientContent({
 export default function ProductClientPage({
     slug,
     initialProduct,
+    initialRelatedProducts = [],
 }: {
     slug: string;
     initialProduct?: Product | null;
+    initialRelatedProducts?: any[];
 }) {
     return (
         <Suspense
@@ -287,7 +295,11 @@ export default function ProductClientPage({
                 </div>
             }
         >
-            <ProductClientContent slug={slug} initialProduct={initialProduct} />
+            <ProductClientContent 
+                slug={slug} 
+                initialProduct={initialProduct} 
+                initialRelatedProducts={initialRelatedProducts}
+            />
         </Suspense>
     );
 }

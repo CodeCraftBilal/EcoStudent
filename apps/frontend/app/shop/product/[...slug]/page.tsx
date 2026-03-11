@@ -100,6 +100,27 @@ export default async function ProductServerPage({ params }: Props) {
 
   const reviews = await fetchReviews();
 
+  const fetchRelatedProducts = async () => {
+    try {
+      const query = new URLSearchParams();
+      if (product.category) query.append("category", product.category);
+      query.append("minPrice", "0");
+      query.append("maxPrice", "5000");
+      query.append("offset", "0");
+      query.append("limit", "12");
+      query.append("maxDistance", "20");
+
+      const res = await fetch(`${BACKEND_URL}/product?${query.toString()}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const initialRelatedProducts = await fetchRelatedProducts();
+
   return (
     <div>
       <ProductNav />
@@ -142,7 +163,11 @@ export default async function ProductServerPage({ params }: Props) {
         distance={product.distance}
       />
 
-      <ProductClientPage slug={slugStr} initialProduct={product} />;
+      <ProductClientPage 
+        slug={slugStr} 
+        initialProduct={product} 
+        initialRelatedProducts={initialRelatedProducts} 
+      />
     </div>
   );
 }
