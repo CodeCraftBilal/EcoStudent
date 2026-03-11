@@ -474,8 +474,8 @@ export class OrderService {
                     rating: true,
                     isVerified: true,
                     reviews_reviews_revieweduseridTousers: {
-                      where: { reviewerid: userId },
                       select: {
+                        reviewerid: true,
                         rating: true,
                         comment: true,
                       },
@@ -515,42 +515,44 @@ export class OrderService {
         }),
       ]);
 
-    const mappedData = data.map((d) => ({
-      id: d.exchangeId,
-      item: {
-        id: d.product.productId,
-        title: d.product.title,
-        description: d.product.description,
-        price: d.agreedPrice,
-        image: d.product.images?.[0],
-        category: d.product.category?.categoryName,
-        condition: d.product.productCondition,
-      },
-      seller: {
-        id: d.product.users?.userId,
-        name: d.product.users?.userName,
-        avatar: d.product.users?.profilePicture,
-        rating: d.product.users?.rating,
-        verified: d.product.users?.isVerified,
-      },
-      status: d.status,
-      purchaseDate: d.createdAt,
-      deliveredDate: d.meetupTime,
-      quantity: 1,
-      totalAmount: Number(d.agreedPrice),
-      paymentMethod: 'cash',
-      meetupLocation: d.meetupLocation,
-      latitude: d.meetupLatitude,
-      longitude: d.meetupLongitude,
-      rating:
-        d.product.users?.reviews_reviews_revieweduseridTousers.length === 0
-          ? null
-          : d.product.users?.reviews_reviews_revieweduseridTousers,
-      review:
-        d.product.users?.reviews_reviews_revieweduseridTousers.length === 0
-          ? null
-          : d.product.users?.reviews_reviews_revieweduseridTousers,
-    }));
+    const mappedData = data.map((d) => {
+      const allReviews = d.product.users?.reviews_reviews_revieweduseridTousers || [];
+      const myReview = allReviews.filter((r) => r.reviewerid === userId);
+      const avgRating = allReviews.length > 0 
+          ? allReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / allReviews.length 
+          : 0;
+
+      return {
+        id: d.exchangeId,
+        item: {
+          id: d.product.productId,
+          title: d.product.title,
+          description: d.product.description,
+          price: d.agreedPrice,
+          image: d.product.images?.[0],
+          category: d.product.category?.categoryName,
+          condition: d.product.productCondition,
+        },
+        seller: {
+          id: d.product.users?.userId,
+          name: d.product.users?.userName,
+          avatar: d.product.users?.profilePicture,
+          rating: avgRating > 0 ? avgRating.toFixed(1) : 0,
+          verified: d.product.users?.isVerified,
+        },
+        status: d.status,
+        purchaseDate: d.createdAt,
+        deliveredDate: d.meetupTime,
+        quantity: 1,
+        totalAmount: Number(d.agreedPrice),
+        paymentMethod: 'cash',
+        meetupLocation: d.meetupLocation,
+        latitude: d.meetupLatitude,
+        longitude: d.meetupLongitude,
+        rating: myReview.length === 0 ? null : myReview,
+        review: myReview.length === 0 ? null : myReview,
+      };
+    });
 
     return {
       data: mappedData,
