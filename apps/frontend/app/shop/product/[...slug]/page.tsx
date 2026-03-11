@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { BACKEND_URL, FRONTEND_URL } from "@/lib/constants";
+import { BACKEND_URL } from "@/lib/constants";
 import ProductClientPage, { Product } from "./client-page";
 import ProductNav from "../../../../components/shop/product/ProductNav";
 import {
@@ -107,8 +107,7 @@ export default async function ProductServerPage({ params }: Props) {
         <ProductImageGallery
           images={product.images}
           title={product.title}
-          // isFavorite={favorites.has(product.id)}
-          // onFavoriteToggle={() => toggleFavorite(product.id)}
+          productId={product.id}
         />
 
         <div className="space-y-6">

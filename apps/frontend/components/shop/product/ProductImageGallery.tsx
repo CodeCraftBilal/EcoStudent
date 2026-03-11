@@ -1,25 +1,72 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { addToFavorite, removeFromFavorite } from "@/lib/utils/favorite";
+import { useSnackbar } from "@/components/ui/dialogBoxes/SnackBarManager";
+import { BACKEND_URL } from "@/lib/constants";
+import { authFetch } from "@/lib/authFetch";
 
 interface ProductImageGalleryProps {
   images: string[];
   title: string;
-  isFavorite?: boolean;
-  onFavoriteToggle?: () => void;
+  productId: string;
 }
 
 export default function ProductImageGallery({
   images,
   title,
-  isFavorite,
-  onFavoriteToggle,
+  productId,
 }: ProductImageGalleryProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
-  
+  const [isFavorite, setIsFavorite] = useState<boolean>(false);
+
+  const { showSuccess, showError } = useSnackbar();
+
+  useEffect(() => {
+    const fetchFavoriteStatus = async () => {
+      try {
+        const res = await authFetch(`${BACKEND_URL}/favorite/ids`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            setIsFavorite(data.map(String).includes(String(productId)));
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch favorite status", e);
+      }
+    };
+    if (productId) {
+      fetchFavoriteStatus();
+    }
+  }, [productId]);
+
+  const toggleFavorite = useCallback(async () => {
+    const wasFavorite = isFavorite;
+    setIsFavorite(!wasFavorite);
+
+    try {
+      let res;
+      if (wasFavorite) {
+        res = await removeFromFavorite(productId);
+      } else {
+        res = await addToFavorite(productId);
+      }
+      if (!res.error) {
+        showSuccess(`${res.message}`, 4000, "bottom-center");
+      } else {
+        showError(`${res.message}`, 4000, "bottom-center");
+        setIsFavorite(wasFavorite);
+      }
+    } catch (err) {
+      console.error("Favorite update failed", err);
+      showError("Failed to update favorite status", 4000, "bottom-center");
+      setIsFavorite(wasFavorite);
+    }
+  }, [isFavorite, productId, showSuccess, showError]);
+
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   };
@@ -72,8 +119,8 @@ export default function ProductImageGallery({
 
           {/* Favorite Button */}
           <button
-            onClick={onFavoriteToggle}
-            className={`absolute top-4 right-4 p-3 rounded-full backdrop-blur-sm transition-all ${
+            onClick={toggleFavorite}
+            className={`absolute top-4 right-4 p-3 rounded-full backdrop-blur-sm transition-all z-10 ${
               isFavorite
                 ? "bg-red-500 text-white"
                 : "bg-white/80 text-gray-700 hover:bg-white"
