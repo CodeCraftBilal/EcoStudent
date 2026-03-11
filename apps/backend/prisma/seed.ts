@@ -18,13 +18,13 @@ const prisma = new PrismaClient({adapter});
 async function main() {
   // await seedCategories(prisma);
   // await seedUsers(prisma, 20);
-  await updateLocation(prisma, 31.5826, 74.3276);
+  // await updateLocation(prisma, 31.5826, 74.3276);
   // await seedProducts(prisma);
   // await seedCustomProducts(prisma);
   // await seedChats(prisma);
   // await seedMessages(prisma);
-  // await seedExchanges(prisma);
-  // await seedReviews(prisma);
+  await seedExchanges(prisma);
+  await seedReviews(prisma);
   // await seedOneChat(prisma, 111)
 }
 

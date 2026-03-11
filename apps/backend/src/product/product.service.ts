@@ -142,7 +142,7 @@ export class ProductService {
           c.categoryname,
           u.username AS seller_name,
           u.isverified,
-          u.rating,
+          COALESCE((SELECT AVG(rating) FROM reviews r WHERE r.revieweduserid = u.userid), 0) AS rating,
           u.profilepicture,
           u.userid,
           ${
@@ -180,7 +180,7 @@ export class ProductService {
         seller: {
           id: p.userid,
           name: p.seller_name,
-          rating: p.rating ? Number(p.rating) : 0,
+          rating: p.rating ? Number(p.rating).toFixed(1) : 0,
           verified: Boolean(p.isverified),
           profilePicture: p.profilepicture,
         },
@@ -215,7 +215,7 @@ export class ProductService {
     c.categoryname,
     u.userid,
     u.username,
-    u.rating,
+    COALESCE((SELECT AVG(rating) FROM reviews r WHERE r.revieweduserid = u.userid), 0) AS rating,
     u.created_at AS userCreatedAt,
     u.profilepicture,
     u.userlocation,
@@ -251,7 +251,7 @@ export class ProductService {
           seller: {
             id: p.userid,
             name: p.username,
-            rating: p.rating ? Number(p.rating) : 0,
+            rating: p.rating ? Number(p.rating).toFixed(1) : 0,
             verified: p.isverified ?? false,
             reviewCount: p.reviewcount ?? 0,
             memberSince: p.userCreatedAt ?? '0',
