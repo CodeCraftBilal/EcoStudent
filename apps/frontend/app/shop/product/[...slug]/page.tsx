@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { BACKEND_URL } from "@/lib/constants";
-import ProductClientPage, { Product } from "./client-page";
+import ProductClientPage, { Product } from "../../../../components/shop/product/RelatedProducts";
 import ProductNav from "../../../../components/shop/product/ProductNav";
 import {
   ProductImageGallery,
