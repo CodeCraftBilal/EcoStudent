@@ -219,7 +219,7 @@ export class FavoriteService {
           u.userid,
           u.username,
           u.profilepicture,
-          u.rating,
+          COALESCE((SELECT AVG(rating) FROM reviews r WHERE r.revieweduserid = u.userid), 0) AS rating,
           u.isverified,
           u.userlocation,
 
@@ -283,7 +283,7 @@ export class FavoriteService {
           id: p.userid.toString(),
           name: p.username,
           profilePicture: p.profilepicture || '',
-          rating: p.rating ? Number(p.rating) : 0,
+          rating: p.rating ? Number(p.rating).toFixed(1) : 0,
           verified: Boolean(p.isverified),
         },
         exchangeType: p.exchangetype,
