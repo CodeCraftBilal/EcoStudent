@@ -1,0 +1,257 @@
+generator client {
+  provider = "prisma-client-py"
+  recursive_type_depth         = -1
+  enable_experimental_decimal  = true
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Message {
+  messageid                       Int            @id @default(autoincrement())
+  chatid                          Int
+  senderid                        Int
+  receiverid                      Int
+  messagetype                     message_type
+  content                         String         @db.VarChar(1000)
+  voicenoteurl                    String?        @db.VarChar(255)
+  isread                          Boolean        @default(false)
+  created_at                      DateTime?      @default(now()) @db.Timestamp(6)
+  status                          MESSAGE_STATUS @default(sent)
+  chat                            chat           @relation(fields: [chatid], references: [chatid], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_chat")
+  users_Message_receiveridTousers users          @relation("Message_receiveridTousers", fields: [receiverid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_receiver")
+  users_Message_senderidTousers   users          @relation("Message_senderidTousers", fields: [senderid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_message_sender")
+}
+
+model admin {
+  admin_id Int @id
+}
+
+model category {
+  categoryid       Int        @id @default(autoincrement())
+  parentcategoryid Int?
+  categoryname     String     @unique(map: "uniquename") @db.VarChar(255)
+  description      String?
+  mediapath        String?    @db.VarChar(255)
+  created_at       DateTime?  @default(now()) @db.Timestamp(6)
+  category         category?  @relation("categoryTocategory", fields: [parentcategoryid], references: [categoryid], onDelete: NoAction, onUpdate: NoAction, map: "fk_category_parent")
+  other_category   category[] @relation("categoryTocategory")
+  product          product[]
+}
+
+model chat {
+  chatid                       Int       @id @default(autoincrement())
+  senderid                     Int
+  receiverid                   Int
+  productid                    Int
+  lastmessage                  String?   @db.VarChar(255)
+  lastmessage_at               DateTime? @db.Timestamp(6)
+  created_at                   DateTime  @default(now()) @db.Timestamp(6)
+  Message                      Message[]
+  product                      product   @relation(fields: [productid], references: [productid], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_product")
+  users_chat_receiveridTousers users     @relation("chat_receiveridTousers", fields: [receiverid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_receiver")
+  users_chat_senderidTousers   users     @relation("chat_senderidTousers", fields: [senderid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_chat_sender")
+
+  @@unique([senderid, receiverid, productid], map: "chat_senderid_receiverid_unique")
+}
+
+model exchanges {
+  exchangeid      Int              @id @default(autoincrement())
+  productid       Int
+  buyerid         Int
+  exchangetype    exchange_type
+  status          exchange_status? @default(pending)
+  agreedprice     Decimal          @db.Decimal(10, 2)
+  meetuplocation  String           @db.VarChar(255)
+  meetuplatitude  Decimal          @db.Decimal(10, 8)
+  meetuplongitude Decimal          @db.Decimal(11, 8)
+  meetuptime      DateTime         @db.Timestamp(6)
+  completed_at    DateTime?        @db.Timestamp(6)
+  created_at      DateTime         @default(now()) @db.Timestamp(6)
+  users           users            @relation(fields: [buyerid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_buyer")
+  product         product          @relation(fields: [productid], references: [productid], onDelete: NoAction, onUpdate: NoAction, map: "fk_exchanges_product")
+  reviews         reviews[]
+}
+
+model notifications {
+  notificationid    Int               @id @default(autoincrement())
+  title             String            @db.VarChar(255)
+  message           String            @db.VarChar(255)
+  isread            Boolean?          @default(false)
+  relatedentitytype String?           @db.VarChar(50)
+  relatedentityid   Int?
+  created_at        DateTime?         @default(now()) @db.Timestamp(6)
+  userid            Int
+  type              NOTIFICATION_TYPE
+  users             users             @relation(fields: [userid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_notifications_users")
+}
+
+model product {
+  productid        Int                      @id @default(autoincrement())
+  userid           Int
+  categoryid       Int
+  title            String                   @db.VarChar(255)
+  description      String?
+  price            Decimal                  @db.Decimal(10, 2)
+  views            Int?
+  images           Json?                    @db.Json
+  viewcount        Int?
+  created_at       DateTime                 @default(now()) @db.Timestamp(6)
+  updated_at       DateTime                 @default(now()) @db.Timestamp(6)
+  originalprice    Int?
+  productcondition product_condition
+  producttype      product_type
+  exchangetype     exchange_type            @default(sale)
+  status           PRODUCT_STATUS           @default(active)
+  search_vector    Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, (((COALESCE(title, ''::character varying))::text || ' '::text) || COALESCE(description, ''::text)))"))
+  chat             chat[]
+  exchanges        exchanges[]
+  category         category                 @relation(fields: [categoryid], references: [categoryid], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
+  users            users                    @relation(fields: [userid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
+  user_favorites   user_favorites[]
+
+  @@index([search_vector], map: "product_search_idx", type: Gin)
+}
+
+model reviews {
+  reviewid                            Int        @id @default(autoincrement())
+  exchangeid                          Int?
+  reviewerid                          Int?
+  revieweduserid                      Int?
+  rating                              Int?
+  comment                             String?    @db.VarChar(500)
+  created_at                          DateTime?  @db.Timestamp(6)
+  exchanges                           exchanges? @relation(fields: [exchangeid], references: [exchangeid], onDelete: NoAction, onUpdate: NoAction, map: "fk_reviews_exchange")
+  users_reviews_revieweduseridTousers users?     @relation("reviews_revieweduseridTousers", fields: [revieweduserid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_reviews_revieweduser")
+  users_reviews_revieweridTousers     users?     @relation("reviews_revieweridTousers", fields: [reviewerid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_reviews_reviewer")
+}
+
+model search_history {
+  searchid     Int       @id @default(autoincrement())
+  userid       Int
+  query        String?   @db.VarChar(255)
+  filters      Json?     @db.Json
+  resultscount Int?
+  created_at   DateTime? @db.Timestamp(6)
+  users        users     @relation(fields: [userid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_searchhistory_users")
+}
+
+model user_favorites {
+  favoriteid Int       @id @default(autoincrement())
+  userid     Int
+  productid  Int
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  product    product   @relation(fields: [productid], references: [productid], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_product")
+  users      users     @relation(fields: [userid], references: [userid], onDelete: NoAction, onUpdate: NoAction, map: "fk_userfavorites_users")
+
+  @@unique([userid, productid], map: "user_favorites_userid_productid_unique")
+}
+
+model users {
+  userid                                Int              @id @default(autoincrement())
+  username                              String           @db.VarChar(255)
+  email                                 String           @unique @db.VarChar(255)
+  role                                  ROLE?
+  status                                USER_STATUS      @default(ACTIVE)
+  hashedpassword                        String?          @db.VarChar(255)
+  hashedrefreshtoken                    String?          @db.VarChar(255)
+  phonenumber                           String?          @db.VarChar(25)
+  profilepicture                        String?          @db.VarChar(255)
+  userlocation                          String?          @db.VarChar(255)
+  latitude                              Decimal?         @db.Decimal(10, 8)
+  longitude                             Decimal?         @db.Decimal(11, 8)
+  rating                                Decimal?         @db.Decimal(3, 2)
+  isverified                            Boolean?
+  created_at                            DateTime?        @db.Timestamp(6)
+  updated_at                            DateTime?        @db.Timestamp(6)
+  tokenversion                          Int              @default(0)
+  isonline                              Boolean?         @default(false)
+  Message_Message_receiveridTousers     Message[]        @relation("Message_receiveridTousers")
+  Message_Message_senderidTousers       Message[]        @relation("Message_senderidTousers")
+  chat_chat_receiveridTousers           chat[]           @relation("chat_receiveridTousers")
+  chat_chat_senderidTousers             chat[]           @relation("chat_senderidTousers")
+  exchanges                             exchanges[]
+  notifications                         notifications[]
+  product                               product[]
+  reviews_reviews_revieweduseridTousers reviews[]        @relation("reviews_revieweduseridTousers")
+  reviews_reviews_revieweridTousers     reviews[]        @relation("reviews_revieweridTousers")
+  search_history                        search_history[]
+  user_favorites                        user_favorites[]
+}
+
+enum MESSAGE_STATUS {
+  sent
+  delivered
+  read
+}
+
+enum NOTIFICATION_TYPE {
+  message
+  sale
+  review
+  purchase
+  listing
+  order
+  other
+}
+
+enum PRODUCT_STATUS {
+  active
+  sold
+  reserved
+  draft
+}
+
+enum ROLE {
+  GUEST
+  USER
+  ADMIN
+}
+
+enum USER_STATUS {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum exchange_status {
+  pending
+  accepted
+  completed
+  cancelled
+}
+
+enum exchange_type {
+  sale
+  exchange
+  donation
+}
+
+enum message_type {
+  TEXT
+  VOICE
+}
+
+enum product_condition {
+  excellent
+  good
+  fair
+}
+
+enum product_type {
+  books
+  bags
+  uniform
+  calculator
+  geometry
+  other
+}
+
+enum status {
+  active
+  sold
+  reserved
+  draft
+}
