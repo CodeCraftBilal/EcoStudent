@@ -5,9 +5,13 @@ router = APIRouter()
 
 @router.get("/")
 async def read_root():
-    print('request revieved')
-    try:
-        user = await db.users.find_first()
-        return {"user": user,"message": "Welcome to EcoStudent AI Recommendation Service"}
-    except:
-        return {"message": "something went wrong"}
+    return "hello word"
+
+@router.get('/recommendation/userid')
+async def get_recommendation():
+    try: 
+        product = await db.product.find_many()
+        return product
+    except Exception as e:
+        print(str(e));
+        return {"success": False, "message": "Something went wrong"}
