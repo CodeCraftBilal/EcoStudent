@@ -16,11 +16,12 @@ import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import multer, { diskStorage } from 'multer';
+import multer from 'multer';
 import { UploadService } from 'src/upload/upload.service';
 import { useGCS } from 'src/upload/constants/constants';
 import { Public } from 'src/auth/decorators/public.decorator';
 import type { FindByUIDParams } from './types/types';
+import { Express } from 'express';
 
 @Controller('product')
 export class ProductController {
@@ -100,6 +101,14 @@ export class ProductController {
   @Get()
   findAll(@Query() query: any) {
     return this.productService.findAll(query);
+  }
+
+  @Public()
+  @Get('v2')
+  findAll_v2(@Req() req: Request) {
+    const originalUrl = req.url;
+    console.log(originalUrl);
+    return this.productService.findAll_v2(originalUrl);
   }
 
   @Public()

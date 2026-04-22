@@ -196,6 +196,13 @@ export class ProductService {
     }
   }
 
+  async findAll_v2(query: string) {
+    const params = query.split('?');
+    const res = await fetch(`http://127.0.0.1:5000/recommendation/userid?${params[1]}`)
+    const products = await res.json();
+    return products;
+  }
+
   async findOne(id: number, filters: any) {
     const lat = filters.lat ? Number(filters.lat) : null;
     const lng = filters.lng ? Number(filters.lng) : null;
