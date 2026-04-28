@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
@@ -14,6 +14,7 @@ import { ChatModule } from './chat/chat.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { MessageModule } from './message/message.module';
 import { NotificationModule } from './notification/notification.module';
+import { LoggerMiddleware } from './middleware/logger/logger.middleware';
 
 @Module({
   imports: [
@@ -24,4 +25,8 @@ import { NotificationModule } from './notification/notification.module';
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*'); // apply to all routes
+  }
+}

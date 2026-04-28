@@ -107,7 +107,6 @@ export class ProductController {
   @Get('v2')
   findAll_v2(@Req() req: Request) {
     const originalUrl = req.url;
-    console.log(originalUrl);
     return this.productService.findAll_v2(originalUrl);
   }
 
