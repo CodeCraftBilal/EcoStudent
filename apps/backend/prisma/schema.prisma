@@ -129,9 +129,8 @@ model product {
   title            String                   @db.VarChar(255)
   description      String?
   price            Decimal                  @db.Decimal(10, 2)
-  views            Int?
   images           Json?                    @db.Json
-  viewCount        Int?                     @map("viewcount")
+  viewCount        Int?                     @default(0) @map("viewcount")
   createdAt        DateTime                 @default(now()) @map("created_at") @db.Timestamp(6)
   updatedAt        DateTime                 @default(now()) @map("updated_at") @db.Timestamp(6)
   originalPrice    Int?                     @map("originalprice")

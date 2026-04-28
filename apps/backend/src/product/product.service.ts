@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { GoogleGenAI } from '@google/genai';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -194,6 +194,58 @@ export class ProductService {
         message: 'Something went wrong!',
       };
     }
+  }
+
+  // Simple in-memory cache to prevent fake rapid increments
+  private readonly viewCache = new Map<string, number>();
+
+  async getProductAndIncrementView(id: number, filters: any, viewerId?: string) {
+    const now = Date.now();
+    let shouldIncrement = true;
+
+    // 6. Prevent fake rapid increments
+    if (viewerId) {
+      const cacheKey = `${id}_${viewerId}`;
+      const lastViewed = this.viewCache.get(cacheKey);
+      
+      // Ignore multiple requests from same user within 5 seconds (5000ms)
+      if (lastViewed && now - lastViewed < 5000) {
+        shouldIncrement = false;
+      } else {
+        this.viewCache.set(cacheKey, now);
+      }
+    }
+
+    if (shouldIncrement) {
+      try {
+        // 2. Increment viewCount using Prisma atomic operation
+        // Prisma natively treats NULL as 0 for increments in recent versions
+        await this.prisma.product.update({
+          where: { productId: id },
+          data: {
+            viewCount: { increment: 1 },
+          },
+        });
+      } catch (error: any) {
+        // 1. Check if product exists (Prisma throws P2025 if record not found)
+        if (error.code === 'P2025') {
+          throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+        }
+        throw error;
+      }
+    }
+
+    // 3. Return updated product
+    // We reuse findOne because it contains raw SQL to calculate distance and ratings.
+    // A single query is not possible without losing those calculated fields or writing
+    // a complex raw UPDATE ... RETURNING query which violates the atomic { increment: 1 } requirement.
+    const product = await this.findOne(id, filters);
+    
+    if (!Array.isArray(product) && product.error) {
+      throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+    }
+    
+    return product;
   }
 
   async findOne(id: number, filters: any) {

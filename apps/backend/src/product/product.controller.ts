@@ -104,9 +104,12 @@ export class ProductController {
 
   @Public()
   @Get(':id')
-  findOne(@Param('id') id: string, @Query() query: any) {
+  async findOne(@Param('id') id: string, @Query() query: any, @Req() req: any) {
+    // Extract viewer IP for throttling fake rapid increments
+    const viewerId = req.ip || req.connection?.remoteAddress || 'unknown';
     
-    return this.productService.findOne(+id, query);
+    // Call service method and return response
+    return this.productService.getProductAndIncrementView(+id, query, viewerId);
   }
 
   @Patch(':id')
