@@ -13,10 +13,16 @@ engine = create_engine(DATABASE_URL)
 
 def get_products():
     query = """
-    SELECT productid, userid, categoryid, title, description, price, 
-           views, viewcount, producttype, exchangetype, status
-    FROM product 
-    WHERE status = 'active'
+    SELECT 
+        p.productid, p.userid, p.categoryid, p.title, p.description, p.price, 
+        p.views, p.viewcount, p.producttype, p.exchangetype, p.status,
+        p.originalprice, p.productcondition, p.images,
+        c.categoryname,
+        u.username, u.rating, u.isverified, u.profilepicture
+    FROM product p
+    LEFT JOIN category c ON p.categoryid = c.categoryid
+    LEFT JOIN users u ON p.userid = u.userid
+    WHERE p.status = 'active'
     """
     try:
         return pd.read_sql(query, engine)

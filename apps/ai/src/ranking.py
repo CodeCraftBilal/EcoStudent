@@ -111,28 +111,72 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 10, weights=None):
     # Sort and get top N
     top_items = result_df.sort_values(by='final_score', ascending=False).head(top_n)
     
-    # Format output
+    import json
+    
+    def extract_first_image(images):
+        if pd.isna(images) or images is None:
+            return None
+        if isinstance(images, list) and len(images) > 0:
+            return images[0]
+        if isinstance(images, dict) and len(images) > 0:
+            first_val = list(images.values())[0]
+            return first_val if isinstance(first_val, str) else None
+        if isinstance(images, str):
+            try:
+                parsed = json.loads(images)
+                if isinstance(parsed, list) and len(parsed) > 0:
+                    return parsed[0]
+            except:
+                pass
+        return None
+
+    # Merge products_df to get all metadata
+    top_items = top_items.merge(products_df, on='productid', how='left')
+
     recommendations = []
     for _, row in top_items.iterrows():
         pid = int(row['productid'])
         score = float(row['final_score'])
         
-        # Determine reason
+        # Determine reason dynamically
         reasons = []
-        if row['content_score'] > 0.5: reasons.append("Similar to your interactions")
-        if row['collab_score'] > 0.5: reasons.append("Users like you bought this")
-        if row['location_score'] > 0.5: reasons.append("Nearby")
-        if row['popularity_score'] > 0.8: reasons.append("Popular right now")
+        if row.get('collab_score', 0) > 0.5: reasons.append("Based on your recent searches")
+        if row.get('popularity_score', 0) > 0.8: reasons.append("Popular among students")
+        if row.get('location_score', 0) > 0.5: reasons.append("Near your location")
+        if row.get('content_score', 0) > 0.5: reasons.append("Similar to items you liked")
         
-        reason = " and ".join(reasons) if reasons else "Recommended for you"
+        reason = " and ".join(reasons) if reasons else "Best deal for this category"
         
+        # Calculate distance
+        distance = float(row.get('distance', 0)) if 'distance' in row and pd.notna(row['distance']) else 0.0
+            
+        rating = float(row.get('rating', 0)) if 'rating' in row and pd.notna(row['rating']) else 0.0
+            
+        original_price = float(row.get('originalprice')) if 'originalprice' in row and pd.notna(row['originalprice']) else None
+        price = float(row.get('price', 0)) if 'price' in row and pd.notna(row['price']) else 0.0
+        
+        profile_pic = str(row.get('profilepicture', '')) if 'profilepicture' in row and pd.notna(row['profilepicture']) else None
+
         recommendations.append({
-            "productId": pid,
+            "id": str(pid),
+            "title": str(row.get('title', '')),
+            "description": str(row.get('description', '')),
+            "price": price,
+            "originalPrice": original_price,
+            "category": str(row.get('categoryname', 'Uncategorized')),
+            "condition": str(row.get('productcondition', '')),
+            "image": extract_first_image(row.get('images')),
+            "distance": round(distance, 1),
+            "seller": {
+                "id": int(row.get('userid', 0)),
+                "name": str(row.get('username', 'Unknown')),
+                "rating": round(rating, 1),
+                "verified": bool(row.get('isverified', False)),
+                "profilePicture": profile_pic
+            },
+            "exchangeType": str(row.get('exchangetype', '')),
             "score": round(score, 3),
             "reason": reason
         })
         
-    return {
-        "userId": user_id,
-        "recommendations": recommendations
-    }
+    return recommendations

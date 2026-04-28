@@ -66,4 +66,4 @@ def get_location_scores(user_id, users_df, products_df, max_radius_km=10):
     # If distance is NaN, score is 0
     prod_locations['location_score'] = prod_locations['location_score'].fillna(0)
     
-    return prod_locations[['productid', 'location_score']]
+    return prod_locations[['productid', 'location_score', 'distance']]
