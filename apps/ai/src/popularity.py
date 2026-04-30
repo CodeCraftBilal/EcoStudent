@@ -7,11 +7,11 @@ def get_popularity_scores(products_df):
         
     df = products_df.copy()
     
-    df['views'] = pd.to_numeric(df['views'], errors='coerce').fillna(0)
+    # df['views'] = pd.to_numeric(df['views'], errors='coerce').fillna(0)
     df['viewcount'] = pd.to_numeric(df['viewcount'], errors='coerce').fillna(0)
     
-    df['popularity'] = df['views'] + df['viewcount']
-    
+    df['popularity'] = df['viewcount']
+    print(df['popularity'])
     if df['popularity'].max() > 0:
         scaler = MinMaxScaler()
         df['popularity_score'] = scaler.fit_transform(df[['popularity']])

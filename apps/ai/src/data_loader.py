@@ -15,7 +15,7 @@ def get_products():
     query = """
     SELECT 
         p.productid, p.userid, p.categoryid, p.title, p.description, p.price, 
-        p.views, p.viewcount, p.producttype, p.exchangetype, p.status,
+        p.viewcount, p.producttype, p.exchangetype, p.status,
         p.originalprice, p.productcondition, p.images,
         c.categoryname,
         u.username, u.rating, u.isverified, u.profilepicture
