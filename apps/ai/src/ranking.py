@@ -21,7 +21,7 @@ def refresh_models():
     _cache['popularity_scores'] = get_popularity_scores(products_df)
     print("Models refreshed successfully.")
 
-def get_hybrid_recommendations(user_id: int, top_n: int = 10, weights=None):
+def get_hybrid_recommendations(user_id: int, top_n: int = 12, offset: int = 0, filters=None, weights=None):
     if not _cache:
         refresh_models()
         
@@ -37,8 +37,46 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 10, weights=None):
     if products_df.empty:
         return {"userId": user_id, "recommendations": []}
         
-    # Start with all products
-    result_df = pd.DataFrame({'productid': products_df['productid']})
+    # Apply filters to products_df
+    if filters:
+        categories = filters.get('category')
+        if categories and len(categories) > 0 and categories[0] not in ('', 'all'):
+            products_df = products_df[products_df['categoryname'].isin(categories)]
+            
+        search_query = filters.get('searchQuery')
+        if search_query:
+            sq = search_query.lower()
+            title_match = products_df['title'].str.lower().str.contains(sq, na=False)
+            desc_match = products_df['description'].str.lower().str.contains(sq, na=False)
+            products_df = products_df[title_match | desc_match]
+            
+        min_price = filters.get('minPrice')
+        if min_price is not None:
+            try:
+                products_df = products_df[products_df['price'] >= float(min_price)]
+            except (ValueError, TypeError):
+                pass
+            
+        max_price = filters.get('maxPrice')
+        if max_price is not None:
+            try:
+                products_df = products_df[products_df['price'] <= float(max_price)]
+            except (ValueError, TypeError):
+                pass
+            
+        conditions = filters.get('condition')
+        if conditions and len(conditions) > 0 and conditions[0] != '':
+            products_df = products_df[products_df['productcondition'].isin(conditions)]
+            
+        exchange_types = filters.get('exchangeType')
+        if exchange_types and len(exchange_types) > 0 and exchange_types[0] != '':
+            products_df = products_df[products_df['exchangetype'].isin(exchange_types)]
+    
+    if products_df.empty:
+        return []
+        
+    valid_products = products_df['productid'].tolist()
+    result_df = pd.DataFrame({'productid': valid_products})
     
     # Get user interactions
     interactions_df = _cache.get('interactions_df', pd.DataFrame())
@@ -55,6 +93,8 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 10, weights=None):
         products_df, 
         top_n=len(products_df)
     )
+    if not content_scores.empty:
+        content_scores = content_scores[content_scores['productid'].isin(valid_products)]
     
     # 2. Collaborative filtering scores
     collab_scores = get_collaborative_recommendations(
@@ -62,12 +102,32 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 10, weights=None):
         interactions_df, 
         _cache.get('collab_sim')
     )
+    if not collab_scores.empty:
+        collab_scores = collab_scores[collab_scores['productid'].isin(valid_products)]
     
     # 3. Location-based scores
-    location_scores = get_location_scores(user_id, _cache.get('users_df', pd.DataFrame()), products_df)
+    lat, lng = None, None
+    if filters:
+        lat, lng = filters.get('lat'), filters.get('lng')
+    location_scores = get_location_scores(user_id, _cache.get('users_df', pd.DataFrame()), products_df, override_lat=lat, override_lon=lng)
+    
+    if not location_scores.empty:
+        location_scores = location_scores[location_scores['productid'].isin(valid_products)]
+        if filters:
+            max_distance = filters.get('maxDistance')
+            if max_distance is not None:
+                try:
+                    max_d = float(max_distance)
+                    location_scores = location_scores[location_scores['distance'] <= max_d]
+                    valid_products = [p for p in valid_products if p in location_scores['productid'].tolist()]
+                    result_df = result_df[result_df['productid'].isin(valid_products)]
+                except (ValueError, TypeError):
+                    pass
     
     # 4. Popularity scores
     popularity_scores = _cache.get('popularity_scores', pd.DataFrame())
+    if not popularity_scores.empty:
+        popularity_scores = popularity_scores[popularity_scores['productid'].isin(valid_products)]
     
     # Merge all scores
     if not content_scores.empty:
@@ -108,8 +168,9 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 10, weights=None):
         weights['popularity'] * result_df['popularity_score']
     )
     
-    # Sort and get top N
-    top_items = result_df.sort_values(by='final_score', ascending=False).head(top_n)
+    # Sort and get top N with offset
+    top_items = result_df.sort_values(by='final_score', ascending=False)
+    top_items = top_items.iloc[offset:offset+top_n]
     
     import json
     

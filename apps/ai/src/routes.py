@@ -16,10 +16,41 @@ async def startup_event():
 async def read_root():
     return "hello word"
 
+from fastapi import Request
+
 @router.get('/recommendations/{userId}')
-async def get_recommendations(userId: int, limit: int = 10):
+async def get_recommendations(
+    request: Request,
+    userId: int,
+    limit: int = 12,
+    offset: int = 0,
+    searchQuery: str = None,
+    minPrice: float = None,
+    maxPrice: float = None,
+    maxDistance: float = None,
+    lat: float = None,
+    lng: float = None
+):
     try:
-        recommendations = get_hybrid_recommendations(userId, top_n=limit)
+        category = request.query_params.getlist('category')
+        condition = request.query_params.getlist('condition')
+        exchangeType = request.query_params.getlist('exchangeType')
+        
+        filters = {
+            'searchQuery': searchQuery,
+            'category': category,
+            'minPrice': minPrice,
+            'maxPrice': maxPrice,
+            'condition': condition,
+            'exchangeType': exchangeType,
+            'maxDistance': maxDistance,
+            'lat': lat,
+            'lng': lng,
+            'limit': limit,
+            'offset': offset
+        }
+        
+        recommendations = get_hybrid_recommendations(user_id=userId, filters=filters, top_n=limit, offset=offset)
         return recommendations
     except Exception as e:
         print(f"Error generating recommendations: {e}")

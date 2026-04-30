@@ -25,16 +25,20 @@ def haversine(lat1, lon1, lat2, lon2):
     except:
         return float('inf')
 
-def get_location_scores(user_id, users_df, products_df, max_radius_km=10):
-    user_data = users_df[users_df['userid'] == user_id]
-    if user_data.empty:
-        return pd.DataFrame()
+def get_location_scores(user_id, users_df, products_df, max_radius_km=10, override_lat=None, override_lon=None):
+    if override_lat is not None and override_lon is not None:
+        user_lat = float(override_lat)
+        user_lon = float(override_lon)
+    else:
+        user_data = users_df[users_df['userid'] == user_id]
+        if user_data.empty:
+            return pd.DataFrame()
+            
+        user_lat = user_data.iloc[0]['latitude']
+        user_lon = user_data.iloc[0]['longitude']
         
-    user_lat = user_data.iloc[0]['latitude']
-    user_lon = user_data.iloc[0]['longitude']
-    
-    if pd.isna(user_lat) or pd.isna(user_lon):
-        return pd.DataFrame()
+        if pd.isna(user_lat) or pd.isna(user_lon):
+            return pd.DataFrame()
         
     seller_ids = products_df['userid'].unique()
     sellers_df = users_df[users_df['userid'].isin(seller_ids)].copy()
