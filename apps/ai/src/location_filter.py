@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
 
-def haversine(lat1, lon1, lat2, lon2):
+def calculate_distance(lat1, lon1, lat2, lon2):
     """
     Calculate the great circle distance between two points 
-    on the earth (specified in decimal degrees)
+    using the Spherical Law of Cosines.
     """
     if pd.isna(lat1) or pd.isna(lon1) or pd.isna(lat2) or pd.isna(lon2):
         return float('inf')
@@ -13,13 +13,13 @@ def haversine(lat1, lon1, lat2, lon2):
         # Convert to float
         lat1, lon1, lat2, lon2 = float(lat1), float(lon1), float(lat2), float(lon2)
         # Convert decimal degrees to radians 
-        lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+        lat1_r, lon1_r, lat2_r, lon2_r = map(np.radians, [lat1, lon1, lat2, lon2])
 
-        # Haversine formula 
-        dlon = lon2 - lon1 
-        dlat = lat2 - lat1 
-        a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
-        c = 2 * np.arcsin(np.sqrt(a)) 
+        # Cosine formula
+        val = np.sin(lat1_r) * np.sin(lat2_r) + np.cos(lat1_r) * np.cos(lat2_r) * np.cos(lon2_r - lon1_r)
+        # Clip to avoid math domain errors
+        val = np.clip(val, -1.0, 1.0)
+        c = np.arccos(val)
         r = 6371 # Radius of earth in kilometers.
         return c * r
     except:
@@ -48,7 +48,7 @@ def get_location_scores(user_id, users_df, products_df, max_radius_km=10, overri
     
     # Calculate distance from user to sellers
     sellers_df['distance'] = sellers_df.apply(
-        lambda row: haversine(user_lat, user_lon, row['latitude'], row['longitude']), 
+        lambda row: calculate_distance(user_lat, user_lon, row['latitude'], row['longitude']), 
         axis=1
     )
     

@@ -53,14 +53,14 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 12, offset: int = 0, f
         min_price = filters.get('minPrice')
         if min_price is not None:
             try:
-                products_df = products_df[products_df['price'] >= float(min_price)]
+                products_df = products_df[products_df['price'].astype(float) >= float(min_price)]
             except (ValueError, TypeError):
                 pass
             
         max_price = filters.get('maxPrice')
         if max_price is not None:
             try:
-                products_df = products_df[products_df['price'] <= float(max_price)]
+                products_df = products_df[products_df['price'].astype(float) <= float(max_price)]
             except (ValueError, TypeError):
                 pass
             
@@ -107,22 +107,35 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 12, offset: int = 0, f
     
     # 3. Location-based scores
     lat, lng = None, None
+    max_d = 10.0
     if filters:
         lat, lng = filters.get('lat'), filters.get('lng')
-    location_scores = get_location_scores(user_id, _cache.get('users_df', pd.DataFrame()), products_df, override_lat=lat, override_lon=lng)
+        max_distance_val = filters.get('maxDistance')
+        if max_distance_val is not None:
+            try:
+                max_d = float(max_distance_val)
+            except (ValueError, TypeError):
+                pass
+                
+    location_scores = get_location_scores(
+        user_id, 
+        _cache.get('users_df', pd.DataFrame()), 
+        products_df, 
+        max_radius_km=max_d,
+        override_lat=lat, 
+        override_lon=lng
+    )
     
     if not location_scores.empty:
         location_scores = location_scores[location_scores['productid'].isin(valid_products)]
-        if filters:
-            max_distance = filters.get('maxDistance')
-            if max_distance is not None:
-                try:
-                    max_d = float(max_distance)
-                    location_scores = location_scores[location_scores['distance'] <= max_d]
-                    valid_products = [p for p in valid_products if p in location_scores['productid'].tolist()]
-                    result_df = result_df[result_df['productid'].isin(valid_products)]
-                except (ValueError, TypeError):
-                    pass
+        if filters and filters.get('maxDistance') is not None:
+            location_scores = location_scores[location_scores['distance'] <= max_d]
+            valid_products = [p for p in valid_products if p in location_scores['productid'].tolist()]
+            result_df = result_df[result_df['productid'].isin(valid_products)]
+    else:
+        if filters and filters.get('maxDistance') is not None:
+            valid_products = []
+            result_df = result_df.iloc[0:0]
     
     # 4. Popularity scores
     popularity_scores = _cache.get('popularity_scores', pd.DataFrame())
