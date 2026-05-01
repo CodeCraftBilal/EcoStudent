@@ -2,7 +2,7 @@ import pandas as pd
 from .data_loader import get_products, get_users, get_interactions
 from .content_filter import compute_content_similarity, get_content_recommendations
 from .collaborative_filter import compute_collaborative_similarity, get_collaborative_recommendations
-from .location_filter import get_location_scores
+from .location_filter import filter_products_by_distance, get_product_distances
 from .popularity import get_popularity_scores
 
 # Global state for caching models
@@ -27,10 +27,9 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 12, offset: int = 0, f
         
     if weights is None:
         weights = {
-            'content': 0.3,
-            'collab': 0.3,
-            'location': 0.2,
-            'popularity': 0.2
+            'content': 0.35,
+            'collab': 0.35,
+            'popularity': 0.3
         }
         
     products_df = _cache.get('products_df', pd.DataFrame())
@@ -38,6 +37,7 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 12, offset: int = 0, f
         return {"userId": user_id, "recommendations": []}
         
     # Apply filters to products_df
+    distance_map = {}
     if filters:
         categories = filters.get('category')
         if categories and len(categories) > 0 and categories[0] not in ('', 'all'):
@@ -71,7 +71,43 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 12, offset: int = 0, f
         exchange_types = filters.get('exchangeType')
         if exchange_types and len(exchange_types) > 0 and exchange_types[0] != '':
             products_df = products_df[products_df['exchangetype'].isin(exchange_types)]
-    
+        
+        # Distance hard-filter: remove products beyond maxDistance
+        lat, lng = filters.get('lat'), filters.get('lng')
+        max_distance_val = filters.get('maxDistance')
+        if max_distance_val is not None:
+            try:
+                max_d = float(max_distance_val)
+            except (ValueError, TypeError):
+                max_d = None
+            if max_d is not None and not products_df.empty:
+                products_df, distance_map = filter_products_by_distance(
+                    user_id,
+                    _cache.get('users_df', pd.DataFrame()),
+                    products_df,
+                    max_distance_km=max_d,
+                    override_lat=lat,
+                    override_lon=lng
+                )
+        else:
+            # No distance filter, but still compute distances for display
+            if not products_df.empty:
+                distance_map = get_product_distances(
+                    user_id,
+                    _cache.get('users_df', pd.DataFrame()),
+                    products_df,
+                    override_lat=lat,
+                    override_lon=lng
+                )
+    else:
+        # No filters at all, still compute distances for display
+        if not products_df.empty:
+            distance_map = get_product_distances(
+                user_id,
+                _cache.get('users_df', pd.DataFrame()),
+                products_df
+            )
+    print("distance_map", distance_map)
     if products_df.empty:
         return []
         
@@ -105,39 +141,7 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 12, offset: int = 0, f
     if not collab_scores.empty:
         collab_scores = collab_scores[collab_scores['productid'].isin(valid_products)]
     
-    # 3. Location-based scores
-    lat, lng = None, None
-    max_d = 10.0
-    if filters:
-        lat, lng = filters.get('lat'), filters.get('lng')
-        max_distance_val = filters.get('maxDistance')
-        if max_distance_val is not None:
-            try:
-                max_d = float(max_distance_val)
-            except (ValueError, TypeError):
-                pass
-                
-    location_scores = get_location_scores(
-        user_id, 
-        _cache.get('users_df', pd.DataFrame()), 
-        products_df, 
-        max_radius_km=max_d,
-        override_lat=lat, 
-        override_lon=lng
-    )
-    
-    if not location_scores.empty:
-        location_scores = location_scores[location_scores['productid'].isin(valid_products)]
-        if filters and filters.get('maxDistance') is not None:
-            location_scores = location_scores[location_scores['distance'] <= max_d]
-            valid_products = [p for p in valid_products if p in location_scores['productid'].tolist()]
-            result_df = result_df[result_df['productid'].isin(valid_products)]
-    else:
-        if filters and filters.get('maxDistance') is not None:
-            valid_products = []
-            result_df = result_df.iloc[0:0]
-    
-    # 4. Popularity scores
+    # 3. Popularity scores
     popularity_scores = _cache.get('popularity_scores', pd.DataFrame())
     if not popularity_scores.empty:
         popularity_scores = popularity_scores[popularity_scores['productid'].isin(valid_products)]
@@ -152,11 +156,6 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 12, offset: int = 0, f
         result_df = result_df.merge(collab_scores, on='productid', how='left')
     else:
         result_df['collab_score'] = 0
-        
-    if not location_scores.empty:
-        result_df = result_df.merge(location_scores, on='productid', how='left')
-    else:
-        result_df['location_score'] = 0
         
     if not popularity_scores.empty:
         result_df = result_df.merge(popularity_scores, on='productid', how='left')
@@ -173,11 +172,10 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 12, offset: int = 0, f
     # Filter out products user already interacted with
     result_df = result_df[~result_df['productid'].isin(target_products)]
     
-    # Calculate final score
+    # Calculate final score (location is a hard filter, not a scoring component)
     result_df['final_score'] = (
         weights['content'] * result_df['content_score'] +
         weights['collab'] * result_df['collab_score'] +
-        weights['location'] * result_df['location_score'] +
         weights['popularity'] * result_df['popularity_score']
     )
     
@@ -216,13 +214,16 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 12, offset: int = 0, f
         reasons = []
         if row.get('collab_score', 0) > 0.5: reasons.append("Based on your recent searches")
         if row.get('popularity_score', 0) > 0.8: reasons.append("Popular among students")
-        if row.get('location_score', 0) > 0.5: reasons.append("Near your location")
         if row.get('content_score', 0) > 0.5: reasons.append("Similar to items you liked")
+        
+        # Use distance from distance_map
+        dist_val = distance_map.get(pid, 0.0)
+        if dist_val > 0 and dist_val != float('inf'):
+            reasons.append("Near your location")
         
         reason = " and ".join(reasons) if reasons else "Best deal for this category"
         
-        # Calculate distance
-        distance = float(row.get('distance', 0)) if 'distance' in row and pd.notna(row['distance']) else 0.0
+        distance = round(float(dist_val), 1) if dist_val != float('inf') else 0.0
             
         rating = float(row.get('rating', 0)) if 'rating' in row and pd.notna(row['rating']) else 0.0
             

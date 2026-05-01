@@ -44,64 +44,101 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     return distance
 
 
-def get_location_scores(user_id, users_df, products_df, max_radius_km=10, override_lat=None, override_lon=None):
+def filter_products_by_distance(
+    user_id, users_df, products_df,
+    max_distance_km, override_lat=None, override_lon=None
+):
+    
+    print("overide lat: ", override_lat, " override long: ", override_lon)
     """
-    Returns product location scores based on distance from user.
-    Score = 1 (closest) → 0 (>= max_radius_km)
+    Hard-filter products by distance from user.
+    Returns (filtered_products_df, distance_map) where:
+      - filtered_products_df: products whose sellers are within max_distance_km
+      - distance_map: dict of {productid: distance_in_km}
+    If user location is unavailable, returns the original products with no distances.
     """
 
-    # Get user location
+    # Resolve user location
     if override_lat is not None and override_lon is not None:
         user_lat = float(override_lat)
         user_lon = float(override_lon)
     else:
         user_data = users_df[users_df['userid'] == user_id]
         if user_data.empty:
-            return pd.DataFrame()
+            return products_df, {}
 
         user_lat = user_data.iloc[0]['latitude']
         user_lon = user_data.iloc[0]['longitude']
 
         if pd.isna(user_lat) or pd.isna(user_lon):
-            return pd.DataFrame()
+            return products_df, {}
 
-    # Get sellers from products
+    # Get unique sellers from products
     seller_ids = products_df['userid'].unique()
     sellers_df = users_df[users_df['userid'].isin(seller_ids)].copy()
 
     if sellers_df.empty:
-        return pd.DataFrame()
+        return products_df, {}
 
-    # 🚀 FAST vectorized distance calculation
+    # Vectorized distance calculation
     sellers_df['distance'] = haversine_distance(
-        user_lat,
-        user_lon,
-        sellers_df['latitude'],
-        sellers_df['longitude']
+        user_lat, user_lon,
+        sellers_df['latitude'], sellers_df['longitude']
     )
 
-    # Optional: filter sellers within radius (performance boost)
-    sellers_df = sellers_df[sellers_df['distance'] <= max_radius_km]
+    # Keep only sellers within the max distance
+    nearby_sellers = sellers_df[sellers_df['distance'] <= max_distance_km]
+
+    if nearby_sellers.empty:
+        return pd.DataFrame(columns=products_df.columns), {}
+
+    # Filter products to only those from nearby sellers
+    filtered_df = products_df[products_df['userid'].isin(nearby_sellers['userid'])].copy()
+
+    # Build a distance map: productid -> distance
+    seller_distance = nearby_sellers.set_index('userid')['distance'].to_dict()
+    distance_map = {
+        row['productid']: seller_distance.get(row['userid'], 0.0)
+        for _, row in filtered_df.iterrows()
+    }
+
+    return filtered_df, distance_map
+
+
+def get_product_distances(user_id, users_df, products_df, override_lat=None, override_lon=None):
+    """
+    Compute distance from user to every product's seller (no filtering).
+    Returns dict of {productid: distance_in_km}.
+    Used to populate the distance field in responses when maxDistance filter is not set.
+    """
+
+    if override_lat is not None and override_lon is not None:
+        user_lat = float(override_lat)
+        user_lon = float(override_lon)
+    else:
+        user_data = users_df[users_df['userid'] == user_id]
+        if user_data.empty:
+            return {}
+
+        user_lat = user_data.iloc[0]['latitude']
+        user_lon = user_data.iloc[0]['longitude']
+
+        if pd.isna(user_lat) or pd.isna(user_lon):
+            return {}
+
+    seller_ids = products_df['userid'].unique()
+    sellers_df = users_df[users_df['userid'].isin(seller_ids)].copy()
 
     if sellers_df.empty:
-        return pd.DataFrame()
+        return {}
 
-    # Merge distances into products
-    prod_locations = products_df[['productid', 'userid']].merge(
-        sellers_df[['userid', 'distance']],
-        on='userid',
-        how='left'
+    sellers_df['distance'] = haversine_distance(
+        user_lat, user_lon,
+        sellers_df['latitude'], sellers_df['longitude']
     )
 
-    # Compute score
-    prod_locations['location_score'] = np.where(
-        prod_locations['distance'] <= max_radius_km,
-        1 - (prod_locations['distance'] / max_radius_km),
-        0
-    )
-
-    # Handle missing values
-    prod_locations['location_score'] = prod_locations['location_score'].fillna(0)
-    prod_locations['distance'] = prod_locations['distance'].fillna(np.inf)
-
-    return prod_locations[['productid', 'location_score', 'distance']]
+    seller_distance = sellers_df.set_index('userid')['distance'].to_dict()
+    return {
+        row['productid']: seller_distance.get(row['userid'], 0.0)
+        for _, row in products_df.iterrows()
+    }

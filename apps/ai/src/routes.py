@@ -14,6 +14,7 @@ async def startup_event():
 
 @router.get("/")
 async def read_root():
+    print("hello world")
     return "hello word"
 
 from fastapi import Request
@@ -31,6 +32,7 @@ async def get_recommendations(
     lat: float = None,
     lng: float = None
 ):
+    print("A new Recommendation recieved")
     try:
         category = request.query_params.getlist('category')
         condition = request.query_params.getlist('condition')
