@@ -74,33 +74,33 @@ def get_filtered_products(filters):
     
     categories = filters.get('category')
     if categories and len(categories) > 0 and categories[0] not in ('', 'all'):
-        where_clauses.append("c.categoryname IN %(categories)s")
-        params['categories'] = tuple(categories)
+        where_clauses.append("c.categoryname = ANY(:categories)")
+        params['categories'] = list(categories)
         
     search_query = filters.get('searchQuery')
     if search_query:
-        where_clauses.append("(LOWER(p.title) LIKE %(search_query)s OR LOWER(p.description) LIKE %(search_query)s)")
+        where_clauses.append("(LOWER(p.title) LIKE :search_query OR LOWER(p.description) LIKE :search_query)")
         params['search_query'] = f"%{search_query.lower()}%"
         
     min_price = filters.get('minPrice')
     if min_price is not None:
-        where_clauses.append("p.price >= %(min_price)s")
+        where_clauses.append("p.price >= :min_price")
         params['min_price'] = float(min_price)
         
     max_price = filters.get('maxPrice')
     if max_price is not None:
-        where_clauses.append("p.price <= %(max_price)s")
+        where_clauses.append("p.price <= :max_price")
         params['max_price'] = float(max_price)
         
     conditions = filters.get('condition')
     if conditions and len(conditions) > 0 and conditions[0] != '':
-        where_clauses.append("p.productcondition IN %(conditions)s")
-        params['conditions'] = tuple(conditions)
+        where_clauses.append("p.productcondition = ANY(:conditions)")
+        params['conditions'] = list(conditions)
         
     exchange_types = filters.get('exchangeType')
     if exchange_types and len(exchange_types) > 0 and exchange_types[0] != '':
-        where_clauses.append("p.exchangetype IN %(exchange_types)s")
-        params['exchange_types'] = tuple(exchange_types)
+        where_clauses.append("p.exchangetype = ANY(:exchange_types)")
+        params['exchange_types'] = list(exchange_types)
         
     whereSQL = "WHERE " + " AND ".join(where_clauses)
     
@@ -152,7 +152,7 @@ def get_filtered_products(filters):
     if maxDistance is not None:
         try:
             max_d = float(maxDistance)
-            sql += " WHERE sub.distance <= %(max_distance)s"
+            sql += " WHERE sub.distance <= :max_distance"
             params['max_distance'] = max_d
         except ValueError:
             pass
