@@ -63,3 +63,103 @@ def get_interactions():
     except Exception as e:
         print(f"Error loading interactions: {e}")
         return pd.DataFrame(columns=['userid', 'productid', 'weight'])
+
+def get_filtered_products(filters):
+    lat = filters.get('lat')
+    lng = filters.get('lng')
+    maxDistance = filters.get('maxDistance')
+    
+    where_clauses = ["p.status = 'active'"]
+    params = {}
+    
+    categories = filters.get('category')
+    if categories and len(categories) > 0 and categories[0] not in ('', 'all'):
+        where_clauses.append("c.categoryname IN %(categories)s")
+        params['categories'] = tuple(categories)
+        
+    search_query = filters.get('searchQuery')
+    if search_query:
+        where_clauses.append("(LOWER(p.title) LIKE %(search_query)s OR LOWER(p.description) LIKE %(search_query)s)")
+        params['search_query'] = f"%{search_query.lower()}%"
+        
+    min_price = filters.get('minPrice')
+    if min_price is not None:
+        where_clauses.append("p.price >= %(min_price)s")
+        params['min_price'] = float(min_price)
+        
+    max_price = filters.get('maxPrice')
+    if max_price is not None:
+        where_clauses.append("p.price <= %(max_price)s")
+        params['max_price'] = float(max_price)
+        
+    conditions = filters.get('condition')
+    if conditions and len(conditions) > 0 and conditions[0] != '':
+        where_clauses.append("p.productcondition IN %(conditions)s")
+        params['conditions'] = tuple(conditions)
+        
+    exchange_types = filters.get('exchangeType')
+    if exchange_types and len(exchange_types) > 0 and exchange_types[0] != '':
+        where_clauses.append("p.exchangetype IN %(exchange_types)s")
+        params['exchange_types'] = tuple(exchange_types)
+        
+    whereSQL = "WHERE " + " AND ".join(where_clauses)
+    
+    if lat is not None and lng is not None:
+        # Prevent division by zero or errors by ensuring lat/lng are floats
+        try:
+            lat = float(lat)
+            lng = float(lng)
+            distance_col = f"""
+            (6371 * acos(
+               cos(radians({lat})) * cos(radians(u.latitude)) *
+               cos(radians(u.longitude) - radians({lng})) +
+               sin(radians({lat})) * sin(radians(u.latitude))
+             ))
+            """
+        except ValueError:
+            distance_col = "0"
+    else:
+        distance_col = "0"
+        
+    sql = f"""
+      SELECT *
+      FROM (
+        SELECT
+          p.productid,
+          p.title,
+          p.description,
+          p.images,
+          p.price,
+          p.originalprice,
+          p.productcondition,
+          p.exchangetype,
+          p.created_at,
+          p.updated_at,
+          c.categoryname,
+          u.username,
+          u.isverified,
+          COALESCE((SELECT AVG(rating) FROM reviews r WHERE r.revieweduserid = u.userid), 0) AS rating,
+          u.profilepicture,
+          u.userid,
+          {distance_col} AS distance
+        FROM product p
+        LEFT JOIN category c ON p.categoryid = c.categoryid
+        LEFT JOIN users u ON p.userid = u.userid
+        {whereSQL}
+      ) AS sub
+    """
+    
+    if maxDistance is not None:
+        try:
+            max_d = float(maxDistance)
+            sql += " WHERE sub.distance <= %(max_distance)s"
+            params['max_distance'] = max_d
+        except ValueError:
+            pass
+            
+    try:
+        from sqlalchemy import text
+        return pd.read_sql(text(sql), engine, params=params)
+    except Exception as e:
+        print(f"Error loading filtered products: {e}")
+        return pd.DataFrame()

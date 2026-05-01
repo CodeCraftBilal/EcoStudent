@@ -1,8 +1,7 @@
 import pandas as pd
-from .data_loader import get_products, get_users, get_interactions
+from .data_loader import get_products, get_users, get_interactions, get_filtered_products
 from .content_filter import compute_content_similarity, get_content_recommendations
 from .collaborative_filter import compute_collaborative_similarity, get_collaborative_recommendations
-from .location_filter import filter_products_by_distance, get_product_distances
 from .popularity import get_popularity_scores
 
 # Global state for caching models
@@ -32,85 +31,31 @@ def get_hybrid_recommendations(user_id: int, top_n: int = 12, offset: int = 0, f
             'popularity': 0.3
         }
         
-    products_df = _cache.get('products_df', pd.DataFrame())
-    if products_df.empty:
-        return {"userId": user_id, "recommendations": []}
+    if filters is None:
+        filters = {}
         
-    # Apply filters to products_df
-    distance_map = {}
-    if filters:
-        categories = filters.get('category')
-        if categories and len(categories) > 0 and categories[0] not in ('', 'all'):
-            products_df = products_df[products_df['categoryname'].isin(categories)]
-            
-        search_query = filters.get('searchQuery')
-        if search_query:
-            sq = search_query.lower()
-            title_match = products_df['title'].str.lower().str.contains(sq, na=False)
-            desc_match = products_df['description'].str.lower().str.contains(sq, na=False)
-            products_df = products_df[title_match | desc_match]
-            
-        min_price = filters.get('minPrice')
-        if min_price is not None:
-            try:
-                products_df = products_df[products_df['price'].astype(float) >= float(min_price)]
-            except (ValueError, TypeError):
-                pass
-            
-        max_price = filters.get('maxPrice')
-        if max_price is not None:
-            try:
-                products_df = products_df[products_df['price'].astype(float) <= float(max_price)]
-            except (ValueError, TypeError):
-                pass
-            
-        conditions = filters.get('condition')
-        if conditions and len(conditions) > 0 and conditions[0] != '':
-            products_df = products_df[products_df['productcondition'].isin(conditions)]
-            
-        exchange_types = filters.get('exchangeType')
-        if exchange_types and len(exchange_types) > 0 and exchange_types[0] != '':
-            products_df = products_df[products_df['exchangetype'].isin(exchange_types)]
-        
-        # Distance hard-filter: remove products beyond maxDistance
-        lat, lng = filters.get('lat'), filters.get('lng')
-        max_distance_val = filters.get('maxDistance')
-        if max_distance_val is not None:
-            try:
-                max_d = float(max_distance_val)
-            except (ValueError, TypeError):
-                max_d = None
-            if max_d is not None and not products_df.empty:
-                products_df, distance_map = filter_products_by_distance(
-                    user_id,
-                    _cache.get('users_df', pd.DataFrame()),
-                    products_df,
-                    max_distance_km=max_d,
-                    override_lat=lat,
-                    override_lon=lng
-                )
-        else:
-            # No distance filter, but still compute distances for display
-            if not products_df.empty:
-                distance_map = get_product_distances(
-                    user_id,
-                    _cache.get('users_df', pd.DataFrame()),
-                    products_df,
-                    override_lat=lat,
-                    override_lon=lng
-                )
-    else:
-        # No filters at all, still compute distances for display
-        if not products_df.empty:
-            distance_map = get_product_distances(
-                user_id,
-                _cache.get('users_df', pd.DataFrame()),
-                products_df
-            )
-    print("distance_map", distance_map)
+    lat = filters.get('lat')
+    lng = filters.get('lng')
+    if lat is None or lng is None:
+        users_df = _cache.get('users_df', pd.DataFrame())
+        if not users_df.empty:
+            user_row = users_df[users_df['userid'] == user_id]
+            if not user_row.empty:
+                lat = user_row.iloc[0]['latitude']
+                lng = user_row.iloc[0]['longitude']
+                filters['lat'] = lat
+                filters['lng'] = lng
+
+    # Fetch pre-filtered products dynamically from the database
+    products_df = get_filtered_products(filters)
+    
     if products_df.empty:
         return []
         
+    # Build distance map directly from DB results
+    distance_map = dict(zip(products_df['productid'], products_df['distance']))
+    print("distance_map", distance_map)
+
     valid_products = products_df['productid'].tolist()
     result_df = pd.DataFrame({'productid': valid_products})
     
