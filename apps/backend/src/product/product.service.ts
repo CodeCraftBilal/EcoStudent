@@ -251,6 +251,7 @@ export class ProductService {
     
     return product;
   }
+  
   async getRecommendationsFromAI(userId: number, filters: any) {
     console.log('Getting recommendations')
     try {

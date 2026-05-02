@@ -98,7 +98,7 @@ const ShopPage = () => {
       params.append("offset", pageParam.toString());
       params.append("limit", "12");
 
-      const url = `${BACKEND_URL}/product?${params.toString()}`;
+      const url = `${BACKEND_URL}/product/v2?${params.toString()}`;
 
       const res = await authFetch(url);
       return res.json();
