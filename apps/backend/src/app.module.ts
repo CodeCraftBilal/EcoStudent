@@ -15,12 +15,13 @@ import { RealtimeModule } from './realtime/realtime.module';
 import { MessageModule } from './message/message.module';
 import { NotificationModule } from './notification/notification.module';
 import { LoggerMiddleware } from './middleware/logger/logger.middleware';
+import { SearchhistoryModule } from './searchhistory/searchhistory.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     UsersModule, 
-    AuthModule, ProductModule, UploadModule, ReviewModule, FavoriteModule, OrderModule, ChatModule, RealtimeModule, MessageModule, NotificationModule,
+    AuthModule, ProductModule, UploadModule, ReviewModule, FavoriteModule, OrderModule, ChatModule, RealtimeModule, MessageModule, NotificationModule, SearchhistoryModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

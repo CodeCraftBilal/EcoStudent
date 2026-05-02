@@ -165,8 +165,6 @@ model search_history {
   searchid     Int       @id @default(autoincrement())
   userid       Int
   query        String?   @db.VarChar(255)
-  filters      Json?     @db.Json
-  resultscount Int?
   created_at   DateTime? @db.Timestamp(6)
   users        Users     @relation(fields: [userid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_searchhistory_users")
 }
