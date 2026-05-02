@@ -1,4 +1,3 @@
-// src/message/message.controller.ts
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import { MessageService } from './message.service';
 

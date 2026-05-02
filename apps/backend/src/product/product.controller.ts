@@ -16,11 +16,12 @@ import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import multer, { diskStorage } from 'multer';
+import multer from 'multer';
 import { UploadService } from 'src/upload/upload.service';
 import { useGCS } from 'src/upload/constants/constants';
 import { Public } from 'src/auth/decorators/public.decorator';
 import type { FindByUIDParams } from './types/types';
+import type { Request } from 'express';
 
 @Controller('product')
 export class ProductController {
@@ -52,7 +53,7 @@ export class ProductController {
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    console.log('createProductDto: ', createProductDto)
+    console.log('createProductDto: ', createProductDto);
     const imageUrls = await Promise.all(
       files.map((file) => {
         return useGCS
@@ -61,10 +62,13 @@ export class ProductController {
       }),
     );
 
-    return this.productService.create({
-      ...createProductDto,
-      images: imageUrls,
-    }, req.user.id);
+    return this.productService.create(
+      {
+        ...createProductDto,
+        images: imageUrls,
+      },
+      req.user.id,
+    );
   }
 
   @Get('mylisting')
@@ -95,10 +99,45 @@ export class ProductController {
     return this.productService.analyzeImage(files[0]);
   }
 
-
   @Public()
   @Get()
   findAll(@Query() query: any) {
+    return this.productService.findAll(query);
+  }
+
+  @Public()
+  @Get('v2')
+  findAll_v2(@Query() query: any, @Req() req: Request) {
+    let userId = null;
+
+    // 1. Try Authorization Header
+    const authHeader =
+      req.headers['authorization'] || req.headers['Authorization'];
+    let token: string | null = null;
+
+    if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
+    // 2. Else: Try Cookie
+    else if (req.cookies && req.cookies['access_token']) {
+      token = req.cookies['access_token']; // cookie name
+    }
+
+    // Decode token if found
+    if (token) {
+      try {
+        const payload = JSON.parse(
+          Buffer.from(token.split('.')[1], 'base64').toString(),
+        );
+        userId = payload.sub;
+      } catch (e) {}
+    }
+
+    // Use userId if exists
+    if (userId) {
+      return this.productService.getRecommendationsFromAI(userId, query);
+    }
+
     return this.productService.findAll(query);
   }
 
@@ -118,7 +157,6 @@ export class ProductController {
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    
     return this.productService.update(+id, {
       ...updateProductDto,
       userId: req.user.id,

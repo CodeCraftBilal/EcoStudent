@@ -167,6 +167,9 @@ export class ProductService {
         ...params,
       );
 
+      if(rawProducts.length == 0) 
+        console.log('no product found')
+
       return rawProducts.map((p) => ({
         id: p.productid.toString(),
         title: p.title,
@@ -195,6 +198,7 @@ export class ProductService {
       };
     }
   }
+
 
   // Simple in-memory cache to prevent fake rapid increments
   private readonly viewCache = new Map<string, number>();
@@ -246,6 +250,52 @@ export class ProductService {
     }
     
     return product;
+  }
+  async getRecommendationsFromAI(userId: number, filters: any) {
+    console.log('Getting recommendations')
+    try {
+      const params = new URLSearchParams();
+      if (filters.searchQuery) params.append('searchQuery', filters.searchQuery);
+      if (filters.minPrice) params.append('minPrice', filters.minPrice);
+      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+      if (filters.maxDistance) params.append('maxDistance', filters.maxDistance);
+      if (filters.lat) params.append('lat', filters.lat);
+      if (filters.lng) params.append('lng', filters.lng);
+      if (filters.limit) params.append('limit', filters.limit);
+      if (filters.offset) params.append('offset', filters.offset);
+
+      if (filters.category) {
+        const categories = Array.isArray(filters.category) ? filters.category : [filters.category];
+        categories.forEach(c => params.append('category', c));
+      }
+
+      if (filters.condition) {
+        const conditions = Array.isArray(filters.condition) ? filters.condition : [filters.condition];
+        conditions.forEach(c => params.append('condition', c));
+      }
+
+      if (filters.exchangeType) {
+        const exchanges = Array.isArray(filters.exchangeType) ? filters.exchangeType : [filters.exchangeType];
+        exchanges.forEach(e => params.append('exchangeType', e));
+      }
+
+      const res = await fetch(`http://127.0.0.1:5000/recommendations/${userId}?${params.toString()}`);
+      if (res.ok) {
+         return await res.json();
+      }
+    } catch (err) {
+      console.error('AI Recommendation Error:', err);
+    }
+    // Fallback to normal findAll if AI fails
+    console.log('findAll is running b/c there was an error in get recommendation')
+    return this.findAll(filters);
+  }
+
+  async findAll_v2(query: string) {
+    const params = query.split('?');
+    const res = await fetch(`http://127.0.0.1:5000/recommendation/userid?${params[1]}`)
+    const products = await res.json();
+    return products;
   }
 
   async findOne(id: number, filters: any) {

@@ -1,0 +1,1 @@
+// "dev": "cd apps/ai & .\\venv\\Scripts\\activate & python -m uvicorn main:app --reload --port 8001"
