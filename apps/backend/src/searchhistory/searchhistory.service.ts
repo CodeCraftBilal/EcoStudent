@@ -40,6 +40,22 @@ export class SearchhistoryService {
     });
   }
 
+  async searchHistory(userId: number, keyword: string) {
+    // raw query to handle ILIKE and case ranking
+    return this.prisma.$queryRaw`
+      SELECT * FROM search_history
+      WHERE userid = ${userId} AND query ILIKE ${'%' + keyword + '%'}
+      ORDER BY 
+        CASE 
+          WHEN query ILIKE ${keyword} THEN 1
+          WHEN query ILIKE ${keyword + '%'} THEN 2
+          ELSE 3
+        END,
+        created_at DESC
+      LIMIT 10
+    `;
+  }
+
   async deleteSearchHistoryItem(userId: number, searchid: number) {
     const existingSearch = await this.prisma.search_history.findFirst({
       where: {

@@ -116,6 +116,7 @@ export function ShopNavBar({
               />
               <div className="flex justify-end mb-4 sm:hidden"></div>
               <SearchHistoryDropdown
+                searchQuery={searchQuery}
                 isOpen={isSearchDropdownOpen}
                 setIsOpen={setIsSearchDropdownOpen}
                 onSelectSearch={(query) => {
