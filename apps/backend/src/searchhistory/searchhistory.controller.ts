@@ -1,34 +1,31 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Req } from '@nestjs/common';
 import { SearchhistoryService } from './searchhistory.service';
 import { CreateSearchhistoryDto } from './dto/create-searchhistory.dto';
-import { UpdateSearchhistoryDto } from './dto/update-searchhistory.dto';
 
-@Controller('searchhistory')
+@Controller('search-history')
 export class SearchhistoryController {
   constructor(private readonly searchhistoryService: SearchhistoryService) {}
 
   @Post()
-  create(@Body() createSearchhistoryDto: CreateSearchhistoryDto) {
-    return this.searchhistoryService.create(createSearchhistoryDto);
+  create(@Req() req, @Body() createSearchhistoryDto: CreateSearchhistoryDto) {
+    return this.searchhistoryService.createOrUpdateSearch(
+      +req.user.id,
+      createSearchhistoryDto.query,
+    );
   }
 
   @Get()
-  findAll() {
-    return this.searchhistoryService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.searchhistoryService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSearchhistoryDto: UpdateSearchhistoryDto) {
-    return this.searchhistoryService.update(+id, updateSearchhistoryDto);
+  findAll(@Req() req) {
+    return this.searchhistoryService.getUserSearchHistory(+req.user.id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.searchhistoryService.remove(+id);
+  remove(@Req() req, @Param('id') id: string) {
+    return this.searchhistoryService.deleteSearchHistoryItem(+req.user.id, +id);
+  }
+
+  @Delete()
+  clearAll(@Req() req) {
+    return this.searchhistoryService.clearSearchHistory(+req.user.id);
   }
 }

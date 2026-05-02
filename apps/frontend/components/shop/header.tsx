@@ -9,6 +9,10 @@ import NotificationDropdown from "../dashboard/Notification";
 import Image from "next/image";
 import ProfileDropDown from "../dashboard/ProfileDropDown";
 import { useNotification } from "@/context/useNotification";
+import { useRef } from "react";
+import SearchHistoryDropdown from "./SearchHistoryDropdown";
+import { authFetch } from "@/lib/authFetch";
+import { BACKEND_URL } from "@/lib/constants";
 
 interface HeaderProps extends FiltersProps {
   searchQuery: string;
@@ -59,6 +63,22 @@ export function ShopNavBar({
     setIsProfileDropdownOpen(false);
   };
 
+  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSearchSubmit = async (query: string) => {
+    if (!query.trim() || !session) return;
+    try {
+      await authFetch(`${BACKEND_URL}/search-history`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query.trim() }),
+      });
+    } catch (error) {
+      console.error("Failed to save search history", error);
+    }
+  };
+
   const toggleProfileDropdown = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
@@ -80,13 +100,30 @@ export function ShopNavBar({
             <div className="relative w-full flex items-center">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search for books, uniforms, calculators..."
                 value={searchQuery}
+                onFocus={() => setIsSearchDropdownOpen(true)}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearchSubmit(searchQuery);
+                    setIsSearchDropdownOpen(false);
+                  }
+                }}
                 className="w-full text-black pl-10 pr-4 py-2 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent shadow-sm"
               />
               <div className="flex justify-end mb-4 sm:hidden"></div>
+              <SearchHistoryDropdown
+                isOpen={isSearchDropdownOpen}
+                setIsOpen={setIsSearchDropdownOpen}
+                onSelectSearch={(query) => {
+                  setSearchQuery(query);
+                  handleSearchSubmit(query);
+                }}
+                inputRef={searchInputRef}
+              />
             </div>
 
             <button
