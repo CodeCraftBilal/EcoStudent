@@ -12,6 +12,56 @@ interface SearchHistoryDropdownProps {
   inputRef: React.RefObject<HTMLInputElement>;
 }
 
+type SearchHistoryItem = {
+  searchid: number;
+  query: string;
+  created_at?: string;
+};
+
+// 1. Manual formatTimeAgo utility function
+export const formatTimeAgo = (dateString?: string): string => {
+  if (!dateString) return "Recently";
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "Recently";
+
+  const diffInSeconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 5) return "Just now";
+  if (diffInSeconds < 60) return "Just now";
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} min${diffInMinutes > 1 ? 's' : ''} ago`;
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 30) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+
+  const diffInYears = Math.floor(diffInDays / 365);
+  return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
+};
+
+// Separate component to handle its own interval updates
+const TimeAgo = ({ dateString }: { dateString?: string }) => {
+  const [timeText, setTimeText] = useState(() => formatTimeAgo(dateString));
+
+  useEffect(() => {
+    setTimeText(formatTimeAgo(dateString));
+    const interval = setInterval(() => {
+      setTimeText(formatTimeAgo(dateString));
+    }, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
+  }, [dateString]);
+
+  return <span className="text-xs text-gray-400 whitespace-nowrap ml-4">{timeText}</span>;
+};
+
 export default function SearchHistoryDropdown({
   searchQuery,
   isOpen,
@@ -19,8 +69,8 @@ export default function SearchHistoryDropdown({
   onSelectSearch,
   inputRef,
 }: SearchHistoryDropdownProps) {
-  const [baseHistory, setBaseHistory] = useState<{ searchid: number; query: string }[]>([]);
-  const [apiSuggestions, setApiSuggestions] = useState<{ searchid: number; query: string }[]>([]);
+  const [baseHistory, setBaseHistory] = useState<SearchHistoryItem[]>([]);
+  const [apiSuggestions, setApiSuggestions] = useState<SearchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -236,21 +286,27 @@ export default function SearchHistoryDropdown({
                   setIsOpen(false);
                 }}
               >
-                <div className="flex items-center space-x-3 text-gray-700">
-                  <Search className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm font-medium">
+                <div className="flex items-center space-x-3 text-gray-700 min-w-0 flex-1">
+                  <Search className="w-4 h-4 text-gray-400 shrink-0" />
+                  <span className="text-sm font-medium truncate">
                     <HighlightMatch text={item.query} highlight={searchQuery.trim()} />
                   </span>
                 </div>
-                {!searchQuery.trim() && (
-                  <button
-                    onClick={(e) => handleDelete(e, item.searchid)}
-                    className="p-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all rounded-full hover:bg-red-50"
-                    title="Remove from history"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
+                
+                <div className="flex items-center">
+                  {!searchQuery.trim() && (
+                    <TimeAgo dateString={item.created_at} />
+                  )}
+                  {!searchQuery.trim() && (
+                    <button
+                      onClick={(e) => handleDelete(e, item.searchid)}
+                      className="ml-2 p-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all rounded-full hover:bg-red-50"
+                      title="Remove from history"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
