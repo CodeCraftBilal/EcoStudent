@@ -211,7 +211,7 @@ export class FavoriteService {
           p.productcondition,
           p.exchangetype,
           p.status,
-          p.views,
+          p.viewcount as views,
           p.created_at,
 
           c.categoryname,
