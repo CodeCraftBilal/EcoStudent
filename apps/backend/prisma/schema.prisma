@@ -138,14 +138,11 @@ model product {
   productType      product_type             @map("producttype")
   exchangeType     exchange_type            @default(sale) @map("exchangetype")
   status           PRODUCT_STATUS           @default(active)
-  search_vector    Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, (((COALESCE(title, ''::character varying))::text || ' '::text) || COALESCE(description, ''::text)))"))
   chat             chat[]
   exchanges        exchanges[]
   category         category                 @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
   users            Users                    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
   userFavorites    user_favorites[]
-
-  @@index([search_vector], map: "product_search_idx", type: Gin)
 }
 
 model reviews {
