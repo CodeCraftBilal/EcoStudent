@@ -326,6 +326,7 @@ export async function seedProducts(prisma: PrismaClient, count = 30) {
         productCondition: faker.helpers.arrayElement(
           Object.values(product_condition),
         ),
+        viewCount: faker.number.int({min: 10, max: 50}),
         productType: faker.helpers.arrayElement(Object.values(product_type)),
         exchangeType: faker.helpers.arrayElement(Object.values(exchange_type)),
         status: faker.helpers.arrayElement(Object.values(PRODUCT_STATUS)),
