@@ -123,26 +123,27 @@ model notifications {
 }
 
 model product {
-  productId        Int                    @id @default(autoincrement()) @map("productid")
-  userId           Int                    @map("userid")
-  categoryId       Int                    @map("categoryid")
-  title            String                 @db.VarChar(255)
+  productId        Int                      @id @default(autoincrement()) @map("productid")
+  userId           Int                      @map("userid")
+  categoryId       Int                      @map("categoryid")
+  title            String                   @db.VarChar(255)
   description      String?
-  price            Decimal                @db.Decimal(10, 2)
-  images           Json?                  @db.Json
-  viewCount        Int?                   @default(0) @map("viewcount")
-  createdAt        DateTime               @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt        DateTime               @default(now()) @map("updated_at") @db.Timestamp(6)
-  originalPrice    Int?                   @map("originalprice")
-  productCondition product_condition      @map("productcondition")
-  productType      product_type           @map("producttype")
-  exchangeType     exchange_type          @default(sale) @map("exchangetype")
-  status           PRODUCT_STATUS         @default(active)
+  price            Decimal                  @db.Decimal(10, 2)
+  images           Json?                    @db.Json
+  viewCount        Int?                     @default(0) @map("viewcount")
+  createdAt        DateTime                 @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt        DateTime                 @default(now()) @map("updated_at") @db.Timestamp(6)
+  originalPrice    Int?                     @map("originalprice")
+  productCondition product_condition        @map("productcondition")
+  productType      product_type             @map("producttype")
+  exchangeType     exchange_type            @default(sale) @map("exchangetype")
+  status           PRODUCT_STATUS           @default(active)
   embedding        Unsupported("vector")?
+  search_vector    Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, (((COALESCE(title, ''::character varying))::text || ' '::text) || COALESCE(description, ''::text)))"))
   chat             chat[]
   exchanges        exchanges[]
-  category         category               @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
-  users            Users                  @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
+  category         category                 @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
+  users            Users                    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
   userFavorites    user_favorites[]
 
   @@index([embedding])
