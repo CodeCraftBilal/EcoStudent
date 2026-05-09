@@ -39,6 +39,37 @@ export class ProductService {
     }
   }
 
+  async generateEmbedding(productId: number, file: Express.Multer.File) {
+    console.log(`Generating embedding for product ${productId}`);
+    try {
+      const formData = new FormData();
+      const uint8Array = new Uint8Array(file.buffer);
+
+      const blob = new Blob([uint8Array], {
+        type: file.mimetype,
+      });
+      formData.append('file', blob, file.originalname);
+      formData.append('productId', productId.toString());
+
+      const fastApiUrl = process.env.FASTAPI_BASE_URL || 'http://127.0.0.1:5000';
+      const response = await fetch(`${fastApiUrl}/embeddings/product`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`FastAPI responded with ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      // Log failures without breaking product upload
+      console.error('Error generating product embedding:', error);
+      return { success: false, message: 'Failed to generate embedding' };
+    }
+  }
+
   async findAll(filters: any) {
     console.log('filters: ', filters);
     const conditions: string[] = [];

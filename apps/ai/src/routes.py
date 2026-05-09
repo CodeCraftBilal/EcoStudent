@@ -67,10 +67,42 @@ async def trigger_refresh(background_tasks: BackgroundTasks):
     background_tasks.add_task(refresh_models)
     return {"message": "Model refresh started in background"}
 
-from fastapi import UploadFile, File
+from fastapi import UploadFile, File, Form
 from sqlalchemy import text
 from .clip_service import get_clip_service
 from .data_loader import engine
+
+@router.post("/embeddings/product")
+async def generate_product_embedding(
+    productId: int = Form(...),
+    file: UploadFile = File(...)
+):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Uploaded file must be an image.")
+    
+    content = await file.read()
+    
+    try:
+        clip_service = get_clip_service()
+        query_embedding = clip_service.get_embedding(content)
+    except Exception as e:
+        print(f"Error extracting embedding: {e}")
+        raise HTTPException(status_code=500, detail="Failed to extract image embeddings.")
+    
+    query = text("""
+        UPDATE product
+        SET embedding = :embedding
+        WHERE productid = :productId;
+    """)
+    
+    try:
+        with engine.begin() as conn:
+            conn.execute(query, {"embedding": str(query_embedding), "productId": productId})
+        
+        return {"status": "success", "message": "Embedding updated successfully"}
+    except Exception as e:
+        print(f"Error updating database: {e}")
+        raise HTTPException(status_code=500, detail="Database update failed.")
 
 @router.post("/image-search")
 async def image_search(

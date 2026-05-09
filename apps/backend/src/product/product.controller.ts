@@ -90,13 +90,22 @@ export class ProductController {
       }),
     );
 
-    return this.productService.create(
+    const result = await this.productService.create(
       {
         ...createProductDto,
         images: imageUrls,
       },
       req.user.id,
     );
+
+    // After successful creation, generate embeddings using the first image without blocking
+    if (result.success && result.productId && files && files.length > 0) {
+      this.productService.generateEmbedding(result.productId, files[0]).catch(err => {
+        console.error('Error initiating embedding generation:', err);
+      });
+    }
+
+    return result;
   }
 
   @Get('mylisting')
