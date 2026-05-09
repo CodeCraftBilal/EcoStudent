@@ -144,6 +144,8 @@ model product {
   category         category               @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_category")
   users            Users                  @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
   userFavorites    user_favorites[]
+
+  @@index([embedding])
 }
 
 model reviews {

@@ -6,3 +6,9 @@ scikit-learn
 psycopg2-binary
 sqlalchemy
 python-dotenv
+torch
+torchvision
+transformers
+Pillow
+pgvector
+python-multipart

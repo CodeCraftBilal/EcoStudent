@@ -13,11 +13,13 @@ import { useRef } from "react";
 import SearchHistoryDropdown from "./SearchHistoryDropdown";
 import { authFetch } from "@/lib/authFetch";
 import { BACKEND_URL } from "@/lib/constants";
+import ImageSearchUpload from "./ImageSearchUpload";
 
 interface HeaderProps extends FiltersProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   cartCount: number;
+  onResultsFound?: (results: any[]) => void;
 }
 
 export function ShopNavBar({
@@ -29,6 +31,7 @@ export function ShopNavBar({
   filters,
   setFilters,
   onResetFilters,
+  onResultsFound,
 }: HeaderProps) {
   const resetFilters = () => {
     setFilters({
@@ -91,7 +94,7 @@ export function ShopNavBar({
             href={"/"}
             className="flex items-center space-x-1 order-1"
           >
-            <Image src={"/logo.png"} alt="EcoStudent" width={40} height={40} className="md:w-[50px] md:h-[50px]" />
+            <Image src={"/logo.png"} alt="EcoStudent" width={40} height={40} className="md:w-12.5 md:h-12.5" />
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">EcoStudent</h1>
           </Link>
 
@@ -112,8 +115,11 @@ export function ShopNavBar({
                     setIsSearchDropdownOpen(false);
                   }
                 }}
-                className="w-full text-black pl-10 pr-4 py-2 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent shadow-sm"
+                className="w-full text-black pl-10 pr-12 py-2 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent shadow-sm"
               />
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                <ImageSearchUpload onResultsFound={onResultsFound || (() => {})} />
+              </div>
               <div className="flex justify-end mb-4 sm:hidden"></div>
               <SearchHistoryDropdown
                 searchQuery={searchQuery}
