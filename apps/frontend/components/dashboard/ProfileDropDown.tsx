@@ -5,6 +5,7 @@ import { BACKEND_URL } from "@/lib/constants";
 import { User, Settings, Home, LogOut, LayoutDashboard } from "lucide-react";
 import Link from "next/link"; // Add this import
 import { redirect } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 type ProfileDropDownProps = {
   closeAllMenus: () => void;
@@ -13,6 +14,26 @@ type ProfileDropDownProps = {
 export default function ProfileDropDown({
   closeAllMenus
 }: ProfileDropDownProps) {
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const toggleBtn = document.getElementById("profile-toggle-btn");
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        (!toggleBtn || !toggleBtn.contains(event.target as Node))
+      ) {
+        closeAllMenus();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [closeAllMenus]);
+
   // Define your links dynamically
   const menuLinks = [
     {
@@ -56,7 +77,7 @@ export default function ProfileDropDown({
     }
 
   return (
-    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+    <div ref={dropdownRef} className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
       <div className="px-4 py-2 border-b border-gray-100">
         <div className="text-sm font-medium text-gray-900">
           {session?.userName}

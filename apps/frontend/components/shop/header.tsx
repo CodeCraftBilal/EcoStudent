@@ -205,6 +205,7 @@ export function ShopNavBar({
               <div className={`flex items-center space-x-4`}>
                 <div className="relative">
                   <button
+                    id="profile-toggle-btn"
                     onClick={toggleProfileDropdown}
                     className="flex items-center space-x-2 px-0 rounded-lg hover:bg-gray-50 transition-colors"
                   >
