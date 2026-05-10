@@ -732,10 +732,7 @@ export class ProductService {
         similarity: p.similarity,
       }));
 
-      return {
-        success: true,
-        matches: matches || [],
-      };
+      return matches || []
     } catch (error) {
       console.error('Error in AI Image Search Service:', error);
       throw new HttpException(
