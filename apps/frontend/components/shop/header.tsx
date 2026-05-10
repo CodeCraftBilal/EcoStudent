@@ -134,6 +134,7 @@ export function ShopNavBar({
             </div>
 
             <button
+              id="filter-toggle-btn"
               onClick={() => setShowFilters(!showFilters)}
               className="bg-green-500 text-white p-3 rounded-full hover:bg-green-600 transition-colors shadow-lg shrink-0"
             >

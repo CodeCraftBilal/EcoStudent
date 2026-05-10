@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, X, UploadCloud, Loader2 } from 'lucide-react';
 
 interface ImageSearchUploadProps {
@@ -15,6 +15,23 @@ export default function ImageSearchUpload({ onResultsFound }: ImageSearchUploadP
   const [error, setError] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -65,7 +82,7 @@ export default function ImageSearchUpload({ onResultsFound }: ImageSearchUploadP
   };
 
   return (
-    <div className="relative flex items-center">
+    <div className="relative flex items-center" ref={containerRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
