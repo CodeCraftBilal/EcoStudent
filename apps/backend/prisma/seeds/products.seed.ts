@@ -6,6 +6,8 @@ import {
   PRODUCT_STATUS,
 } from '../../generated/prisma';
 import { faker } from '@faker-js/faker';
+import path from 'path';
+import fs from 'fs';
 
 const mockItems = [
   {
@@ -405,3 +407,62 @@ const getCategoryId = (category: string) => {
 
   return categories.find(c => c.name === category)?.id ?? 6;
 };
+
+export async function generateAndStoreEmbeddings(
+  prisma: PrismaClient,
+) {
+  console.log("generating and storing ebedings");
+  try {
+    const products = await prisma.product.findMany({
+      where: {
+        embedding: null,
+      },
+      select: {
+        productId: true,
+        images: true,
+      },
+    });
+
+    console.log(products);
+
+    for (const product of products) {
+      try {
+        const imagePath = product.images?.[0];
+
+        if (!imagePath) continue;
+
+        const absolutePath = path.join(
+          process.cwd(),
+          'public',
+          imagePath,
+        );
+
+        if (!fs.existsSync(absolutePath)) continue;
+
+        // Send image path to FastAPI (not file upload, just path reference)
+        const response = await fetch(
+          `http://127.0.0.1:5000/embeddings/product`,
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              image_path: absolutePath,
+            }),
+          },
+        );
+
+      } catch (err) {
+        continue;
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Embeddings generated and stored successfully',
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: 'Failed to generate embeddings',
+    };
+  }
+}
