@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, X, UploadCloud, Loader2 } from 'lucide-react';
+import config from '@/config';
 
 interface ImageSearchUploadProps {
   onResultsFound: (results: any[]) => void;
@@ -49,7 +50,7 @@ export default function ImageSearchUpload({ onResultsFound }: ImageSearchUploadP
       formData.append('image', file);
 
       // Call NestJS endpoint
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/product/image-search`, {
+      const response = await fetch(`${config.backendUrl}/product/image-search`, {
         method: 'POST',
         body: formData,
       });
