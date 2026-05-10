@@ -8,311 +8,7 @@ import {
 import { faker } from '@faker-js/faker';
 import path from 'path';
 import fs from 'fs';
-
-const mockItems = [
-  {
-    id: '1',
-    title: 'Calculus Early Transcendentals',
-    description:
-      'Like new condition, barely used. Perfect for engineering students.',
-    price: 2500,
-    originalPrice: 4000,
-    category: 'books',
-    condition: 'excellent',
-    image: '/calculusbook.jpg',
-    distance: 1.2,
-    rating: 4.8,
-    seller: {
-      id: '3',
-      name: 'Ali Ahmed',
-      rating: 4.9,
-      verified: true,
-    },
-    exchangeType: 'sale',
-  },
-  {
-    id: '2',
-    title: 'Oxford University Uniform',
-    description: 'Complete set with blazer, trousers, and tie. Size medium.',
-    price: 1500,
-    category: 'uniform',
-    condition: 'good',
-    image: '/imgshop/oxforduniform.png',
-    distance: 2.5,
-    rating: 4.5,
-    seller: {
-      id: '3',
-      name: 'Sara Khan',
-      rating: 4.7,
-      verified: true,
-    },
-    exchangeType: 'sale',
-  },
-  {
-    id: '3',
-    title: 'Scientific Calculator FX-991ES',
-    description:
-      'Casio scientific calculator with all functions working perfectly.',
-    price: 800,
-    category: 'calculator',
-    condition: 'excellent',
-    image: '/imgshop/calc.png',
-    distance: 0.8,
-    rating: 4.9,
-    seller: {
-      id: '3',
-      name: 'Bilal Raza',
-      rating: 5.0,
-      verified: false,
-    },
-    exchangeType: 'exchange',
-  },
-  {
-    id: '4',
-    title: 'Geometry Box Set',
-    description: 'Full geometry set with compass, protector, and ruler.',
-    price: 300,
-    category: 'geometry',
-    condition: 'good',
-    image: '/imgshop/geomat.png',
-    distance: 3.1,
-    rating: 4.3,
-    seller: {
-      id: '3',
-      name: 'Fatima Noor',
-      rating: 4.4,
-      verified: true,
-    },
-    exchangeType: 'sale',
-  },
-  {
-    id: '5',
-    title: 'School Bag Backpack',
-    description: 'Waterproof school backpack with laptop compartment.',
-    price: 1200,
-    category: 'bags',
-    condition: 'fair',
-    image: '/imgshop/bag.png',
-    distance: 1.8,
-    seller: {
-      id: '3',
-      name: 'Usman Ali',
-      rating: 4.6,
-      verified: true,
-    },
-    exchangeType: 'sale',
-  },
-  {
-    id: '6',
-    title: 'Physics Textbook Advanced',
-    description: 'Physics concepts and problems for college students.',
-    price: 0,
-    category: 'books',
-    condition: 'good',
-    image: '/imgshop/phybook.png',
-    distance: 4.2,
-    seller: {
-      id: '3',
-      name: 'Ayesha Malik',
-      rating: 4.8,
-      verified: true,
-    },
-    exchangeType: 'donation',
-  },
-  {
-    id: '11',
-    title: 'Casio FX-991EX Scientific Calculator',
-    description:
-      'Advanced scientific calculator suitable for engineering and science students.',
-    price: 4500,
-    originalPrice: 6000,
-    category: 'calculator',
-    condition: 'excellent',
-    image: '/imgshop/calc.png',
-    distance: 2.5,
-    rating: 4.8,
-    seller: {
-      id: '3',
-      name: 'Ali Raza',
-      rating: 4.9,
-      verified: true,
-    },
-    exchangeType: 'sale',
-  },
-  {
-    id: '12',
-    title: 'Data Structures and Algorithms Book',
-    description:
-      'Comprehensive guide for computer science students with C++ examples.',
-    price: 1200,
-    category: 'books',
-    condition: 'good',
-    image: '/imgshop/dsa-book.png',
-    distance: 4.2,
-    rating: 4.6,
-    seller: {
-      id: '3',
-      name: 'Hassan Ahmad',
-      rating: 4.7,
-      verified: false,
-    },
-    exchangeType: 'exchange',
-  },
-  {
-    id: '13',
-    title: 'Engineering Drawing Set',
-    description:
-      'Complete drawing set including compass, divider, protractor, and scale for engineering students.',
-    price: 800,
-    originalPrice: 1000,
-    category: 'other',
-    condition: 'excellent',
-    image: '/imgshop/drawing-set.png',
-    distance: 1.8,
-    rating: 4.5,
-    seller: {
-      id: '3',
-      name: 'Fatima Noor',
-      rating: 4.8,
-      verified: true,
-    },
-    exchangeType: 'sale',
-  },
-  {
-    id: '14',
-    title: 'Arduino Starter Kit',
-    description:
-      'Perfect for beginners learning electronics and programming with Arduino.',
-    price: 5500,
-    originalPrice: 6500,
-    category: 'calculator',
-    condition: 'good',
-    image: '/imgshop/arduino-kit.jpg',
-    distance: 3.1,
-    rating: 4.9,
-    seller: {
-      id: '3',
-      name: 'Muhammad Bilal',
-      rating: 4.9,
-      verified: true,
-    },
-    exchangeType: 'sale',
-  },
-  {
-    id: '15',
-    title: 'Laptop Backpack',
-    description:
-      'Durable water-resistant backpack with laptop compartment and multiple pockets for students.',
-    price: 2000,
-    category: 'other',
-    condition: 'excellent',
-    image: '/imgshop/backpack.png',
-    distance: 5.4,
-    rating: 4.4,
-    seller: {
-      id: '3',
-      name: 'Sara Khan',
-      rating: 4.6,
-      verified: false,
-    },
-    exchangeType: 'sale',
-  },
-  {
-    id: '16',
-    title: 'Whiteboard with Markers',
-    description:
-      'Portable whiteboard perfect for study rooms or home learning setup.',
-    price: 1500,
-    category: 'other',
-    condition: 'good',
-    image: '/imgshop/whiteboard.png',
-    distance: 6.0,
-    rating: 4.3,
-    seller: {
-      id: '3',
-      name: 'Aqeel Rehman',
-      rating: 4.7,
-      verified: true,
-    },
-    exchangeType: 'donation',
-  },
-  {
-    id: '17',
-    title: 'Programming Laptop (Dell Latitude 7490)',
-    description:
-      'Used laptop with Core i5, 8GB RAM, SSD — ideal for students and developers.',
-    price: 65000,
-    originalPrice: 80000,
-    category: 'other',
-    condition: 'good',
-    image: '/imgshop/dell-laptop.jpg',
-    distance: 2.0,
-    rating: 4.9,
-    seller: {
-      id: '3',
-      name: 'Zain Malik',
-      rating: 4.8,
-      verified: true,
-    },
-    exchangeType: 'sale',
-  },
-  {
-    id: '18',
-    title: 'Mathematics Formula Chart',
-    description:
-      'Large laminated math formula sheet for quick revision before exams.',
-    price: 300,
-    category: 'other',
-    condition: 'excellent',
-    image: '/imgshop/math-chart.png',
-    distance: 1.2,
-    rating: 4.2,
-    seller: {
-      id: '3',
-      name: 'Anam Javed',
-      rating: 4.4,
-      verified: false,
-    },
-    exchangeType: 'donation',
-  },
-  {
-    id: '19',
-    title: 'Mechanical Keyboard for Coding',
-    description:
-      'RGB backlit mechanical keyboard for smooth typing experience while programming.',
-    price: 7500,
-    category: 'calculator',
-    condition: 'excellent',
-    image: '/imgshop/keyboard.jpg',
-    distance: 3.7,
-    rating: 4.8,
-    seller: {
-      id: '3',
-      name: 'Hamza Tariq',
-      rating: 4.9,
-      verified: true,
-    },
-    exchangeType: 'sale',
-  },
-  {
-    id: '20',
-    title: 'Python Programming Notebook',
-    description:
-      'Well-maintained handwritten notes covering Python basics to advanced topics.',
-    price: 700,
-    category: 'other',
-    condition: 'fair',
-    image: '/imgshop/python-notes.png',
-    distance: 4.8,
-    seller: {
-      id: '3',
-      name: 'Nimra Aslam',
-      rating: 4.3,
-      verified: false,
-    },
-    exchangeType: 'exchange',
-  },
-];
+import { mockItems } from './data/products';
 
 export async function seedProducts(prisma: PrismaClient, count = 30) {
   const users = await prisma.users.findMany();
@@ -328,7 +24,7 @@ export async function seedProducts(prisma: PrismaClient, count = 30) {
         productCondition: faker.helpers.arrayElement(
           Object.values(product_condition),
         ),
-        viewCount: faker.number.int({min: 10, max: 50}),
+        viewCount: faker.number.int({ min: 10, max: 50 }),
         productType: faker.helpers.arrayElement(Object.values(product_type)),
         exchangeType: faker.helpers.arrayElement(Object.values(exchange_type)),
         status: faker.helpers.arrayElement(Object.values(PRODUCT_STATUS)),
@@ -381,7 +77,7 @@ const getCategoryId = (category: string) => {
   const categories = [
     {
       id: 1,
-      name: 'books'
+      name: 'books',
     },
     {
       id: 2,
@@ -389,39 +85,35 @@ const getCategoryId = (category: string) => {
     },
     {
       id: 3,
-      name: 'uniform'
+      name: 'uniform',
     },
     {
       id: 4,
-      name: 'calculator'
+      name: 'calculator',
     },
     {
       id: 5,
-      name: 'geometry'
+      name: 'geometry',
     },
     {
       id: 6,
-      name: 'other'
+      name: 'other',
     },
   ];
 
-  return categories.find(c => c.name === category)?.id ?? 6;
+  return categories.find((c) => c.name === category)?.id ?? 6;
 };
 
-export async function generateAndStoreEmbeddings(
-  prisma: PrismaClient,
-) {
-  console.log("generating and storing ebedings");
+export async function generateAndStoreEmbeddings(prisma: PrismaClient) {
+  console.log('generating and storing ebedings');
   try {
-    const products = await prisma.product.findMany({
-      where: {
-        embedding: null,
-      },
-      select: {
-        productId: true,
-        images: true,
-      },
-    });
+    const products = await prisma.$queryRaw<
+      { productId: number; images: any }[]
+    >`
+      SELECT productid as "productId", images
+      FROM product
+      WHERE embedding IS NULL
+    `;
 
     console.log(products);
 
@@ -433,23 +125,50 @@ export async function generateAndStoreEmbeddings(
 
         const absolutePath = path.join(
           process.cwd(),
+          '..',
+          'frontend',
           'public',
           imagePath,
         );
 
         if (!fs.existsSync(absolutePath)) continue;
 
-        // Send image path to FastAPI (not file upload, just path reference)
+        const imageBuffer = fs.readFileSync(absolutePath);
+        let mimeType = 'image/jpeg';
+
+        if (absolutePath.toLowerCase().endsWith('.png')) {
+          mimeType = 'image/png';
+        } else if (
+          absolutePath.toLowerCase().endsWith('.jpg') ||
+          absolutePath.toLowerCase().endsWith('.jpeg')
+        ) {
+          mimeType = 'image/jpeg';
+        } else if (absolutePath.toLowerCase().endsWith('.webp')) {
+          mimeType = 'image/webp';
+        }
+        const blob = new Blob([imageBuffer], { type: mimeType });
+
+        const formData = new FormData();
+        formData.append('productId', product.productId.toString());
+        formData.append('file', blob, path.basename(absolutePath));
+
         const response = await fetch(
           `http://127.0.0.1:5000/embeddings/product`,
           {
             method: 'POST',
-            body: JSON.stringify({
-              image_path: absolutePath,
-            }),
+            body: formData,
           },
         );
 
+        if (!response.ok) {
+          console.error(
+            `Failed to generate embedding for product ${product.productId}: ${await response.text()}`,
+          );
+        } else {
+          console.log(
+            `Successfully generated embedding for product ${product.productId}`,
+          );
+        }
       } catch (err) {
         continue;
       }
