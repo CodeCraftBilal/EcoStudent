@@ -19,7 +19,7 @@ interface HeaderProps extends FiltersProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   cartCount: number;
-  onResultsFound?: (results: any[]) => void;
+  onResultsFound?: (results: any[], file: File) => void;
 }
 
 export function ShopNavBar({

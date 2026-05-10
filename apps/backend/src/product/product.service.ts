@@ -694,7 +694,7 @@ export class ProductService {
     }
   }
 
-  async searchByImage(file: Express.Multer.File, topK: number) {
+  async searchByImage(file: Express.Multer.File, page: number, limit: number) {
     console.log("searching by images")
     try {
       const formData = new FormData();
@@ -705,9 +705,11 @@ export class ProductService {
       });
       formData.append('file', blob, file.originalname);
 
+      const offset = (page - 1) * limit;
+
       const fastApiUrl =
         process.env.FASTAPI_BASE_URL || 'http://127.0.0.1:5000';
-      const response = await fetch(`${fastApiUrl}/image-search?top_k=${topK}`, {
+      const response = await fetch(`${fastApiUrl}/image-search?limit=${limit}&offset=${offset}`, {
         method: 'POST',
         body: formData,
       });

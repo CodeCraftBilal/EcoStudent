@@ -107,7 +107,8 @@ async def generate_product_embedding(
 @router.post("/image-search")
 async def image_search(
     file: UploadFile = File(...), 
-    top_k: int = 10
+    limit: int = 12,
+    offset: int = 0
 ):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Uploaded file must be an image.")
@@ -130,12 +131,12 @@ async def image_search(
         LEFT JOIN category c ON p.categoryid = c.categoryid
         WHERE p.embedding IS NOT NULL
         ORDER BY p.embedding <=> :embedding
-        LIMIT :top_k
+        LIMIT :limit OFFSET :offset
     """)
     
     try:
         with engine.connect() as conn:
-            result = conn.execute(query, {"embedding": str(query_embedding), "top_k": top_k}).fetchall()
+            result = conn.execute(query, {"embedding": str(query_embedding), "limit": limit, "offset": offset}).fetchall()
         
         matches = [dict(row._mapping) for row in result]
         return {"status": "success", "matches": matches}

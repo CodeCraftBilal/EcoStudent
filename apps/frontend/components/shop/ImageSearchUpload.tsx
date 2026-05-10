@@ -5,7 +5,7 @@ import { Camera, X, UploadCloud, Loader2 } from 'lucide-react';
 import config from '@/config';
 
 interface ImageSearchUploadProps {
-  onResultsFound: (results: any[]) => void;
+  onResultsFound: (results: any[], file: File) => void;
 }
 
 export default function ImageSearchUpload({ onResultsFound }: ImageSearchUploadProps) {
@@ -50,7 +50,7 @@ export default function ImageSearchUpload({ onResultsFound }: ImageSearchUploadP
       formData.append('image', file);
 
       // Call NestJS endpoint
-      const response = await fetch(`${config.backendUrl}/product/image-search`, {
+      const response = await fetch(`${config.backendUrl}/product/image-search?page=1&limit=12`, {
         method: 'POST',
         body: formData,
       });
@@ -63,7 +63,9 @@ export default function ImageSearchUpload({ onResultsFound }: ImageSearchUploadP
 
       // Pass matching products to parent
       if (data?.matches) {
-        onResultsFound(data.matches);
+        onResultsFound(data.matches, file);
+      } else if (Array.isArray(data)) {
+        onResultsFound(data, file);
       }
       setIsOpen(false);
       setPreview(null);

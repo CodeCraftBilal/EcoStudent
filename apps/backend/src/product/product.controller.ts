@@ -49,13 +49,14 @@ export class ProductController {
   )
   async searchByImage(
     @UploadedFiles() files: Express.Multer.File[],
-    @Query('top_k') topK: string = '10',
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '12',
   ) {
     console.log('image search is called');
     if (!files || files.length === 0) {
       throw new BadRequestException('No image provided');
     }
-    return this.productService.searchByImage(files[0], parseInt(topK, 10));
+    return this.productService.searchByImage(files[0], parseInt(page, 10), parseInt(limit, 10));
   }
 
   @Post()
