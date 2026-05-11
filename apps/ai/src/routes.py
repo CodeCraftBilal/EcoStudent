@@ -108,7 +108,9 @@ async def generate_product_embedding(
 async def image_search(
     file: UploadFile = File(...), 
     limit: int = 12,
-    offset: int = 0
+    offset: int = 0,
+    lat: float = None,
+    lng: float = None
 ):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Uploaded file must be an image.")
@@ -124,11 +126,35 @@ async def image_search(
     
     query = text("""
         SELECT 
-            p.productid as id, p.title, p.description, p.price, p.originalprice, 
-            p.productcondition as condition, p.exchangetype, p.images, c.categoryname as category,
+            p.productid, 
+            p.title, 
+            p.description, 
+            p.price, 
+            p.originalprice, 
+            p.productcondition, 
+            p.exchangetype, 
+            p.images, 
+            c.categoryname,
+            u.username AS seller_name,
+            u.isverified,
+            COALESCE((SELECT AVG(rating) FROM reviews r WHERE r.revieweduserid = u.userid), 0) AS rating,
+            u.profilepicture,
+            u.userid,
+            CASE
+            WHEN :lat IS NOT NULL AND :lng IS NOT NULL THEN
+                (
+                    6371 * acos(
+                        cos(radians(:lat)) * cos(radians(u.latitude)) *
+                        cos(radians(u.longitude) - radians(:lng)) +
+                        sin(radians(:lat)) * sin(radians(u.latitude))
+                    )
+                )
+            ELSE 0
+            END as distance,
             1 - (p.embedding <=> :embedding) AS similarity
         FROM product p
         LEFT JOIN category c ON p.categoryid = c.categoryid
+        LEFT JOIN users u ON p.userid = u.userid
         WHERE p.embedding IS NOT NULL
         ORDER BY p.embedding <=> :embedding
         LIMIT :limit OFFSET :offset
@@ -136,7 +162,8 @@ async def image_search(
     
     try:
         with engine.connect() as conn:
-            result = conn.execute(query, {"embedding": str(query_embedding), "limit": limit, "offset": offset}).fetchall()
+            result = conn.execute(query, {"embedding": str(query_embedding), "limit": limit, "offset": offset, "lat": lat,
+        "lng": lng,}).fetchall()
         
         matches = [dict(row._mapping) for row in result]
         return {"status": "success", "matches": matches}

@@ -3,7 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { FindByUIDParams } from './types/types';
+import { FindByUIDParams, RawProduct } from './types/types';
 import { PRODUCT_STATUS } from 'generated/prisma';
 
 @Injectable()
@@ -51,7 +51,8 @@ export class ProductService {
       formData.append('file', blob, file.originalname);
       formData.append('productId', productId.toString());
 
-      const fastApiUrl = process.env.FASTAPI_BASE_URL || 'http://127.0.0.1:5000';
+      const fastApiUrl =
+        process.env.FASTAPI_BASE_URL || 'http://127.0.0.1:5000';
       const response = await fetch(`${fastApiUrl}/embeddings/product`, {
         method: 'POST',
         body: formData,
@@ -219,6 +220,9 @@ export class ProductService {
         },
         exchangeType: p.exchangetype,
       }));
+
+      const formatedProducts = this.formatProducts(rawProducts);
+      return formatedProducts;
     } catch (err) {
       console.error('findAll error:', err);
       return {
@@ -227,6 +231,28 @@ export class ProductService {
         message: 'Something went wrong!',
       };
     }
+  }
+
+  formatProducts(rawProducts: RawProduct[]) {
+    return rawProducts.map((p) => ({
+      id: p.productid.toString(),
+      title: p.title,
+      description: p.description,
+      price: Number(p.price),
+      originalPrice: p.originalprice ? Number(p.originalprice) : undefined,
+      category: p.categoryname,
+      condition: p.productcondition,
+      image: Array.isArray(p.images) ? p.images[0] : null,
+      distance: p.distance ? Number(Number(p.distance).toFixed(1)) : 0,
+      seller: {
+        id: p.userid,
+        name: p.seller_name,
+        rating: p.rating ? Number(p.rating).toFixed(1) : 0,
+        verified: Boolean(p.isverified),
+        profilePicture: p.profilepicture,
+      },
+      exchangeType: p.exchangetype,
+    }));
   }
 
   // Simple in-memory cache to prevent fake rapid increments
@@ -695,7 +721,7 @@ export class ProductService {
   }
 
   async searchByImage(file: Express.Multer.File, page: number, limit: number) {
-    console.log("searching by images")
+    console.log('searching by images');
     try {
       const formData = new FormData();
       const uint8Array = new Uint8Array(file.buffer);
@@ -709,10 +735,13 @@ export class ProductService {
 
       const fastApiUrl =
         process.env.FASTAPI_BASE_URL || 'http://127.0.0.1:5000';
-      const response = await fetch(`${fastApiUrl}/image-search?limit=${limit}&offset=${offset}`, {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch(
+        `${fastApiUrl}/image-search?limit=${limit}&offset=${offset}`,
+        {
+          method: 'POST',
+          body: formData,
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`FastAPI responded with ${response.status}`);
@@ -721,20 +750,9 @@ export class ProductService {
       const data = await response.json();
 
       // Map properties to match frontend Item interface structure if needed
-      const matches = data.matches?.map((p) => ({
-        id: p.id.toString(),
-        title: p.title,
-        description: p.description,
-        price: Number(p.price),
-        originalPrice: p.originalprice ? Number(p.originalprice) : undefined,
-        category: p.category,
-        condition: p.condition,
-        image: Array.isArray(p.images) ? p.images[0] : null,
-        exchangeType: p.exchangetype,
-        similarity: p.similarity,
-      }));
+      const formatedData = this.formatProducts(data.matches);
 
-      return matches || []
+      return formatedData || [];
     } catch (error) {
       console.error('Error in AI Image Search Service:', error);
       throw new HttpException(

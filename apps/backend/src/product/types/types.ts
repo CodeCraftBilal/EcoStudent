@@ -42,3 +42,21 @@ export interface FindByUIDParams {
   condition?: string;
   sortBy?: 'latest' | 'price-asc' | 'price-desc';
 };
+
+export interface RawProduct {
+  productid: number;
+  title: string;
+  description: string;
+  price: number | string;
+  originalprice?: number | string | null;
+  categoryname: string;
+  productcondition: string;
+  images: string[] | null;
+  distance?: number | string | null;
+  userid: number | string;
+  seller_name: string;
+  rating?: number | string | null;
+  isverified: boolean | number;
+  profilepicture?: string | null;
+  exchangetype: string;
+};
