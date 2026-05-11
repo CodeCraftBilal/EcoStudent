@@ -65,12 +65,18 @@ export default function ChatLayout({
   );
 
   useEffect(() => {
-    setConversations(conversationProp);
-  }, [conversationProp]);
-
-  useEffect(() => {
-    console.log('conversation changed ', conversations)
-  }, [conversations]);
+    setConversations((prev) => {
+      // Merge conversationProp with newlyCreatedChat
+      const updated = [...conversationProp];
+      if (newlyCreatedChat) {
+        const exists = updated.some((c) => c.id === newlyCreatedChat.id);
+        if (!exists) {
+          updated.unshift(newlyCreatedChat);
+        }
+      }
+      return updated;
+    });
+  }, [conversationProp, newlyCreatedChat]);
 
   // Fetch the newly created chat when redirected with newChat flag
   useEffect(() => {
@@ -89,6 +95,9 @@ export default function ChatLayout({
           const chatData = await response.json();
           console.log("Fetched new chat:", chatData);
           setNewlyCreatedChat(chatData);
+          
+          // Invalidate conversations to ensure the query cache is fully up to date
+          queryClient.invalidateQueries({ queryKey: ["conversations"] });
 
           // Remove newChat flag from URL but keep conversationId
           const params = new URLSearchParams(searchParams.toString());
@@ -105,17 +114,7 @@ export default function ChatLayout({
     fetchNewChat();
   }, [conversationIdFromUrl, isNewChat, searchParams, pathname, router]);
 
-  // Merge conversations with newly created chat and sort
-  useEffect(() => {
-    if (!newlyCreatedChat) return;
-
-    setConversations((prev) => {
-      const exists = prev.some((c) => c.id === newlyCreatedChat.id);
-      if (exists) return prev;
-
-      return [newlyCreatedChat, ...prev];
-    });
-  }, [newlyCreatedChat]);
+  // Handled by the merged effect above
 
   // Handle URL parameter to select conversation
   useEffect(() => {
