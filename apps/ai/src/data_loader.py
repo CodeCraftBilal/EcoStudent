@@ -120,7 +120,8 @@ def get_filtered_products(filters):
             distance_col = "0"
     else:
         distance_col = "0"
-        
+    
+    print(f'lat: ${lat} lng: ${lng}')
     sql = f"""
       SELECT *
       FROM (

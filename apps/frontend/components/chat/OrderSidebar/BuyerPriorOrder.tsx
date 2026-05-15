@@ -46,7 +46,7 @@ export default function BuyerOrderPriorInfo({ conversation }: PageProps) {
         </div>
 
         <Link
-          href={`/shop/product/${conversation.item?.id}`}
+          href={`/shop/product/${conversation.item?.id}?from=dashboard/chat?conversationId=${conversation.id}`}
           className="w-full px-4 py-2 bg-eco-500 text-white rounded-lg hover:bg-eco-600 transition-colors text-sm font-medium flex items-center justify-center gap-2"
         >
           View Item
@@ -105,8 +105,8 @@ export default function BuyerOrderPriorInfo({ conversation }: PageProps) {
               </>
             </button>
             <p className="text-sm text-gray-600 mt-1">
-                Ask Seller to create order.
-              </p>
+              Ask Seller to create order.
+            </p>
           </div>
         </div>
       </div>
