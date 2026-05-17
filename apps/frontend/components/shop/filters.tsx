@@ -3,6 +3,7 @@
 import { Filter, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FilterState } from "@/lib/types/types";
+import { useEffect, useRef } from "react";
 
 export interface FiltersProps {
   showFilters: boolean;
@@ -25,10 +26,33 @@ const exchangeTypeOptions = [
 ];
 
 export function Filters({ showFilters, setShowFilters, filters, setFilters, onResetFilters }: FiltersProps) {
+  const filtersRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const toggleBtn = document.getElementById("filter-toggle-btn");
+      if (
+        filtersRef.current &&
+        !filtersRef.current.contains(event.target as Node) &&
+        (!toggleBtn || !toggleBtn.contains(event.target as Node))
+      ) {
+        setShowFilters(false);
+      }
+    };
+
+    if (showFilters) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showFilters, setShowFilters]);
+
   return (
     <AnimatePresence>
       {showFilters && (
         <motion.div
+          ref={filtersRef}
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}

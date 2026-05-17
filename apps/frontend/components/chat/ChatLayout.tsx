@@ -65,12 +65,18 @@ export default function ChatLayout({
   );
 
   useEffect(() => {
-    setConversations(conversationProp);
-  }, [conversationProp]);
-
-  useEffect(() => {
-    console.log('conversation changed ', conversations)
-  }, [conversations]);
+    setConversations((prev) => {
+      // Merge conversationProp with newlyCreatedChat
+      const updated = [...conversationProp];
+      if (newlyCreatedChat) {
+        const exists = updated.some((c) => c.id === newlyCreatedChat.id);
+        if (!exists) {
+          updated.unshift(newlyCreatedChat);
+        }
+      }
+      return updated;
+    });
+  }, [conversationProp, newlyCreatedChat]);
 
   // Fetch the newly created chat when redirected with newChat flag
   useEffect(() => {
@@ -89,6 +95,9 @@ export default function ChatLayout({
           const chatData = await response.json();
           console.log("Fetched new chat:", chatData);
           setNewlyCreatedChat(chatData);
+          
+          // Invalidate conversations to ensure the query cache is fully up to date
+          queryClient.invalidateQueries({ queryKey: ["conversations"] });
 
           // Remove newChat flag from URL but keep conversationId
           const params = new URLSearchParams(searchParams.toString());
@@ -105,17 +114,7 @@ export default function ChatLayout({
     fetchNewChat();
   }, [conversationIdFromUrl, isNewChat, searchParams, pathname, router]);
 
-  // Merge conversations with newly created chat and sort
-  useEffect(() => {
-    if (!newlyCreatedChat) return;
-
-    setConversations((prev) => {
-      const exists = prev.some((c) => c.id === newlyCreatedChat.id);
-      if (exists) return prev;
-
-      return [newlyCreatedChat, ...prev];
-    });
-  }, [newlyCreatedChat]);
+  // Handled by the merged effect above
 
   // Handle URL parameter to select conversation
   useEffect(() => {
@@ -136,7 +135,7 @@ export default function ChatLayout({
 
     const nextId = foundConversation.id.toString();
 
-    // 🔥 THIS LINE PREVENTS THE LOOP
+    // THIS LINE PREVENTS THE LOOP
     if (selectedConversationId !== nextId) {
       setSelectedConversationId(nextId);
     }
@@ -276,29 +275,15 @@ export default function ChatLayout({
       setConversations((prev) =>
         prev.map((con) =>
           con.id === selectedConversation.id
-            ? { ...selectedConversation, lastMessage: content }
+            ? { ...selectedConversation, lastMessage: content, lastMessageAt: optimisticMessage.timestamp }
             : con
         )
       )
-
-      moveConversationToTop(selectedConversation.id);
     } catch (err) {
       console.log("Socket not initialized: ", err);
     }
   };
 
-  const moveConversationToTop = (convId: string) => {
-    setConversations((prev) => {
-      const index = prev.findIndex((c) => c.id.toString() === convId);
-      if (index === -1) return prev;
-
-      const updated = [...prev];
-      const [item] = updated.splice(index, 1);
-      updated.unshift(item);
-
-      return updated;
-    });
-  };
 
   useEffect(() => {
     if (!socket) return;
@@ -331,13 +316,10 @@ export default function ChatLayout({
         console.error("Failed to fetch new conversation", err);
       }
     } else {
-      // move conversation to top
-      moveConversationToTop(message.chatId.toString());
-
       setConversations((prev) =>
         prev.map((con) =>
           con.id.toString() === message.chatId.toString()
-            ? { ...con, lastMessage: message.content, unreadCount: Number(con.unreadCount || 0) + 1 }
+            ? { ...con, lastMessage: message.content, unreadCount: Number(con.unreadCount || 0) + 1, lastMessageAt: message.timestamp || new Date().toISOString() }
             : con
         )
       )
@@ -369,11 +351,19 @@ export default function ChatLayout({
 
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
+  const sortedConversations = useMemo(() => {
+    return [...conversations].sort((a, b) => {
+      const dateA = new Date(a.lastMessageAt || 0).getTime();
+      const dateB = new Date(b.lastMessageAt || 0).getTime();
+      return dateB - dateA;
+    });
+  }, [conversations]);
+
   // Use MobileChatLayout for mobile devices
   if (isMobile) {
     return (
       <MobileChatLayout
-        conversations={conversations}
+        conversations={sortedConversations}
         currentUser={currentUser}
         onConversationSelect={handleConversationSelect}
         // conversation props
@@ -435,7 +425,7 @@ export default function ChatLayout({
       {/* Conversation List Sidebar */}
       <div className="w-80 lg:w-96 border-r border-gray-200">
         <ConversationList
-          conversations={conversations}
+          conversations={sortedConversations}
           selectedConversationId={selectedConversationId}
           onConversationSelect={handleConversationSelect}
           showReturnToWebsite={true}

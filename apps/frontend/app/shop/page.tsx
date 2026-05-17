@@ -36,6 +36,17 @@ const ShopPage = () => {
   const { session } = useSession();
   const lastItemRef = useRef<HTMLDivElement | null>(null);
 
+  // ----------------------------------
+  // Image Search State
+  // ----------------------------------
+  const [isImageSearchActive, setIsImageSearchActive] = useState(false);
+  const [imageSearchFile, setImageSearchFile] = useState<File | null>(null);
+  const [imageProducts, setImageProducts] = useState<Item[]>([]);
+  const [isImageSearchLoading, setIsImageSearchLoading] = useState(false);
+  const [imageSearchHasMore, setImageSearchHasMore] = useState(false);
+  const [imageSearchPage, setImageSearchPage] = useState(1);
+  const [imageSearchError, setImageSearchError] = useState<string | null>(null);
+
   // debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -46,6 +57,13 @@ const ShopPage = () => {
       clearTimeout(timer);
     };
   }, [searchQuery]);
+
+  // Deactivate image search if user types a text query or changes category
+  useEffect(() => {
+    if (debouncedSearch !== "" || filters.category !== "all") {
+      setIsImageSearchActive(false);
+    }
+  }, [debouncedSearch, filters.category]);
 
   // ----------------------------------
   // Stable memoized filters
@@ -136,25 +154,69 @@ const ShopPage = () => {
   }, [data]);
 
   // ----------------------------------
-  // Infinite Scroll Observer (Optimized)
+  // Image Search Infinite Scroll Function
   // ----------------------------------
+  const fetchNextImageSearchPage = useCallback(async () => {
+    if (!imageSearchFile || !imageSearchHasMore || isImageSearchLoading) return;
+    
+    setIsImageSearchLoading(true);
+    setImageSearchError(null);
+    try {
+      const formData = new FormData();
+      formData.append('image', imageSearchFile);
+      
+      const res = await fetch(`${BACKEND_URL}/product/image-search?page=${imageSearchPage}&limit=12`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Failed to fetch image search results");
+      const data = await res.json();
+      const newItems = data?.matches || data || [];
+      
+      setImageProducts((prev) => [...prev, ...newItems]);
+      setImageSearchPage((prev) => prev + 1);
+      setImageSearchHasMore(newItems.length >= 12);
+    } catch (err) {
+      console.error("Failed to fetch next image search page", err);
+      setImageSearchError("Failed to fetch more products.");
+    } finally {
+      setIsImageSearchLoading(false);
+    }
+  }, [imageSearchFile, imageSearchPage, imageSearchHasMore, isImageSearchLoading]);
+
+  // ----------------------------------
+  // Unified Infinite Scroll Observer
+  // ----------------------------------
+  const displayItems = isImageSearchActive ? imageProducts : items;
+  const isDisplayFetchingNextPage = isImageSearchActive ? isImageSearchLoading : isFetchingNextPage;
+  const displayHasNextPage = isImageSearchActive ? imageSearchHasMore : hasNextPage;
+  const displayFetchNextPage = isImageSearchActive ? fetchNextImageSearchPage : fetchNextPage;
+
   useEffect(() => {
-    if (!lastItemRef.current || !hasNextPage) return;
+    if (!lastItemRef.current || !displayHasNextPage) return;
 
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
+      if (entries[0].isIntersecting && displayHasNextPage && !isDisplayFetchingNextPage) {
+        displayFetchNextPage();
       }
     });
 
     observer.observe(lastItemRef.current);
 
     return () => observer.disconnect();
-  }, [hasNextPage, fetchNextPage, items]);
+  }, [displayHasNextPage, displayFetchNextPage, isDisplayFetchingNextPage, displayItems]);
 
   // ----------------------------------
   // Memoized Callbacks
   // ----------------------------------
+  const handleImageResults = useCallback((results: any[], file: File) => {
+    setIsImageSearchActive(true);
+    setImageSearchFile(file);
+    setImageProducts(results);
+    setImageSearchPage(2);
+    setImageSearchHasMore(results.length >= 12);
+  }, []);
+
   const resetFilters = useCallback(() => {
     setFilters({
       category: "all",
@@ -165,6 +227,8 @@ const ShopPage = () => {
     });
 
     setSearchQuery("");
+    setIsImageSearchActive(false);
+    setImageSearchFile(null);
     refetch();
   }, [refetch]);
 
@@ -216,6 +280,7 @@ const ShopPage = () => {
         filters={filters}
         setFilters={setFilters}
         onResetFilters={resetFilters}
+        onResultsFound={handleImageResults}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -229,24 +294,26 @@ const ShopPage = () => {
 
         <div className="flex justify-between items-center mb-2">
           <p className="text-gray-600 py-2">
-            Showing {items.length} of {items.length} items
+            Showing {displayItems.length} items {isImageSearchActive && "(Image Search)"}
           </p>
         </div>
 
-        {isProductsLoading && (
+        {!isImageSearchActive && isProductsLoading && (
           <div className="w-full">
             <ContentLoader columns={4} count={8} type="grid" />
           </div>
         )}
 
-        {!isProductsLoading && items.length === 0 ? (
+        {!isProductsLoading && displayItems.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-16"
           >
             <Search className="w-16 h-16 mx-auto text-gray-400" />
-            <h3 className="text-lg font-semibold">No items found</h3>
+            <h3 className="text-lg font-semibold">
+              {isImageSearchActive ? "No similar products found" : "No items found"}
+            </h3>
             <p className="text-gray-600">Try adjusting your filters</p>
             <button
               onClick={resetFilters}
@@ -260,11 +327,11 @@ const ShopPage = () => {
             // layout
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
           >
-            {items.map((item, idx) => {
-              const isLast = idx === items.length - 1;
+            {displayItems.map((item, idx) => {
+              const isLast = idx === displayItems.length - 1;
 
               return (
-                <div key={item.id} ref={isLast ? lastItemRef : null}>
+                <div key={`${item.id}-${idx}`} ref={isLast ? lastItemRef : null}>
                   <ItemCard
                     item={item}
                     index={Number(item.id)}
@@ -277,7 +344,7 @@ const ShopPage = () => {
           </div>
         )}
 
-        {isFetchingNextPage && (
+        {isDisplayFetchingNextPage && (
           <div className="w-full">
             <ContentLoader columns={4} count={8} type="grid" />
           </div>

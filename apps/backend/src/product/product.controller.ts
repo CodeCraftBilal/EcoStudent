@@ -30,6 +30,35 @@ export class ProductController {
     private readonly uploadService: UploadService,
   ) {}
 
+  @Public()
+  @Post('image-search')
+  @UseInterceptors(
+    FilesInterceptor('image', 1, {
+      storage: multer.memoryStorage(),
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
+          return callback(
+            new BadRequestException('Only images allowed'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  async searchByImage(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '12',
+  ) {
+    console.log('image search is called');
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No image provided');
+    }
+    return this.productService.searchByImage(files[0], parseInt(page, 10), parseInt(limit, 10));
+  }
+
   @Post()
   @UseInterceptors(
     FilesInterceptor('images', 3, {
@@ -62,13 +91,22 @@ export class ProductController {
       }),
     );
 
-    return this.productService.create(
+    const result = await this.productService.create(
       {
         ...createProductDto,
         images: imageUrls,
       },
       req.user.id,
     );
+
+    // After successful creation, generate embeddings using the first image without blocking
+    if (result.success && result.productId && files && files.length > 0) {
+      this.productService.generateEmbedding(result.productId, files[0]).catch(err => {
+        console.error('Error initiating embedding generation:', err);
+      });
+    }
+
+    return result;
   }
 
   @Get('mylisting')
@@ -144,9 +182,10 @@ export class ProductController {
   @Public()
   @Get(':id')
   async findOne(@Param('id') id: string, @Query() query: any, @Req() req: any) {
+    console.log("Find one product");
     // Extract viewer IP for throttling fake rapid increments
     const viewerId = req.ip || req.connection?.remoteAddress || 'unknown';
-    
+
     // Call service method and return response
     return this.productService.getProductAndIncrementView(+id, query, viewerId);
   }
@@ -157,6 +196,7 @@ export class ProductController {
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
   ) {
+    console.log("update function is running in controller")
     return this.productService.update(+id, {
       ...updateProductDto,
       userId: req.user.id,

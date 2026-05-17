@@ -57,6 +57,7 @@ export class ChatService {
         senderId: senderId,
         receiverId: createChatDto.receiverId,
         productId: createChatDto.productId,
+        lastMessageAt: new Date(),
       },
       include: {
         users_chat_senderidTousers: true,
@@ -189,9 +190,9 @@ export class ChatService {
           },
         ],
       }),
-      lastMessage: {
-        not: null,
-      },
+      // lastMessage: {
+      //   not: null,
+      // },
     },
     include: {
       users_chat_senderidTousers: {

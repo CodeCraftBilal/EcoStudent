@@ -3,7 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { FindByUIDParams } from './types/types';
+import { FindByUIDParams, RawProduct } from './types/types';
 import { PRODUCT_STATUS } from 'generated/prisma';
 
 @Injectable()
@@ -36,6 +36,38 @@ export class ProductService {
     } catch (err) {
       console.error('Product Upload Error: ', err);
       return { success: false, message: 'something went wrong!' };
+    }
+  }
+
+  async generateEmbedding(productId: number, file: Express.Multer.File) {
+    console.log(`Generating embedding for product ${productId}`);
+    try {
+      const formData = new FormData();
+      const uint8Array = new Uint8Array(file.buffer);
+
+      const blob = new Blob([uint8Array], {
+        type: file.mimetype,
+      });
+      formData.append('file', blob, file.originalname);
+      formData.append('productId', productId.toString());
+
+      const fastApiUrl =
+        process.env.FASTAPI_BASE_URL || 'http://127.0.0.1:5000';
+      const response = await fetch(`${fastApiUrl}/embeddings/product`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`FastAPI responded with ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      // Log failures without breaking product upload
+      console.error('Error generating product embedding:', error);
+      return { success: false, message: 'Failed to generate embedding' };
     }
   }
 
@@ -167,8 +199,7 @@ export class ProductService {
         ...params,
       );
 
-      if(rawProducts.length == 0) 
-        console.log('no product found')
+      if (rawProducts.length == 0) console.log('no product found');
 
       return rawProducts.map((p) => ({
         id: p.productid.toString(),
@@ -189,6 +220,9 @@ export class ProductService {
         },
         exchangeType: p.exchangetype,
       }));
+
+      const formatedProducts = this.formatProducts(rawProducts);
+      return formatedProducts;
     } catch (err) {
       console.error('findAll error:', err);
       return {
@@ -199,11 +233,36 @@ export class ProductService {
     }
   }
 
+  formatProducts(rawProducts: RawProduct[]) {
+    return rawProducts.map((p) => ({
+      id: p.productid.toString(),
+      title: p.title,
+      description: p.description,
+      price: Number(p.price),
+      originalPrice: p.originalprice ? Number(p.originalprice) : undefined,
+      category: p.categoryname,
+      condition: p.productcondition,
+      image: Array.isArray(p.images) ? p.images[0] : null,
+      distance: p.distance ? Number(Number(p.distance).toFixed(1)) : 0,
+      seller: {
+        id: p.userid,
+        name: p.seller_name,
+        rating: p.rating ? Number(p.rating).toFixed(1) : 0,
+        verified: Boolean(p.isverified),
+        profilePicture: p.profilepicture,
+      },
+      exchangeType: p.exchangetype,
+    }));
+  }
 
   // Simple in-memory cache to prevent fake rapid increments
   private readonly viewCache = new Map<string, number>();
 
-  async getProductAndIncrementView(id: number, filters: any, viewerId?: string) {
+  async getProductAndIncrementView(
+    id: number,
+    filters: any,
+    viewerId?: string,
+  ) {
     const now = Date.now();
     let shouldIncrement = true;
 
@@ -211,7 +270,7 @@ export class ProductService {
     if (viewerId) {
       const cacheKey = `${id}_${viewerId}`;
       const lastViewed = this.viewCache.get(cacheKey);
-      
+
       // Ignore multiple requests from same user within 5 seconds (5000ms)
       if (lastViewed && now - lastViewed < 5000) {
         shouldIncrement = false;
@@ -244,57 +303,71 @@ export class ProductService {
     // A single query is not possible without losing those calculated fields or writing
     // a complex raw UPDATE ... RETURNING query which violates the atomic { increment: 1 } requirement.
     const product = await this.findOne(id, filters);
-    
+
     if (!Array.isArray(product) && product.error) {
       throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
     }
-    
+
     return product;
   }
-  
+
   async getRecommendationsFromAI(userId: number, filters: any) {
-    console.log('Getting recommendations')
+    console.log('Getting recommendations');
+    const fastApiUrl = process.env.FASTAPI_BASE_URL || 'http://127.0.0.1:5000';
     try {
       const params = new URLSearchParams();
-      if (filters.searchQuery) params.append('searchQuery', filters.searchQuery);
+      if (filters.searchQuery)
+        params.append('searchQuery', filters.searchQuery);
       if (filters.minPrice) params.append('minPrice', filters.minPrice);
       if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
-      if (filters.maxDistance) params.append('maxDistance', filters.maxDistance);
+      if (filters.maxDistance)
+        params.append('maxDistance', filters.maxDistance);
       if (filters.lat) params.append('lat', filters.lat);
       if (filters.lng) params.append('lng', filters.lng);
       if (filters.limit) params.append('limit', filters.limit);
       if (filters.offset) params.append('offset', filters.offset);
 
       if (filters.category) {
-        const categories = Array.isArray(filters.category) ? filters.category : [filters.category];
-        categories.forEach(c => params.append('category', c));
+        const categories = Array.isArray(filters.category)
+          ? filters.category
+          : [filters.category];
+        categories.forEach((c) => params.append('category', c));
       }
 
       if (filters.condition) {
-        const conditions = Array.isArray(filters.condition) ? filters.condition : [filters.condition];
-        conditions.forEach(c => params.append('condition', c));
+        const conditions = Array.isArray(filters.condition)
+          ? filters.condition
+          : [filters.condition];
+        conditions.forEach((c) => params.append('condition', c));
       }
 
       if (filters.exchangeType) {
-        const exchanges = Array.isArray(filters.exchangeType) ? filters.exchangeType : [filters.exchangeType];
-        exchanges.forEach(e => params.append('exchangeType', e));
+        const exchanges = Array.isArray(filters.exchangeType)
+          ? filters.exchangeType
+          : [filters.exchangeType];
+        exchanges.forEach((e) => params.append('exchangeType', e));
       }
 
-      const res = await fetch(`http://127.0.0.1:5000/recommendations/${userId}?${params.toString()}`);
+      const res = await fetch(
+        `${fastApiUrl}/recommendations/${userId}?${params.toString()}`,
+      );
       if (res.ok) {
-         return await res.json();
+        return await res.json();
       }
     } catch (err) {
       console.error('AI Recommendation Error:', err);
     }
     // Fallback to normal findAll if AI fails
-    console.log('findAll is running b/c there was an error in get recommendation')
+    console.log(
+      'findAll is running b/c there was an error in get recommendation',
+    );
     return this.findAll(filters);
   }
 
   async findAll_v2(query: string) {
+    const fastApiUrl = process.env.FASTAPI_BASE_URL || 'http://127.0.0.1:5000';
     const params = query.split('?');
-    const res = await fetch(`http://127.0.0.1:5000/recommendation/userid?${params[1]}`)
+    const res = await fetch(`${fastApiUrl}/recommendation/userid?${params[1]}`);
     const products = await res.json();
     return products;
   }
@@ -631,7 +704,10 @@ export class ProductService {
       });
 
       const text = response.text || '';
-      const cleanedText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const cleanedText = text
+        .replace(/```json/gi, '')
+        .replace(/```/g, '')
+        .trim();
       const result = JSON.parse(cleanedText);
 
       return {
@@ -641,6 +717,48 @@ export class ProductService {
     } catch (err) {
       console.error('Image Analysis Error: ', err);
       return { success: false, message: 'Failed to analyze image' };
+    }
+  }
+
+  async searchByImage(file: Express.Multer.File, page: number, limit: number) {
+    console.log('searching by images');
+    try {
+      const formData = new FormData();
+      const uint8Array = new Uint8Array(file.buffer);
+
+      const blob = new Blob([uint8Array], {
+        type: file.mimetype,
+      });
+      formData.append('file', blob, file.originalname);
+
+      const offset = (page - 1) * limit;
+
+      const fastApiUrl =
+        process.env.FASTAPI_BASE_URL || 'http://127.0.0.1:5000';
+      const response = await fetch(
+        `${fastApiUrl}/image-search?limit=${limit}&offset=${offset}`,
+        {
+          method: 'POST',
+          body: formData,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`FastAPI responded with ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Map properties to match frontend Item interface structure if needed
+      const formatedData = this.formatProducts(data.matches);
+
+      return formatedData || [];
+    } catch (error) {
+      console.error('Error in AI Image Search Service:', error);
+      throw new HttpException(
+        'Failed to search products by image',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

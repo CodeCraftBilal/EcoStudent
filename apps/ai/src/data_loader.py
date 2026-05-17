@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+import math
 
 load_dotenv()
 
@@ -104,23 +105,39 @@ def get_filtered_products(filters):
         
     whereSQL = "WHERE " + " AND ".join(where_clauses)
     
-    if lat is not None and lng is not None:
-        # Prevent division by zero or errors by ensuring lat/lng are floats
-        try:
-            lat = float(lat)
-            lng = float(lng)
-            distance_col = f"""
-            (6371 * acos(
-               cos(radians({lat})) * cos(radians(u.latitude)) *
-               cos(radians(u.longitude) - radians({lng})) +
-               sin(radians({lat})) * sin(radians(u.latitude))
-             ))
-            """
-        except ValueError:
-            distance_col = "0"
+    valid_location = False
+    try:
+        lat = float(lat) if lat is not None else None
+        lng = float(lng) if lng is not None else None
+
+        if (
+            lat is not None and
+            lng is not None and
+            not math.isnan(lat) and
+            not math.isnan(lng)
+        ):
+            valid_location = True
+
+    except (ValueError, TypeError):
+        valid_location = False
+
+
+    if valid_location:
+        distance_col = """
+        (6371 * acos(
+           cos(radians(:lat)) * cos(radians(u.latitude)) *
+           cos(radians(u.longitude) - radians(:lng)) +
+           sin(radians(:lat)) * sin(radians(u.latitude))
+         ))
+        """
+
+        params['lat'] = lat
+        params['lng'] = lng
+
     else:
         distance_col = "0"
-        
+    
+    print(f'lat: ${lat} lng: ${lng}')
     sql = f"""
       SELECT *
       FROM (

@@ -138,6 +138,7 @@ model product {
   productType      product_type             @map("producttype")
   exchangeType     exchange_type            @default(sale) @map("exchangetype")
   status           PRODUCT_STATUS           @default(active)
+  embedding        Unsupported("vector")?
   search_vector    Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, (((COALESCE(title, ''::character varying))::text || ' '::text) || COALESCE(description, ''::text)))"))
   chat             chat[]
   exchanges        exchanges[]
@@ -145,7 +146,7 @@ model product {
   users            Users                    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_product_users")
   userFavorites    user_favorites[]
 
-  @@index([search_vector], map: "product_search_idx", type: Gin)
+  @@index([embedding])
 }
 
 model reviews {
@@ -162,11 +163,11 @@ model reviews {
 }
 
 model search_history {
-  searchid     Int       @id @default(autoincrement())
-  userid       Int
-  query        String?   @db.VarChar(255)
-  created_at   DateTime? @db.Timestamp(6)
-  users        Users     @relation(fields: [userid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_searchhistory_users")
+  searchid   Int       @id @default(autoincrement())
+  userid     Int
+  query      String?   @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(6)
+  users      Users     @relation(fields: [userid], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "fk_searchhistory_users")
 }
 
 model user_favorites {

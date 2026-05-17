@@ -18,6 +18,7 @@ export default function ConversationItem({
   showItemInfo = true
 }: ConversationItemProps) {
   const formatTime = (timestamp: string) => {
+    if (!timestamp) return "";
     const date = new Date(timestamp);
     const now = new Date();
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
@@ -80,7 +81,7 @@ export default function ConversationItem({
           {/* Last Message Preview */}
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-gray-600 truncate flex-1 mr-2">
-              {conversation.lastMessage}
+              {conversation.lastMessage || <span className="italic text-gray-400">Started a chat</span>}
             </p>
             
             {/* Unread Badge */}
